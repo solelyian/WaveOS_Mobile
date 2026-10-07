@@ -7,6 +7,7 @@ import { el } from "../core/el";
 import { glyph } from "../core/icons";
 import { lucide } from "../core/lucide";
 import { motion } from "../core/motion";
+import { spotlight } from "../core/spotlight";
 import { on, set, sys, toggle } from "../system/state";
 import type { GlyphName } from "../core/icons";
 
@@ -42,6 +43,7 @@ export class ControlCenter {
         el("span", {}, "Lumen — Single"),
         el("div", { class: "track" }, this.progress)),
       el("div", { class: "mctl" }, glyph("prev"), this.playBtn, glyph("next")));
+    spotlight(media);
 
     // Interrupteurs : 8 tuiles indépendantes (4×2), icône libre sur tuile.
     const toggles = el("div", { class: "cc-toggles" },
@@ -66,6 +68,7 @@ export class ControlCenter {
         this.device("Wave TV", "Écran partagé", "monitor-smartphone"),
         this.device("AirBuds Pro", "Connectés", "headphones"),
         this.device("Wave Watch", "À proximité", "smartphone")));
+    spotlight(devices);
 
     this.node = el("div", { id: "layer-cc", class: "layer sheet", role: "dialog", "aria-label": "Centre de contrôle" },
       el("div", { class: "sheet-bg g g-thick" }),
@@ -80,10 +83,17 @@ export class ControlCenter {
     const subEl = el("span", { class: "st" }, sub());
     const t = el("div", { class: "cc2-tile", role: "switch", tabindex: "0" }, bub,
       el("span", { class: "tx" }, el("div", { class: "tt" }, label), subEl));
+    spotlight(t);
     const sync = () => { t.classList.toggle("on", sys[key]); subEl.textContent = sub(); };
     on(key, sync); sync();
-    t.addEventListener("click", (e) => { e.stopPropagation(); toggle(key); });
-    t.addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggle(key); } });
+    // press physique : squash à l'appui (CSS), « pop » de l'icône au relâchement
+    const pop = () => {
+      bub.classList.remove("pop");
+      void bub.offsetWidth; // relance l'animation
+      bub.classList.add("pop");
+    };
+    t.addEventListener("click", (e) => { e.stopPropagation(); toggle(key); pop(); });
+    t.addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggle(key); pop(); } });
     this.tiles.set(key, t);
     return t;
   }
@@ -92,6 +102,7 @@ export class ControlCenter {
     const t = el("div", { class: "cc2-tile", role: "button", tabindex: "0", "aria-label": label },
       el("span", { class: "bub" }, lucide(ic)),
       el("span", { class: "tx" }, el("div", { class: "tt" }, label), el("span", { class: "st" }, "")));
+    spotlight(t);
     return t;
   }
 
@@ -105,20 +116,38 @@ export class ControlCenter {
     const fill = el("div", { class: "fill" });
     const s = el("div", { class: "cc-hslider g g-regular", role: "slider", tabindex: "0", "aria-label": aria },
       fill, el("span", { class: "sic" }, glyph(ic)));
+    spotlight(s);
     const frac = () => (sys[key] - min) / (max - min);
     const sync = () => { fill.style.width = `${frac() * 100}%`; };
     on(key, sync); sync();
+    // « edge stretch » HarmonyOS : en butée, la capsule s'étire contre le bord
+    // puis reprend sa forme avec un rebond élastique au relâchement.
+    const settle = () => {
+      s.style.transition = "transform .5s cubic-bezier(.2,1.6,.32,1)";
+      s.style.transform = "";
+      window.setTimeout(() => { s.style.transition = ""; }, 520);
+    };
     const setFromX = (clientX: number) => {
       const r = s.getBoundingClientRect();
-      const f = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+      const raw = (clientX - r.left) / r.width;
+      const f = Math.min(1, Math.max(0, raw));
       set(key, min + f * (max - min));
+      const over = raw < 0 ? -raw * r.width : raw > 1 ? (raw - 1) * r.width : 0;
+      if (over > 1) {
+        const k = Math.min(over / 90, 1) * 0.075;
+        s.style.transition = "";
+        s.style.transformOrigin = raw < 0 ? "left center" : "right center";
+        s.style.transform = `scaleX(${1 + k}) scaleY(${1 - k * 0.55})`;
+      } else if (s.style.transform) {
+        settle();
+      }
     };
     s.addEventListener("pointerdown", (e) => {
       e.stopPropagation();
       setFromX(e.clientX);
       s.setPointerCapture(e.pointerId);
       const mv = (ev: PointerEvent) => setFromX(ev.clientX);
-      const up = () => s.removeEventListener("pointermove", mv);
+      const up = () => { s.removeEventListener("pointermove", mv); settle(); };
       s.addEventListener("pointermove", mv);
       s.addEventListener("pointerup", up, { once: true });
     });

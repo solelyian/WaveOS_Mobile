@@ -4,6 +4,7 @@
 import { el } from "../core/el";
 import { glyph } from "../core/icons";
 import { motion } from "../core/motion";
+import { tilt } from "../core/spotlight";
 import { APPS, DOCK, iconFor, type AppDef } from "../apps/registry";
 
 const GRID_STEP = 0.035; // cascade : décalage entre rangées
@@ -35,6 +36,8 @@ export class HomeScreen {
         el("div", { class: "w-label" }, days[d.getDay()]),
         el("div", { class: "w-big" }, String(d.getDate()))),
       el("div", { class: "w-sub" }, "Design review — 16:00"));
+    tilt(weather, 6);
+    tilt(cal, 6);
     this.widgetsEl = el("div", { id: "home-widgets" }, weather, cal);
 
     const grid = el("div", { id: "home-grid" });
