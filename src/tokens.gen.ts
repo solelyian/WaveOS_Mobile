@@ -60,20 +60,20 @@ export const tokens = {
   },
   "spring": {
     "snappy": {
-      "k": 170,
-      "d": 18
+      "k": 200,
+      "d": 19
     },
     "soft": {
-      "k": 120,
-      "d": 14
+      "k": 150,
+      "d": 16
     },
     "bounce": {
       "k": 140,
       "d": 8
     },
     "sheet": {
-      "k": 150,
-      "d": 19
+      "k": 195,
+      "d": 17
     }
   },
   "duration": {

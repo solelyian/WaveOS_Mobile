@@ -1,35 +1,59 @@
-// statusbar.ts — heure réelle, radios, batterie, point Focus.
-// Minimaliste par exigence : icônes stroke 1.7, pas de bonbonnes.
+// statusbar.ts — heure réelle + radios en icônes Lucide.
+// Règle : géométrie professionnelle, pas de paths maison — lucide() vendored.
+// L'avion remplace le bloc signal/wifi ; la lune signale Focus ; la batterie
+// suit l'état réel (batterie simulée dans SysState).
 import { el } from "../core/el";
-import { glyph } from "../core/icons";
+import { lucide } from "../core/lucide";
 import { on, sys } from "../system/state";
 import { motion } from "../core/motion";
 
 export class StatusBar {
   node: HTMLElement;
   private timeEl: HTMLElement;
-  private wifiEl: SVGSVGElement;
-  private cellEl: SVGSVGElement;
+  private cellEl: SVGElement;
+  private wifiEl: SVGElement;
+  private btEl: SVGElement;
+  private battWrap: HTMLElement;
+  private planeEl: SVGElement;
+  private moonEl: SVGElement;
   private lastMin = -1;
 
   constructor() {
     this.timeEl = el("span", { class: "time" }, "09:41");
-    this.cellEl = glyph("cellular");
-    this.wifiEl = glyph("wifi");
-    const batt = glyph("battery");
-    const focusDot = el("span", { class: "focus-dot", title: "Focus" });
+    this.planeEl = lucide("plane", "sb-plane");
+    this.planeEl.style.display = "none";
+    this.cellEl = lucide("signal-high");
+    this.wifiEl = lucide("wifi");
+    this.btEl = lucide("bluetooth", "sb-bt");
+    this.moonEl = lucide("moon", "sb-focus");
+    this.moonEl.style.display = "none";
+    this.battWrap = el("span", { class: "batt" },
+      el("span", { class: "batt-pct" }, "87"),
+      lucide("battery-full"));
     this.node = el("div", { id: "statusbar" },
       this.timeEl,
-      el("div", { class: "sicons" }, focusDot, this.cellEl, this.wifiEl, batt));
+      el("div", { class: "sicons" },
+        this.moonEl, this.planeEl, this.cellEl, this.wifiEl, this.btEl, this.battWrap));
 
-    on("wifi", (v) => { this.wifiEl.style.opacity = v ? "1" : ".25"; });
-    on("airplane", (v) => {
-      this.cellEl.style.opacity = v ? ".25" : "1";
-      this.wifiEl.style.opacity = v ? ".25" : sys.wifi ? "1" : ".25";
+    on("wifi", () => this.syncRadios());
+    on("bt", () => this.syncRadios());
+    on("airplane", () => this.syncRadios());
+    on("focus", (v) => {
+      this.moonEl.style.display = v ? "" : "none";
+      this.node.classList.toggle("focus", v);
     });
-    on("focus", (v) => this.node.classList.toggle("focus", v));
+    this.syncRadios();
     this.sync();
     motion.every(() => this.sync());
+  }
+
+  private syncRadios(): void {
+    const air = sys.airplane;
+    this.planeEl.style.display = air ? "" : "none";
+    this.cellEl.style.display = air ? "none" : "";
+    this.wifiEl.style.display = air ? "none" : "";
+    this.wifiEl.style.opacity = sys.wifi ? "1" : ".25";
+    this.btEl.style.opacity = sys.bt ? "1" : ".25";
   }
 
   private sync(): void {

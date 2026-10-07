@@ -1,20 +1,40 @@
-// nc.ts — Centre de notifications : grande heure + date, cartes verre en
-// cascade, glisser-gauche pour rejeter, « Effacer ». Respecte le mode Focus.
+// nc.ts — Centre de notifications, inspiration HarmonyOS : notifications
+// GROUPÉES par app (pile = carte de tête + repli, tap pour déplier), heure
+// système en tête, « Effacer » global. Glisser-gauche rejette une carte.
+// Respecte le mode Focus (atténuation).
 import { el } from "../core/el";
-import { appIcon, G } from "../core/icons";
+import { appIcon } from "../core/icons";
+import { lucide } from "../core/lucide";
 import { motion } from "../core/motion";
 import { on } from "../system/state";
 import type { GlyphName } from "../core/icons";
 
-interface Notif { app: string; icon: GlyphName; tint: string; when: string; title: string; body: string }
+interface Notif { title: string; body: string; when: string }
+interface Group { app: string; icon: GlyphName; tint: string; items: Notif[] }
 
-const FEED: Notif[] = [
-  { app: "Messages", icon: "messages", tint: "#1FA870", when: "il y a 2 min", title: "Camille", body: "On se retrouve à 19h au studio ?" },
-  { app: "Messages", icon: "messages", tint: "#1FA870", when: "il y a 9 min", title: "Équipe Nyne", body: "La build WaveOS 0.9 est prête 🎉" },
-  { app: "Mail", icon: "mail", tint: "#2B5CC9", when: "il y a 26 min", title: "Facture validée", body: "Votre paiement a été accepté." },
-  { app: "Rappels", icon: "reminders", tint: "#E87E1E", when: "il y a 1 h", title: "Design review", body: "Aujourd'hui 16:00 — salle Rubans" },
-  { app: "Météo", icon: "weather", tint: "#2B66C9", when: "il y a 2 h", title: "Pluie à 18h", body: "Averses attendues ce soir à Lyon." },
+const FEED: Group[] = [
+  {
+    app: "Messages", icon: "messages", tint: "#1FA870",
+    items: [
+      { title: "Camille", body: "On se retrouve à 19h au studio ?", when: "il y a 2 min" },
+      { title: "Équipe Nyne", body: "La build WaveOS 0.9 est prête 🎉", when: "il y a 9 min" },
+    ],
+  },
+  {
+    app: "Mail", icon: "mail", tint: "#2B5CC9",
+    items: [{ title: "Facture validée", body: "Votre paiement de 49,00 € a été accepté.", when: "il y a 26 min" }],
+  },
+  {
+    app: "Rappels", icon: "reminders", tint: "#E87E1E",
+    items: [{ title: "Design review", body: "Aujourd'hui 16:00 — salle Rubans", when: "il y a 1 h" }],
+  },
+  {
+    app: "Météo", icon: "weather", tint: "#2B66C9",
+    items: [{ title: "Pluie à 18h", body: "Averses attendues ce soir à Lyon.", when: "il y a 2 h" }],
+  },
 ];
+
+interface CardState { dx: number; op: number; gone: boolean }
 
 export class NotificationCenter {
   node: HTMLElement;
@@ -23,7 +43,7 @@ export class NotificationCenter {
   private clockEl: HTMLElement;
   private emptyEl: HTMLElement;
   private clearBtn: HTMLElement;
-  private cards = new Map<HTMLElement, { dx: number; op: number; gone: boolean }>();
+  private cards = new Map<HTMLElement, CardState>();
 
   constructor(private announce: (m: string) => void) {
     const d = new Date();
@@ -32,16 +52,22 @@ export class NotificationCenter {
     this.clockEl = el("div", { class: "t-clock" }, "09:41");
 
     this.list = el("div", { id: "nc-list" });
-    this.emptyEl = el("div", { id: "nc-empty", style: "display:none" }, "Aucune notification");
-    this.clearBtn = el("button", { id: "nc-clear", class: "g g-thin" }, "Effacer");
+    this.emptyEl = el("div", { id: "nc-empty", style: "display:none" },
+      lucide("bell-off", "nc-bell"),
+      el("div", { class: "e-t" }, "Aucune notification"),
+      el("div", { class: "e-s" }, "Vous êtes à jour."));
+    this.clearBtn = el("button", { id: "nc-clear", class: "g g-thin" },
+      lucide("trash-2", "nc-trash"), "Tout effacer");
     this.clearBtn.addEventListener("click", (e) => { e.stopPropagation(); this.clear(); });
 
-    for (const n of FEED) this.list.append(this.card(n));
+    for (const g of FEED) this.list.append(this.group(g));
 
     this.node = el("div", { id: "layer-nc", class: "layer sheet", role: "dialog", "aria-label": "Notifications" },
       el("div", { class: "sheet-bg g g-thick" }),
       el("div", { class: "nc-head" },
-        el("div", {}, this.clockEl, el("div", { class: "nc-date", style: "text-align:left;color:rgba(255,255,255,.75);font-size:calc(14px*var(--ts))" }, `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`)),
+        el("div", {},
+          this.clockEl,
+          el("div", { class: "nc-date" }, `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`)),
         this.clearBtn),
       this.list, this.emptyEl);
 
@@ -49,16 +75,51 @@ export class NotificationCenter {
       if (e.target === this.node || (e.target as HTMLElement).classList.contains("sheet-bg")) this.onClose?.();
     });
     on("focus", (v) => { this.list.style.opacity = v ? ".45" : "1"; });
+    this.syncEmpty();
   }
 
-  private card(n: Notif): HTMLElement {
-    const icon = appIcon(`nc-${n.icon}`, G[n.icon] as unknown as string[], n.tint, n.tint, 38);
-    const c = el("div", { class: "nc-card g g-regular" }, icon,
+  /** Groupe empilé : carte de tête + repli « +N » derrière ; tap déplie. */
+  private group(g: Group): HTMLElement {
+    const wrap = el("div", { class: "nc-group" });
+    const stack = el("div", { class: "nc-stack" });
+    const cards = g.items.map((n) => this.card(g, n));
+    // Repli : jusqu'à 2 cartes fantômes derrière la tête
+    for (let i = 1; i < Math.min(3, cards.length); i++) {
+      stack.append(el("div", { class: "nc-peek", style: `--i:${i}` }));
+    }
+    stack.append(cards[0]);
+    const body = el("div", { class: "nc-expanded", style: "display:none" },
+      ...cards.slice(1));
+    wrap.append(this.groupHeader(g, cards.length, stack, body, wrap), stack, body);
+    return wrap;
+  }
+
+  private groupHeader(g: Group, n: number, stack: HTMLElement, body: HTMLElement, wrap: HTMLElement): HTMLElement {
+    const chev = lucide("chevron-down", "nc-chev");
+    const count = el("span", { class: "nc-count" }, String(n));
+    const h = el("button", { class: "nc-ghead" },
+      appIcon(`nc-${g.icon}`, g.icon, g.tint, g.tint, 22),
+      el("span", { class: "nc-gname" }, g.app), count, chev);
+    let open = false;
+    const apply = () => {
+      open = !open;
+      body.style.display = open ? "" : "none";
+      wrap.classList.toggle("open", open);
+      chev.style.transform = open ? "rotate(180deg)" : "";
+      count.style.display = open ? "none" : "";
+    };
+    if (n > 1) h.addEventListener("click", (e) => { e.stopPropagation(); apply(); });
+    else { count.style.display = "none"; chev.style.display = "none"; }
+    return h;
+  }
+
+  private card(g: Group, n: Notif): HTMLElement {
+    const c = el("div", { class: "nc-card g g-regular" },
+      appIcon(`ncc-${g.icon}`, g.icon, g.tint, g.tint, 34),
       el("div", { class: "ntx" },
-        el("div", { class: "nh" }, el("span", {}, n.app), el("span", {}, n.when)),
-        el("b", {}, n.title), el("span", {}, n.body)));
-    // glisser pour rejeter — dx est composé avec la cascade dans render()
-    const st = { dx: 0, op: 1, gone: false };
+        el("div", { class: "nh" }, el("span", {}, n.title), el("span", {}, n.when)),
+        el("span", { class: "nb" }, n.body)));
+    const st: CardState = { dx: 0, op: 1, gone: false };
     this.cards.set(c, st);
     let startX = 0;
     c.style.touchAction = "pan-y";
@@ -72,8 +133,7 @@ export class NotificationCenter {
       const up = () => {
         c.removeEventListener("pointermove", mv);
         if (st.dx < -110) {
-          st.gone = true;
-          st.dx = -393; st.op = 0;
+          st.gone = true; st.dx = -393; st.op = 0;
           c.style.transition = "transform .28s cubic-bezier(.3,.8,.3,1), opacity .24s";
           window.setTimeout(() => { this.cards.delete(c); c.remove(); this.syncEmpty(); }, 280);
           this.announce("Notification rejetée");
@@ -91,19 +151,19 @@ export class NotificationCenter {
   }
 
   private syncEmpty(): void {
-    const left = this.list.children.length;
-    this.emptyEl.style.display = left ? "none" : "block";
+    const left = this.list.querySelectorAll(".nc-card").length;
+    this.emptyEl.style.display = left ? "none" : "flex";
     this.clearBtn.style.display = left ? "flex" : "none";
   }
 
   private clear(): void {
-    const kids = [...this.list.children] as HTMLElement[];
-    kids.forEach((k, i) => {
+    const groups = [...this.list.children] as HTMLElement[];
+    groups.forEach((k, i) => {
       k.style.transition = `transform .3s ${i * 40}ms cubic-bezier(.4,.8,.3,1), opacity .26s ${i * 40}ms`;
       k.style.transform = "translateX(-120%)";
       k.style.opacity = "0";
     });
-    window.setTimeout(() => { this.list.replaceChildren(); this.syncEmpty(); }, 380 + kids.length * 40);
+    window.setTimeout(() => { this.list.replaceChildren(); this.syncEmpty(); }, 380 + groups.length * 40);
     this.announce("Notifications effacées");
   }
 
@@ -117,17 +177,19 @@ export class NotificationCenter {
     const e = motion.easeOut(motion.clamp(p, 0, 1));
     this.node.style.transform = `translateY(${-(1 - e) * 852}px)`;
     this.node.style.visibility = p <= 0.001 ? "hidden" : "visible";
-    // cascade interne : les cartes tombent avec un léger décalage ; le dx de
-    // rejet (glisser-gauche) est composé ici, pas en concurrence.
+    // cascade : chaque groupe descend avec décalage ; le dx de rejet est
+    // composé carte par carte.
     const kids = this.list.children;
     for (let i = 0; i < kids.length; i++) {
       const k = kids[i] as HTMLElement;
-      const st = this.cards.get(k);
-      const dx = st?.dx ?? 0;
-      const op = st?.op ?? 1;
-      const pi = motion.clamp(p * 1.35 - i * 0.09, 0, 1);
-      k.style.transform = `translateX(${dx}px) translateY(${(1 - motion.easeOut(pi)) * 26}px)`;
-      k.style.opacity = String(op);
+      const pi = motion.clamp(p * 1.4 - i * 0.08, 0, 1);
+      k.style.transform = `translateY(${(1 - motion.easeOut(pi)) * 30}px)`;
+      k.style.opacity = String(Math.min(1, pi * 1.7));
+    }
+    for (const [c, st] of this.cards) {
+      if (st.gone) continue;
+      c.style.transform = `translateX(${st.dx}px)`;
+      c.style.opacity = String(st.op);
     }
   }
 }
