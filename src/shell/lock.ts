@@ -26,12 +26,22 @@ export class LockScreen {
 
     const camBtn = el("button", { id: "lock-cam", class: "lock-btn g g-regular", "aria-label": "Caméra" }, glyph("camera"));
 
+    const wrap = el("div", { id: "lock-clock-wrap" }, this.dateEl, this.clockEl);
     this.node = el("div", { id: "layer-lock", class: "layer", role: "dialog", "aria-label": "Écran verrouillé" },
-      el("div", { id: "lock-clock-wrap" }, this.dateEl, this.clockEl),
+      wrap,
       el("div", { id: "lock-hint" },
         el("div", { class: "caps" }, "Glisser vers le haut"),
         el("div", { class: "bar" })),
       this.torchBtn, camBtn);
+    // « spatial clock » : l'heure flotte en parallaxe sous le pointeur,
+    // au-dessus du plan du wallpaper — sensation de profondeur.
+    this.node.addEventListener("pointermove", (e) => {
+      const r = this.node.getBoundingClientRect();
+      const nx = (e.clientX - r.left) / r.width - 0.5;
+      const ny = (e.clientY - r.top) / r.height - 0.5;
+      wrap.style.transform = `translate(${nx * 10}px, ${ny * 8}px)`;
+    });
+    this.node.addEventListener("pointerleave", () => { wrap.style.transform = ""; });
   }
 
   tick(): void {

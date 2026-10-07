@@ -120,9 +120,20 @@ export class ControlCenter {
     const frac = () => (sys[key] - min) / (max - min);
     const sync = () => { fill.style.width = `${frac() * 100}%`; };
     on(key, sync); sync();
-    // « edge stretch » HarmonyOS : en butée, la capsule s'étire contre le bord
-    // puis reprend sa forme avec un rebond élastique au relâchement.
+    // Morph « capsule → pilule géante » tant que le doigt tient : la capsule
+    // grandit et se soulève (signature HarmonyOS), puis « edge stretch » en
+    // butée — elle s'étire contre le bord et reprend sa forme avec un rebond.
+    let held = false;
+    let overK = 0;
+    const apply = () => {
+      s.style.transition = held ? "transform .3s cubic-bezier(.2,1.2,.36,1)" : "";
+      s.style.transformOrigin = "center";
+      s.style.transform = held
+        ? `translateY(-5px) scale(${1.045 + overK}, ${1.13 - overK * 0.7})`
+        : "";
+    };
     const settle = () => {
+      held = false; overK = 0;
       s.style.transition = "transform .5s cubic-bezier(.2,1.6,.32,1)";
       s.style.transform = "";
       window.setTimeout(() => { s.style.transition = ""; }, 520);
@@ -133,17 +144,12 @@ export class ControlCenter {
       const f = Math.min(1, Math.max(0, raw));
       set(key, min + f * (max - min));
       const over = raw < 0 ? -raw * r.width : raw > 1 ? (raw - 1) * r.width : 0;
-      if (over > 1) {
-        const k = Math.min(over / 90, 1) * 0.075;
-        s.style.transition = "";
-        s.style.transformOrigin = raw < 0 ? "left center" : "right center";
-        s.style.transform = `scaleX(${1 + k}) scaleY(${1 - k * 0.55})`;
-      } else if (s.style.transform) {
-        settle();
-      }
+      const nk = Math.min(over / 90, 1) * 0.08;
+      if (nk !== overK) { overK = nk; apply(); }
     };
     s.addEventListener("pointerdown", (e) => {
       e.stopPropagation();
+      held = true; apply();
       setFromX(e.clientX);
       s.setPointerCapture(e.pointerId);
       const mv = (ev: PointerEvent) => setFromX(ev.clientX);

@@ -11,6 +11,7 @@ export class Wallpaper {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private variant = -1;
+  private px = 0; private py = 0; // parallaxe spatiale (−0.5…0.5)
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -43,9 +44,12 @@ export class Wallpaper {
     return w().wg_luminance_region(x * SCALE, y * SCALE, ww * SCALE, h * SCALE);
   }
 
+  /** Parallaxe spatiale « 3D wallpaper » : la scène glisse contre le pointeur. */
+  setParallax(nx: number, ny: number): void { this.px = nx; this.py = ny; }
+
   /** Parallaxe légère pendant les transitions (dézoom à l'ouverture des sheets). */
   render(openAmount: number): void {
     const s = 1.04 - motion.clamp(openAmount, 0, 1) * 0.04;
-    this.canvas.style.transform = `scale(${s})`;
+    this.canvas.style.transform = `translate(${this.px * 9}px, ${this.py * 9}px) scale(${s})`;
   }
 }

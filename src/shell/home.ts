@@ -58,9 +58,95 @@ export class HomeScreen {
       el("span", { class: "name" }, app.name));
     s.addEventListener("click", () => this.onApp(app));
     s.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") this.onApp(app); });
+    this.armWidgetMorph(s, ic as HTMLElement, app);
     this.bySlot.set(s, app);
     sink.push(s);
     return s;
+  }
+
+  /** Toucher long (≥420 ms, sans bouger) : l'icône morphe en widget 2×2 sur
+   *  place — signature HarmonyOS. Tap ailleurs ou Échap = rétractation vers
+   *  l'icône avec ressort amorti. */
+  private armWidgetMorph(slot: HTMLElement, ic: HTMLElement, app: AppDef): void {
+    let timer = 0, sx = 0, sy = 0;
+    slot.addEventListener("pointerdown", (e) => {
+      sx = e.clientX; sy = e.clientY;
+      timer = window.setTimeout(() => this.morphToWidget(ic, app), 420);
+    });
+    slot.addEventListener("pointermove", (e) => {
+      if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) { clearTimeout(timer); timer = 0; }
+    });
+    const cancel = () => { clearTimeout(timer); timer = 0; };
+    slot.addEventListener("pointerup", cancel);
+    slot.addEventListener("pointercancel", cancel);
+    slot.addEventListener("pointerleave", cancel);
+  }
+
+  private morphToWidget(ic: HTMLElement, app: AppDef): void {
+    const phone = document.getElementById("phone")!;
+    const pr = phone.getBoundingClientRect();
+    const r = ic.getBoundingClientRect();
+    const card = el("div", { class: "wmorph g g-regular", role: "dialog", "aria-label": `Widget ${app.name}` });
+    card.style.left = `${r.left - pr.left}px`;
+    card.style.top = `${r.top - pr.top}px`;
+    card.style.width = `${r.width}px`;
+    card.style.height = `${r.height}px`;
+    const ghost = iconFor(app, 60) as HTMLElement;
+    ghost.classList.add("wm-ghost");
+    card.append(ghost);
+    phone.append(card);
+    const W = 186;
+    const cx = r.left - pr.left + r.width / 2, cy = r.top - pr.top + r.height / 2;
+    requestAnimationFrame(() => {
+      card.style.transition = "left .42s cubic-bezier(.25,1.25,.4,1), top .42s cubic-bezier(.25,1.25,.4,1), width .42s cubic-bezier(.25,1.25,.4,1), height .42s cubic-bezier(.25,1.25,.4,1), border-radius .42s";
+      card.style.left = `${Math.max(10, Math.min(pr.width - W - 10, cx - W / 2))}px`;
+      card.style.top = `${Math.max(64, cy - W / 2)}px`;
+      card.style.width = `${W}px`;
+      card.style.height = `${W}px`;
+      card.style.borderRadius = "30px";
+      window.setTimeout(() => card.append(this.widgetBody(app)), 200);
+    });
+    const close = () => {
+      card.style.transition = "left .34s cubic-bezier(.3,.9,.3,1), top .34s cubic-bezier(.3,.9,.3,1), width .34s cubic-bezier(.3,.9,.3,1), height .34s cubic-bezier(.3,.9,.3,1), border-radius .34s, opacity .24s";
+      card.style.left = `${r.left - pr.left}px`;
+      card.style.top = `${r.top - pr.top}px`;
+      card.style.width = `${r.width}px`;
+      card.style.height = `${r.height}px`;
+      card.style.opacity = "0";
+      window.setTimeout(() => card.remove(), 360);
+    };
+    const away = (e: Event) => {
+      if (!card.contains(e.target as Node)) {
+        close();
+        document.removeEventListener("pointerdown", away, true);
+        document.removeEventListener("keydown", esc, true);
+      }
+    };
+    const esc = (e: Event) => {
+      if ((e as KeyboardEvent).key === "Escape") {
+        close();
+        document.removeEventListener("pointerdown", away, true);
+        document.removeEventListener("keydown", esc, true);
+      }
+    };
+    window.setTimeout(() => {
+      document.addEventListener("pointerdown", away, true);
+      document.addEventListener("keydown", esc, true);
+    }, 60);
+  }
+
+  private widgetBody(app: AppDef): HTMLElement {
+    if (app.id === "meteo") return el("div", { class: "wm-body" },
+      el("div", { class: "w-big" }, "19°"), el("div", { class: "w-sub" }, "Éclaircies — Lyon"),
+      el("div", { class: "w-row" }, el("span", {}, "19h 18°"), el("span", {}, "20h 17°")));
+    if (app.id === "horloge") {
+      const d = new Date();
+      return el("div", { class: "wm-body" }, el("div", { class: "w-big" },
+        `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`),
+        el("div", { class: "w-sub" }, "Lyon — heure locale"));
+    }
+    return el("div", { class: "wm-body" }, el("div", { class: "w-big" }, app.name),
+      el("div", { class: "w-sub" }, "Widget WaveOS — aperçu"));
   }
 
   /** Rect logique (393×852) de l'icône d'une app — ancre du morph d'ouverture. */

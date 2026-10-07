@@ -75,6 +75,23 @@ export class Shell {
       onDragEnd: (g) => this.dragEnd(g),
     });
 
+    // Wallpaper spatial : la scène se décale en parallaxe sous le pointeur et
+    // une lumière discrète suit le doigt (« light follows finger »).
+    const wpl = document.getElementById("wplight")!;
+    this.phone.addEventListener("pointermove", (e) => {
+      const r = this.phone.getBoundingClientRect();
+      this.wallpaper.setParallax(
+        (e.clientX - r.left) / r.width - 0.5,
+        (e.clientY - r.top) / r.height - 0.5);
+      wpl.style.setProperty("--wx", `${e.clientX - r.left}px`);
+      wpl.style.setProperty("--wy", `${e.clientY - r.top}px`);
+      wpl.style.setProperty("--wl", "1");
+    });
+    this.phone.addEventListener("pointerleave", () => {
+      this.wallpaper.setParallax(0, 0);
+      wpl.style.setProperty("--wl", "0");
+    });
+
     // état système → présentation
     on("theme", (v) => {
       this.phone.dataset.theme = v;

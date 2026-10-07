@@ -135,11 +135,25 @@ export function clockContent(): HTMLElement {
 export function meteoContent(): HTMLElement {
   const hours = [["Maint.", "19°", "cloud-sun"], ["19h", "18°", "cloud-rain"], ["20h", "16°", "cloud-rain"], ["21h", "15°", "cloud"], ["22h", "14°", "cloud"], ["23h", "13°", "moon"]];
   const days = [["Mer.", "12° / 19°", "cloud-rain"], ["Jeu.", "11° / 17°", "cloud"], ["Ven.", "10° / 18°", "cloud-sun"], ["Sam.", "9° / 16°", "sun"], ["Dim.", "8° / 15°", "sun"], ["Lun.", "9° / 17°", "cloud-sun"]];
-  return el("div", { class: "app-flow" },
-    el("div", { class: "wx-hero" },
-      el("div", { class: "wx-city" }, "Lyon"),
-      el("div", { class: "wx-t" }, "19°"),
-      el("div", { class: "wx-c" }, "Averses — Max. 21° · Min. 12°")),
+  const sky = el("div", { class: "wx-sky" },
+    el("i", { class: "s1" }), el("i", { class: "s2" }), el("i", { class: "s3" }));
+  const hero = el("div", { class: "wx-hero" }, sky,
+    el("div", { class: "wx-city" }, "Lyon"),
+    el("div", { class: "wx-t" }, "19°"),
+    el("div", { class: "wx-c" }, "Averses — Max. 21° · Min. 12°"));
+  // « spatial camera movement » : la skyline glisse en parallaxe sous le doigt.
+  hero.addEventListener("pointermove", (e) => {
+    const r = hero.getBoundingClientRect();
+    const nx = (e.clientX - r.left) / r.width - 0.5;
+    const ny = (e.clientY - r.top) / r.height - 0.5;
+    hero.style.setProperty("--wx", `${nx * 22}px`);
+    hero.style.setProperty("--wy", `${ny * 10}px`);
+  });
+  hero.addEventListener("pointerleave", () => {
+    hero.style.setProperty("--wx", "0px");
+    hero.style.setProperty("--wy", "0px");
+  });
+  return el("div", { class: "app-flow" }, hero,
     el("div", { class: "sec-t" }, "Heure par heure"),
     el("div", { class: "wx-hours card" }, ...hours.map(([h, t, ic]) =>
       el("div", { class: "wx-h" }, el("span", {}, h), lucide(ic), el("b", {}, t)))),

@@ -36,6 +36,11 @@ body {
 
 #wallpaper{ position:absolute; inset:0; width:100%; height:100%; }
 #scrim{ position:absolute; inset:0; background:#04060f; opacity:0; pointer-events:none; }
+/* lumière qui suit le doigt sur le wallpaper — « light follows finger » */
+#wplight{ position:absolute; inset:0; pointer-events:none; z-index:1;
+  background:radial-gradient(300px circle at var(--wx,50%) var(--wy,40%), rgba(210,225,255,.14), rgba(140,160,255,.05) 45%, transparent 68%);
+  opacity:var(--wl,0); transition:opacity .45s; }
+#phone[data-theme="light"] #wplight{ background:radial-gradient(300px circle at var(--wx,50%) var(--wy,40%), rgba(255,255,255,.4), transparent 65%); }
 #layers{ position:absolute; inset:0; }
 .layer{ position:absolute; inset:0; will-change:transform,opacity; }
 .layer[hidden]{ display:none; }
@@ -93,9 +98,9 @@ body {
 
 /* ================= lock ================= */
 #layer-lock{ display:flex; flex-direction:column; align-items:center; z-index:30; }
-#lock-clock-wrap{ margin-top:118px; text-align:center; }
+#lock-clock-wrap{ margin-top:118px; text-align:center; will-change:transform; transition:transform .5s cubic-bezier(.2,1,.3,1); }
 #lock-date{ font-size:calc(20px*var(--ts)); font-weight:500; color:rgba(255,255,255,.92); margin-bottom:2px; }
-#lock-clock{ color:#fff; }
+#lock-clock{ color:#fff; text-shadow:0 1px 0 rgba(255,255,255,.08), 0 18px 44px rgba(6,10,28,.65), 0 2px 10px rgba(6,10,28,.4); }
 #lock-hint{ position:absolute; bottom:118px; display:flex; flex-direction:column; align-items:center; gap:10px; }
 #lock-hint .caps{ font-size:calc(12px*var(--ts)); font-weight:600; letter-spacing:.26em; color:rgba(255,255,255,.55); }
 #lock-hint .bar{ width:4px; height:26px; border-radius:2px; background:linear-gradient(to top,rgba(255,255,255,.7),rgba(255,255,255,.1)); }
@@ -227,6 +232,14 @@ body {
 .spot::after{ content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
   background:radial-gradient(150px circle at var(--lx,50%) var(--ly,50%), rgba(255,255,255,.17), rgba(255,255,255,.05) 45%, transparent 70%);
   opacity:var(--lg,0); transition:opacity .3s; }
+/* contour lumineux tracé au doigt (« light outlines ») — anneau 1.5px via
+   double masque : le dégradé radial ne vit que sur le bord de l'élément. */
+.spot::before{ content:""; position:absolute; inset:0; border-radius:inherit; padding:1.5px; pointer-events:none; z-index:1;
+  background:radial-gradient(95px circle at var(--lx,50%) var(--ly,50%), rgba(255,255,255,.8), rgba(190,210,255,.3) 55%, transparent 75%);
+  -webkit-mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);
+  -webkit-mask-composite:xor; mask:linear-gradient(#000,#000) content-box exclude,linear-gradient(#000,#000);
+  mask-composite:exclude;
+  opacity:var(--lg,0); transition:opacity .3s; }
 #phone[data-theme="light"] .spot::after{ background:radial-gradient(150px circle at var(--lx,50%) var(--ly,50%), rgba(255,255,255,.5), rgba(255,255,255,.15) 45%, transparent 70%); }
 /* tuile : squash élastique à l'appui + « pop » de l'icône au relâchement */
 .cc2-tile{ transition:transform .14s ease-out; will-change:transform; }
@@ -238,6 +251,30 @@ body {
 .app-slot .icon{ transition:transform .14s ease-out; }
 .app-slot:active .icon{ transform:scale(.86); }
 .tilt{ will-change:transform; }
+/* morph icône → widget (toucher long) : la carte naît du rect de l'icône
+   et grandit sur place, fantôme d'icône en crossfade. */
+.wmorph{ position:absolute; z-index:70; border-radius:23px; overflow:hidden;
+  display:flex; align-items:center; justify-content:center; }
+.wm-ghost{ position:absolute; width:60px; height:60px; animation:wm-fade .3s .12s both; }
+@keyframes wm-fade{ to{ opacity:0; transform:scale(.4); } }
+.wm-body{ padding:14px 16px; align-self:flex-start; animation:wm-in .35s .05s both; width:100%; }
+.wm-body .w-big{ font-size:calc(34px*var(--ts)); font-weight:200; letter-spacing:-.02em; line-height:1; color:#fff; }
+.wm-body .w-sub{ font-size:calc(11.5px*var(--ts)); color:rgba(255,255,255,.8); margin-top:4px; }
+.wm-body .w-row{ display:flex; gap:12px; font-size:calc(10.5px*var(--ts)); color:rgba(255,255,255,.75); margin-top:10px; }
+@keyframes wm-in{ from{ opacity:0; transform:translateY(8px); } }
+/* skyline « caméra spatiale » du hero Météo : 3 plans glissant à vitesses
+   différentes sous --wx/--wy. */
+.wx-hero{ position:relative; overflow:hidden; }
+.wx-hero > :not(.wx-sky){ position:relative; } /* texte au-dessus de la skyline */
+.wx-sky{ position:absolute; inset:0; pointer-events:none; }
+.wx-sky i{ position:absolute; left:-15%; right:-15%; bottom:0; height:58%;
+  -webkit-mask:linear-gradient(transparent 0%,#000 60%); mask:linear-gradient(transparent 0%,#000 60%);
+  transform:translate(calc(var(--wx,0px)*.35),calc(var(--wy,0px)*.3)); will-change:transform;
+  background:repeating-linear-gradient(90deg, rgba(16,34,72,.4) 0 22px, transparent 22px 46px); }
+.wx-sky .s2{ height:40%; background:repeating-linear-gradient(90deg, rgba(10,24,56,.6) 0 30px, transparent 30px 52px);
+  transform:translate(calc(var(--wx,0px)*.75),calc(var(--wy,0px)*.6)); }
+.wx-sky .s3{ height:24%; background:repeating-linear-gradient(90deg, rgba(6,14,36,.85) 0 44px, transparent 44px 70px);
+  transform:translate(calc(var(--wx,0px)*1.25),calc(var(--wy,0px)*.9)); }
 
 /* ================= switcher ================= */
 #layer-switcher{ z-index:35; }
