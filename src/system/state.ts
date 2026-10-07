@@ -15,6 +15,7 @@ export interface SysState {
   volume: number;            // 0 – 1
   rotation: boolean;         // verrou orientation
   torch: boolean;
+  pinLock: boolean;          // exiger un code PIN au déverrouillage
 }
 
 export const sys: SysState = {
@@ -30,6 +31,7 @@ export const sys: SysState = {
   volume: 0.55,
   rotation: false,
   torch: false,
+  pinLock: false,
 };
 
 type Listener = (v: unknown) => void;
@@ -47,6 +49,6 @@ export function set<K extends keyof SysState>(key: K, v: SysState[K]): void {
   listeners.get(key)?.forEach((fn) => (fn as (x: SysState[K]) => void)(v));
 }
 
-export function toggle(key: "wifi" | "bt" | "airplane" | "focus" | "reduced" | "rotation" | "torch"): void {
+export function toggle(key: "wifi" | "bt" | "airplane" | "focus" | "reduced" | "rotation" | "torch" | "pinLock"): void {
   set(key, !sys[key]);
 }

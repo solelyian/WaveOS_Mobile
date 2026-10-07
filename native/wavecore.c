@@ -35,7 +35,7 @@ int wc_spring_new(float v0, float k, float d) {
   return -1;
 }
 EXP("wc_spring_free")  void  wc_spring_free(int id) { if (id >= 0 && id < WC_MAX_SPRINGS) g_used[id] = 0; }
-EXP("wc_spring_set")   void  wc_spring_set(int id, float v, float vel) { g_sp[id].v = v; g_sp[id].vel = vel; }
+EXP("wc_spring_set")   void  wc_spring_set(int id, float v, float vel) { g_sp[id].v = v; g_sp[id].vel = vel; g_sp[id].target = v; }
 EXP("wc_spring_target")void  wc_spring_target(int id, float t) { g_sp[id].target = t; }
 EXP("wc_spring_params")void  wc_spring_params(int id, float k, float d) { g_sp[id].k = k; g_sp[id].d = d; }
 EXP("wc_spring_value") float wc_spring_value(int id) { return g_sp[id].v; }

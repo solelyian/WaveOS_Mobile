@@ -69,6 +69,9 @@ export class Shell {
     layers.append(this.home.node, this.appwin.node, this.lock.node, this.sw.node, this.cc.node, this.nc.node);
     document.getElementById("chrome")!.append(statusbar.node);
 
+    this.lock.onPinPass = () => { this.unlockP.to(1); this.unlock(); };
+    this.lock.onPinDismiss = () => { /* la face est déjà revenue à 0 */ };
+
     new GestureRouter(this.phone, {
       onDragStart: (g) => this.dragStart(g),
       onDrag: (g) => this.dragMove(g),
@@ -115,6 +118,7 @@ export class Shell {
 
   private relock(): void {
     this.ccP.to(0);
+    this.lock.resetPin();
     this.mode = "lock";
     this.unlockP.set(0);
     this.homeP.set(0);
@@ -170,6 +174,7 @@ export class Shell {
 
     switch (this.mode) {
       case "lock":
+        if (this.lock.pinOpen) return false; // le pavé PIN capture l'écran
         if (g.dy < -2) { this.drag = "unlock"; this.dragBase = this.unlockP.v; return true; }
         if (g.dy > 2) { this.drag = "nc"; this.dragBase = 0; return true; }
         return false;
@@ -250,7 +255,10 @@ export class Shell {
     const cl = motion.clamp;
 
     // transitions de mode au repos
-    if (this.mode === "lock" && this.unlockP.settled && this.unlockP.v > 0.99) this.unlock();
+    if (this.mode === "lock" && !this.lock.pinOpen && this.unlockP.settled && this.unlockP.v > 0.99) {
+      if (sys.pinLock) { this.lock.showPin(); this.unlockP.to(0); }
+      else this.unlock();
+    }
     if (this.mode === "app" && this.appP.settled && this.appP.v < 0.002) {
       this.mode = "home"; this.appwin.node.style.visibility = "hidden"; 
       a11y.announce("Accueil");

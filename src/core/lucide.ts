@@ -93,6 +93,9 @@ import checkCircleRaw from "lucide-static/icons/check-circle-2.svg?raw";
 import cloudRaw from "lucide-static/icons/cloud.svg?raw";
 import hourglassRaw from "lucide-static/icons/hourglass.svg?raw";
 import fileTextRaw from "lucide-static/icons/file-text.svg?raw";
+import nfcRaw from "lucide-static/icons/nfc.svg?raw";
+import shareRaw from "lucide-static/icons/share-2.svg?raw";
+import fingerprintRaw from "lucide-static/icons/fingerprint.svg?raw";
 
 const RAW: Record<string, string> = {
   wifi: wifiRaw, "wifi-off": wifiOffRaw,
@@ -120,6 +123,7 @@ const RAW: Record<string, string> = {
   "shield-check": shieldRaw, globe: globeRaw,
   minus: minusRaw, speaker: speakerRaw, "check-circle": checkCircleRaw,
   cloud: cloudRaw, hourglass: hourglassRaw, "file-text": fileTextRaw,
+  nfc: nfcRaw, "share-2": shareRaw, fingerprint: fingerprintRaw,
 };
 
 /** Construit un élément <svg class="glyph"> à partir du SVG Lucide nommé. */

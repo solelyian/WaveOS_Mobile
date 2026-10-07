@@ -3,7 +3,7 @@ import "./styles.css";
 import { initWasm } from "./wasm/bridge";
 import { Shell } from "./shell/shell";
 import { el, svgEl } from "./core/el";
-import { set } from "./system/state";
+import { set, sys } from "./system/state";
 
 // Échelle d'affichage : le téléphone 393×852 tient dans la fenêtre.
 function fitStage(): void {
@@ -34,7 +34,8 @@ async function main(): Promise<void> {
   window.addEventListener("resize", fitStage);
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) set("reduced", true);
   buildBoot();
-  new Shell();
+  const shell = new Shell();
+  if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__w = { sys, shell };
 }
 
 main().catch((e) => {

@@ -20,7 +20,7 @@ function chev(): HTMLElement {
   return s;
 }
 
-function toggleEl<K extends "wifi" | "bt" | "airplane" | "focus" | "reduced" | "rotation" | "torch">(key: K): HTMLElement {
+function toggleEl<K extends "wifi" | "bt" | "airplane" | "focus" | "reduced" | "rotation" | "torch" | "pinLock">(key: K): HTMLElement {
   const t = el("span", { class: `toggle${sys[key] ? " on" : ""}`, role: "switch", "aria-checked": String(sys[key]) });
   const sync = () => { t.classList.toggle("on", sys[key]); t.setAttribute("aria-checked", String(sys[key])); };
   on(key, sync);
@@ -28,7 +28,7 @@ function toggleEl<K extends "wifi" | "bt" | "airplane" | "focus" | "reduced" | "
   return t;
 }
 
-function rowToggle(icon: GlyphName, tint: string, label: string, key: "wifi" | "bt" | "airplane" | "focus" | "reduced" | "rotation" | "torch"): HTMLElement {
+function rowToggle(icon: GlyphName, tint: string, label: string, key: "wifi" | "bt" | "airplane" | "focus" | "reduced" | "rotation" | "torch" | "pinLock"): HTMLElement {
   const r = row(icon, tint, label, toggleEl(key));
   r.addEventListener("click", () => toggle(key));
   return r;
@@ -119,6 +119,9 @@ export function settingsContent(): HTMLElement {
     // — Concentration
     el("div", { class: "set-group" },
       rowToggle("bell", "#F0A02E", "Mode Focus", "focus")),
+    // — Sécurité
+    el("div", { class: "set-group" },
+      rowToggle("lockOri", "#8A7CFF", "Code de verrouillage (8520)", "pinLock")),
     // — Système
     el("div", { class: "set-group" },
       row("earpiece", "#2FCC92", "Nyne ID", chev()),
