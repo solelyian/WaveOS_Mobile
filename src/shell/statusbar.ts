@@ -47,6 +47,10 @@ export class StatusBar {
     motion.every(() => this.sync());
   }
 
+  /** Masquée quand le centre de notifications couvre l'écran — sur la réf
+   *  HarmonyOS le NC n'a pas de status bar, la grande horloge la remplace. */
+  setGone(v: boolean): void { this.node.classList.toggle("gone", v); }
+
   private syncRadios(): void {
     const air = sys.airplane;
     this.planeEl.style.display = air ? "" : "none";

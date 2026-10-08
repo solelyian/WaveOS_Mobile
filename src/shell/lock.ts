@@ -16,8 +16,10 @@ export class LockScreen {
   onPinDismiss?: () => void; // « Retour » → le shell ramène le face-lock
   pinOpen = false;
   private passed = false; // code accepté : la face reste éteinte pendant la sortie du pavé
-  private hh: HTMLElement;
-  private mm: HTMLElement;
+  private hh: SVGTextElement;
+  private mm: SVGTextElement;
+  private hhR: SVGTextElement;
+  private mmR: SVGTextElement;
   private dateEl: HTMLElement;
   private torchBtn: HTMLElement;
   private playBtn: HTMLElement;
@@ -33,9 +35,32 @@ export class LockScreen {
     this.dateEl = el("div", { id: "lock-date" },
       `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`);
 
-    // Horloge empilée HH / MM — signature HarmonyOS : deux lignes géantes.
-    this.hh = el("div", { class: "t-lockh" }, "13");
-    this.mm = el("div", { class: "t-lockh" }, "38");
+    // Horloge empilée HH / MM en « liquid glass » — les glyphes réfractent
+    // le wallpaper (masque SVG + backdrop-filter), liseré + halo dessus.
+    const SVGNS = "http://www.w3.org/2000/svg";
+    const h0 = String(d.getHours()).padStart(2, "0"), m0 = String(d.getMinutes()).padStart(2, "0");
+    const defs = document.createElementNS(SVGNS, "svg");
+    defs.setAttribute("width", "0"); defs.setAttribute("height", "0");
+    defs.setAttribute("aria-hidden", "true");
+    defs.innerHTML =
+      `<defs><mask id="lk-clkm" maskUnits="userSpaceOnUse" x="0" y="0" width="349" height="204">` +
+      `<text x="174.5" y="94" text-anchor="middle" class="clkmt">${h0}</text>` +
+      `<text x="174.5" y="192" text-anchor="middle" class="clkmt">${m0}</text></mask></defs>`;
+    const mts = defs.querySelectorAll(".clkmt");
+    this.hh = mts[0] as unknown as SVGTextElement;
+    this.mm = mts[1] as unknown as SVGTextElement;
+    const rim = document.createElementNS(SVGNS, "svg");
+    rim.setAttribute("viewBox", "0 0 349 204");
+    rim.setAttribute("aria-hidden", "true");
+    rim.classList.add("clkr");
+    rim.innerHTML =
+      `<text x="174.5" y="94" text-anchor="middle" class="clkrt">${h0}</text>` +
+      `<text x="174.5" y="192" text-anchor="middle" class="clkrt">${m0}</text>`;
+    const rts = rim.querySelectorAll(".clkrt");
+    this.hhR = rts[0] as unknown as SVGTextElement;
+    this.mmR = rts[1] as unknown as SVGTextElement;
+    const clkGlass = el("div", { id: "lock-clock" },
+      defs, el("div", { class: "clkg", style: "-webkit-mask:url(#lk-clkm);mask:url(#lk-clkm)" }), rim);
 
     // Puces d'état — petites capsules verre sous la date.
     const chips = el("div", { id: "lk-chips" },
@@ -44,7 +69,7 @@ export class LockScreen {
       el("span", { class: "lk-chip g g-thin" }, lucide("bell"), "2"));
 
     const clockWrap = el("div", { id: "lock-clock-wrap" },
-      this.hh, this.mm, this.dateEl, chips);
+      clkGlass, this.dateEl, chips);
 
     // Rangée du bas : torche | pilule média | caméra.
     this.torchBtn = el("button", { class: "lock-btn g g-regular", "aria-label": "Lampe torche" },
@@ -190,7 +215,7 @@ export class LockScreen {
   tick(): void {
     const d = new Date();
     const h = String(d.getHours()).padStart(2, "0"), m = String(d.getMinutes()).padStart(2, "0");
-    if (this.hh.textContent !== h) this.hh.textContent = h;
-    if (this.mm.textContent !== m) this.mm.textContent = m;
+    if (this.hh.textContent !== h) { this.hh.textContent = h; this.hhR.textContent = h; }
+    if (this.mm.textContent !== m) { this.mm.textContent = m; this.mmR.textContent = m; }
   }
 }

@@ -27,6 +27,8 @@ export class NotificationCenter {
   onClose?: () => void;
   private list: HTMLElement;
   private clockEl: HTMLElement;
+  private mt: SVGTextElement;
+  private rt: SVGTextElement;
   private emptyEl: HTMLElement;
   private trashBtn: HTMLElement;
   private cards = new Map<HTMLElement, CardState>();
@@ -35,7 +37,26 @@ export class NotificationCenter {
     const d = new Date();
     const days = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
     const months = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
-    this.clockEl = el("div", { class: "t-clock" }, "09:41");
+    // Horloge « liquid glass » : les chiffres réfractent réellement le fond —
+    // un masque SVG (userSpaceOnUse) n'applique le backdrop-filter et le reflet
+    // QUE dans les glyphes ; un texte calqué dessus ajoute le liseré lumineux.
+    const SVGNS = "http://www.w3.org/2000/svg";
+    const defs = document.createElementNS(SVGNS, "svg");
+    defs.setAttribute("width", "0"); defs.setAttribute("height", "0");
+    defs.setAttribute("aria-hidden", "true");
+    defs.classList.add("nc-clk-defs");
+    defs.innerHTML =
+      `<defs><mask id="nc-clkm" maskUnits="userSpaceOnUse" x="0" y="0" width="349" height="150">` +
+      `<text x="174.5" y="118" text-anchor="middle" class="clkmt">09:41</text></mask></defs>`;
+    this.mt = defs.querySelector(".clkmt") as unknown as SVGTextElement;
+    const rim = document.createElementNS(SVGNS, "svg");
+    rim.setAttribute("viewBox", "0 0 349 150");
+    rim.setAttribute("aria-hidden", "true");
+    rim.classList.add("clkr");
+    rim.innerHTML = `<text x="174.5" y="118" text-anchor="middle" class="clkrt">09:41</text>`;
+    this.rt = rim.querySelector(".clkrt") as unknown as SVGTextElement;
+    this.clockEl = el("div", { class: "nc-clock" }, defs,
+      el("div", { class: "clkg", style: "-webkit-mask:url(#nc-clkm);mask:url(#nc-clkm)" }), rim);
 
     this.list = el("div", { id: "nc-list" });
     this.emptyEl = el("div", { id: "nc-empty", style: "display:none" },
@@ -142,7 +163,7 @@ export class NotificationCenter {
   tick(): void {
     const d = new Date();
     const t = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-    if (this.clockEl.textContent !== t) this.clockEl.textContent = t;
+    if (this.mt.textContent !== t) { this.mt.textContent = t; this.rt.textContent = t; }
   }
 
   render(p: number): void {

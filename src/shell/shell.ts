@@ -42,6 +42,7 @@ export class Shell {
   private homeP = new Spring(0, "soft");
   private ccP = new Spring(0, "sheet");
   private ncP = new Spring(0, "sheet");
+  private readonly sb = new StatusBar();
   private swP = new Spring(0, "soft");
   private appP = new Spring(0, "soft");
 
@@ -54,8 +55,6 @@ export class Shell {
     this.phone = document.getElementById("phone")!;
     const layers = document.getElementById("layers")!;
     this.wallpaper = new Wallpaper(document.getElementById("wallpaper") as HTMLCanvasElement);
-    const statusbar = new StatusBar();
-
     this.home = new HomeScreen((app) => this.openApp(app));
     this.appwin = new AppWindow();
     this.lock = new LockScreen(() => {});
@@ -67,7 +66,7 @@ export class Shell {
     this.sw.onClose = () => this.closeSwitcher();
 
     layers.append(this.home.node, this.appwin.node, this.lock.node, this.sw.node, this.cc.node, this.nc.node);
-    document.getElementById("chrome")!.append(statusbar.node);
+    document.getElementById("chrome")!.append(this.sb.node);
 
     this.lock.onPinPass = () => { this.unlockP.to(1); this.unlock(); };
     this.lock.onPinDismiss = () => { /* la face est déjà revenue à 0 */ };
@@ -273,6 +272,7 @@ export class Shell {
     this.cc.render(this.ccP.v);
     this.nc.render(this.ncP.v);
     this.sw.render(this.swP.v);
+    this.sb.setGone(this.ncP.v > 0.55);
     this.lock.tick(); this.nc.tick();
 
     // scrim adaptatif : mesuré sur la luminance réelle du fond sous la zone

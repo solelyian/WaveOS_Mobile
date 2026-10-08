@@ -9,12 +9,12 @@ import sys
 from PIL import Image
 
 PLANCHES = {
-    "/Users/devin/waveos-proto/assets-gen/planche_a.png": [
+    "/Users/devin/waveos-proto/assets-gen/planche_a_glass.png": [
         "telephone", "messages", "navigateur",
         "musique", "mail", "photos",
         "camera", "plans", "meteo",
     ],
-    "/Users/devin/waveos-proto/assets-gen/planche_b.png": [
+    "/Users/devin/waveos-proto/assets-gen/planche_b_glass.png": [
         "reglages", "horloge", "notes",
         "rappels", "store", "calculette",
         "fichiers", "sante", "bourse",
@@ -22,35 +22,38 @@ PLANCHES = {
 }
 
 OUT = "/Users/devin/waveos-proto/public/icons"
-LUM_THRESHOLD = 26      # fond ~#0A0E1F → coupe à 26
-PAD = 2                 # marge gardée autour du contenu détecté
+CROP_FRAC = 0.78        # tuile ≈ 82% de la cellule, centrée (évite la fuite de lueur des voisines)
 
 
 def tight_box(img):
-    """Bounding box des pixels au-dessus du seuil de luminance."""
-    g = img.convert("L")
-    px = g.load()
-    w, h = g.size
-    xs, ys = [], []
-    step = 2
-    for y in range(0, h, step):
-        for x in range(0, w, step):
-            if px[x, y] > LUM_THRESHOLD:
-                xs.append(x)
-                ys.append(y)
-    if not xs:
-        return (0, 0, w, h)
-    x0, x1 = max(0, min(xs) - PAD), min(w, max(xs) + step + PAD)
-    y0, y1 = max(0, min(ys) - PAD), min(h, max(ys) + step + PAD)
-    # force un carré centré
-    bw, bh = x1 - x0, y1 - y0
-    side = max(bw, bh)
-    cx, cy = (x0 + x1) // 2, (y0 + y1) // 2
+    """Crop centré fixe — plus fiable que la luminance quand les tuiles
+    dépolies dégagent une lueur qui déborde dans la cellule voisine."""
+    w, h = img.size
+    side = int(min(w, h) * CROP_FRAC)
+    cx, cy = w // 2, h // 2
     x0 = max(0, cx - side // 2)
     y0 = max(0, cy - side // 2)
-    x1 = min(w, x0 + side)
-    y1 = min(h, y0 + side)
-    return (x0, y0, x1, y1)
+    return (x0, y0, min(w, x0 + side), min(h, y0 + side))
+
+
+def squircle_alpha(side, n=4.6, feather=1.5):
+    """Masque alpha « squircle » n=4.6 (notre géométrie Sillage) supersamplé.
+    Coupe les coins sombres ET les bavures de lueur en bord de tuile."""
+    ss = 4
+    S = side * ss
+    m = Image.new("L", (S, S), 0)
+    px = m.load()
+    a = S / 2.0
+    for y in range(S):
+        for x in range(S):
+            dx = (x - a + 0.5) / a
+            dy = (y - a + 0.5) / a
+            if abs(dx) ** n + abs(dy) ** n <= 1.0:
+                px[x, y] = 255
+    return m.resize((side, side), Image.LANCZOS)
+
+
+MASK = squircle_alpha(256)
 
 
 def extract(path, names):
@@ -62,9 +65,10 @@ def extract(path, names):
         cell = img.crop((col * cw, row * ch, (col + 1) * cw, (row + 1) * ch))
         box = tight_box(cell)
         tile = cell.crop(box)
-        tile = tile.resize((256, 256), Image.LANCZOS)
+        tile = tile.resize((256, 256), Image.LANCZOS).convert("RGBA")
+        tile.putalpha(MASK)
         tile.save(f"{OUT}/{name}.png", optimize=True)
-        print(f"{name}: cell {box} → 256px")
+        print(f"{name}: cell {box} → 256px squircle")
 
 
 if __name__ == "__main__":
