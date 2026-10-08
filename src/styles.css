@@ -107,7 +107,7 @@ body {
 #lock-face{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; will-change:transform,opacity; transition:opacity .25s; }
 #lock-glyph{ margin-top:74px; color:rgba(255,255,255,.8); }
 #lock-glyph .glyph{ width:17px; height:17px; }
-#lock-clock-wrap{ margin-top:24px; text-align:center; will-change:transform; transition:transform .5s cubic-bezier(.2,1,.3,1); }
+#lock-clock-wrap{ margin-top:24px; width:349px; text-align:center; will-change:transform; transition:transform .5s cubic-bezier(.2,1,.3,1); }
 
 #lock-date{ margin-top:13px; font-size:calc(17px*var(--ts)); font-weight:500; color:rgba(255,255,255,.85); }
 #lk-chips{ display:flex; gap:8px; justify-content:center; margin-top:16px; }
@@ -243,21 +243,21 @@ body {
 /* Horloges « liquid glass » (NC + lock) : les glyphes réfractent le fond.
    .clkg = surface masquée par les chiffres (blur + reflet, masque en style
    inline car l'id diffère) ; .clkr = liseré lumineux + halo rosé/violet. */
-.nc-clock{ position:relative; width:100%; height:150px; }
+.nc-clock{ position:relative; width:100%; height:122px; }
 #lock-clock{ position:relative; width:100%; height:204px; }
 .clkg{ position:absolute; inset:0; -webkit-mask-type:luminance; mask-type:luminance;
-  -webkit-backdrop-filter:blur(7px) brightness(1.72) saturate(1.5); backdrop-filter:blur(7px) brightness(1.72) saturate(1.5);
-  background:linear-gradient(180deg, rgba(255,255,255,.38), rgba(255,255,255,.09) 45%, rgba(196,186,255,.24)); }
+  -webkit-backdrop-filter:blur(6px) brightness(1.62) saturate(1.5); backdrop-filter:blur(6px) brightness(1.62) saturate(1.5);
+  background:linear-gradient(180deg, rgba(255,255,255,.46), rgba(255,255,255,.14) 45%, rgba(196,186,255,.26)); }
 .clkr{ position:absolute; inset:0; width:100%; height:100%; }
 .clkmt{ font-weight:680; letter-spacing:-.01em; font-variant-numeric:tabular-nums; fill:#fff; }
 .clkrt{ font-weight:680; letter-spacing:-.01em; font-variant-numeric:tabular-nums;
-  fill:rgba(255,255,255,.10); stroke:rgba(255,255,255,.62); stroke-width:.9; paint-order:stroke fill;
-  text-shadow:-1px 0 0 rgba(255,140,190,.22), 1px 0 0 rgba(130,130,255,.22), 0 4px 26px rgba(200,170,255,.55), 0 0 62px rgba(140,120,255,.30); }
-.nc-clock .clkmt,.nc-clock .clkrt{ font-size:118px; }
+  fill:rgba(255,255,255,.30); stroke:rgba(255,255,255,.66); stroke-width:.9; paint-order:stroke fill;
+  text-shadow:-1px 0 0 rgba(255,140,190,.24), 1px 0 0 rgba(130,130,255,.24), 0 4px 26px rgba(200,170,255,.55), 0 0 62px rgba(140,120,255,.32); }
+.nc-clock .clkmt,.nc-clock .clkrt{ font-size:96px; }
 #lock-clock .clkmt,#lock-clock .clkrt{ font-size:100px; }
 #phone[data-theme="light"] .clkg{ -webkit-backdrop-filter:blur(7px) brightness(1.02) saturate(1.25); backdrop-filter:blur(7px) brightness(1.02) saturate(1.25);
   background:linear-gradient(180deg, rgba(20,26,60,.20), rgba(20,26,60,.05) 45%, rgba(255,255,255,.30)); }
-#phone[data-theme="light"] .clkrt{ fill:rgba(20,26,60,.10); stroke:rgba(20,26,60,.42);
+#phone[data-theme="light"] .clkrt{ fill:rgba(20,26,60,.26); stroke:rgba(20,26,60,.45);
   text-shadow:-1px 0 0 rgba(200,90,140,.18), 1px 0 0 rgba(90,90,200,.18), 0 4px 22px rgba(120,110,190,.35); }
 .nc-head .nc-date{ color:rgba(255,255,255,.62); font-size:calc(13.5px*var(--ts)); line-height:1.35; margin-top:2px; }
 #phone[data-theme="light"] .nc-head .nc-date{ color:rgba(20,22,31,.55); }

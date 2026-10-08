@@ -9,12 +9,12 @@ import sys
 from PIL import Image
 
 PLANCHES = {
-    "/Users/devin/waveos-proto/assets-gen/planche_a_glass.png": [
+    "/Users/devin/waveos-proto/assets-gen/planche_a_soft.png": [
         "telephone", "messages", "navigateur",
         "musique", "mail", "photos",
         "camera", "plans", "meteo",
     ],
-    "/Users/devin/waveos-proto/assets-gen/planche_b_glass.png": [
+    "/Users/devin/waveos-proto/assets-gen/planche_b_soft.png": [
         "reglages", "horloge", "notes",
         "rappels", "store", "calculette",
         "fichiers", "sante", "bourse",
