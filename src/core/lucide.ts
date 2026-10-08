@@ -156,6 +156,12 @@ import antennaRaw from "lucide-static/icons/antenna.svg?raw";
 import wavesRaw from "lucide-static/icons/waves.svg?raw";
 import listRaw from "lucide-static/icons/list.svg?raw";
 import cloudDrizzleRaw from "lucide-static/icons/cloud-drizzle.svg?raw";
+import filePenRaw from "lucide-static/icons/file-pen.svg?raw";
+import squarePenRaw from "lucide-static/icons/square-pen.svg?raw";
+import settings2Raw from "lucide-static/icons/settings-2.svg?raw";
+import barChartRaw from "lucide-static/icons/bar-chart-3.svg?raw";
+import scanEyeRaw from "lucide-static/icons/scan-eye.svg?raw";
+import bellRingRaw from "lucide-static/icons/bell-ring.svg?raw";
 
 const RAW: Record<string, string> = {
   wifi: wifiRaw, "wifi-off": wifiOffRaw,
@@ -202,6 +208,8 @@ const RAW: Record<string, string> = {
   sparkles: sparklesRaw, "mic-off": micOffRaw, "moon-star": moonStarRaw,
   signal: signalRaw, antenna: antennaRaw,
   waves: wavesRaw, list: listRaw, "cloud-drizzle": cloudDrizzleRaw,
+  "file-pen": filePenRaw, "square-pen": squarePenRaw, "settings-2": settings2Raw,
+  "chart-bar": barChartRaw, "scan-eye": scanEyeRaw, "bell-ring": bellRingRaw,
 };
 
 /** Markup interne du SVG Lucide (paths, sans l'enveloppe <svg>). */

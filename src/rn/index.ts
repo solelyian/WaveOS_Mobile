@@ -7,3 +7,4 @@ export {
 } from "./ui";
 export { StackNav, useStack } from "./stack";
 export { rnApp, unmountRN } from "./host";
+export { createStore, useStore, type Store } from "./store";
