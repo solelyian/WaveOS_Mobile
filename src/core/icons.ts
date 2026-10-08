@@ -9,7 +9,7 @@ const LU = {
   weather: "cloud-sun", maps: "map-pin", notes: "notebook-text", reminders: "check-circle",
   store: "shopping-bag", music: "music", calc: "calculator", camera: "camera",
   mail: "mail", files: "folder", health: "heart-pulse", phone: "phone",
-  compass: "compass", wallet: "wallet", stocks: "chart-line",
+  compass: "compass", wallet: "wallet", stocks: "chart-line", calendar: "calendar",
   wifi: "wifi", bluetooth: "bluetooth", airplane: "plane", moon: "moon",
   flashlight: "flashlight", rotation: "rotate-cw", sun: "sun", volume: "volume-2",
   play: "play", pause: "pause", next: "skip-forward", prev: "skip-back",
@@ -33,7 +33,7 @@ const ICON_PNG: Partial<Record<GlyphName, string>> = {
   weather: "meteo", maps: "plans", notes: "notes", reminders: "rappels",
   store: "store", music: "musique", calc: "calculette", camera: "camera",
   mail: "mail", files: "fichiers", health: "sante", phone: "telephone",
-  compass: "navigateur", stocks: "bourse",
+  compass: "navigateur", stocks: "bourse", calendar: "agenda",
 };
 
 /** Tuile d'icône : PNG glossy du pack, masqué squircle par CSS. */

@@ -162,6 +162,9 @@ import settings2Raw from "lucide-static/icons/settings-2.svg?raw";
 import barChartRaw from "lucide-static/icons/bar-chart-3.svg?raw";
 import scanEyeRaw from "lucide-static/icons/scan-eye.svg?raw";
 import bellRingRaw from "lucide-static/icons/bell-ring.svg?raw";
+import coffeeRaw from "lucide-static/icons/coffee.svg?raw";
+import gamepadRaw from "lucide-static/icons/gamepad-2.svg?raw";
+import commandRaw from "lucide-static/icons/command.svg?raw";
 
 const RAW: Record<string, string> = {
   wifi: wifiRaw, "wifi-off": wifiOffRaw,
@@ -210,6 +213,7 @@ const RAW: Record<string, string> = {
   waves: wavesRaw, list: listRaw, "cloud-drizzle": cloudDrizzleRaw,
   "file-pen": filePenRaw, "square-pen": squarePenRaw, "settings-2": settings2Raw,
   "chart-bar": barChartRaw, "scan-eye": scanEyeRaw, "bell-ring": bellRingRaw,
+  coffee: coffeeRaw, "gamepad-2": gamepadRaw, command: commandRaw,
 };
 
 /** Markup interne du SVG Lucide (paths, sans l'enveloppe <svg>). */

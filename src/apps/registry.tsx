@@ -16,10 +16,15 @@ import { ReglagesApp } from "../apps-rn/Reglages";
 import { FichiersApp } from "../apps-rn/Fichiers";
 import { HorlogeApp } from "../apps-rn/Horloge";
 import { RappelsApp } from "../apps-rn/Rappels";
-import {
-  bourseContent, calcContent, cameraContent, navContent,
-  phoneContent, plansContent, santeContent, storeContent,
-} from "./contents";
+import { CalculetteApp } from "../apps-rn/Calculette";
+import { CameraApp } from "../apps-rn/Camera";
+import { BourseApp } from "../apps-rn/Bourse";
+import { SanteApp } from "../apps-rn/Sante";
+import { PlansApp } from "../apps-rn/Plans";
+import { StoreApp } from "../apps-rn/Store";
+import { NavigateurApp } from "../apps-rn/Navigateur";
+import { AgendaApp } from "../apps-rn/Agenda";
+import { phoneContent } from "./contents";
 
 export interface AppDef {
   id: string;
@@ -46,22 +51,23 @@ export const APPS: AppDef[] = [
   { id: "photos",     name: "Photos",     glyph: "photos",    c0: "#F4F6FB", c1: "#C9D2EA", ink: "#B04A78", content: rnApp(<PhotosApp />), rn: true },
   { id: "horloge",    name: "Horloge",    glyph: "clock",     c0: "#2A2E40", c1: "#0E1020", content: rnApp(<HorlogeApp />), rn: true },
   { id: "meteo",      name: "Météo",      glyph: "weather",   c0: "#5FA8E8", c1: "#2B66C9", content: rnApp(<MeteoApp />), rn: true },
-  { id: "plans",      name: "Plans",      glyph: "maps",      c0: "#7BDC9A", c1: "#2E8B57", content: plansContent },
+  { id: "plans",      name: "Plans",      glyph: "maps",      c0: "#7BDC9A", c1: "#2E8B57", content: rnApp(<PlansApp />), rn: true },
   { id: "notes",      name: "Notes",      glyph: "notes",     c0: "#F8F4E8", c1: "#E5DCBE", ink: "#8A7B4A", content: rnApp(<NotesApp />), rn: true },
   { id: "rappels",    name: "Rappels",    glyph: "reminders", c0: "#FFB35C", c1: "#E87E1E", content: rnApp(<RappelsApp />), rn: true },
-  { id: "store",      name: "Wave Store", glyph: "store",     c0: "#8FB0FF", c1: "#5570D6", content: storeContent },
+  { id: "store",      name: "Wave Store", glyph: "store",     c0: "#8FB0FF", c1: "#5570D6", content: rnApp(<StoreApp />), rn: true },
   { id: "musique",    name: "Musique",    glyph: "music",     c0: "#FF9FB4", c1: "#E8446B", content: rnApp(<MusiqueApp />), rn: true },
-  { id: "calculette", name: "Calculette", glyph: "calc",      c0: "#4A4F60", c1: "#14161F", content: calcContent },
-  { id: "camera",     name: "Caméra",     glyph: "camera",    c0: "#4A4F60", c1: "#191C28", content: cameraContent },
+  { id: "calculette", name: "Calculette", glyph: "calc",      c0: "#4A4F60", c1: "#14161F", content: rnApp(<CalculetteApp />), rn: true },
+  { id: "camera",     name: "Caméra",     glyph: "camera",    c0: "#4A4F60", c1: "#191C28", content: rnApp(<CameraApp />), rn: true },
   { id: "mail",       name: "Mail",       glyph: "mail",      c0: "#6BA8E8", c1: "#2B5CC9", content: rnApp(<MailApp />), rn: true },
   { id: "fichiers",   name: "Fichiers",   glyph: "files",     c0: "#9FB9F5", c1: "#4A6CC9", content: rnApp(<FichiersApp />), rn: true },
-  { id: "sante",      name: "Santé",      glyph: "health",    c0: "#FF9E9E", c1: "#E84A5F", content: santeContent },
-  { id: "bourse",     name: "Bourse",     glyph: "stocks",    c0: "#3A3F4D", c1: "#10121C", content: bourseContent },
+  { id: "sante",      name: "Santé",      glyph: "health",    c0: "#FF9E9E", c1: "#E84A5F", content: rnApp(<SanteApp />), rn: true },
+  { id: "bourse",     name: "Bourse",     glyph: "stocks",    c0: "#3A3F4D", c1: "#10121C", content: rnApp(<BourseApp />), rn: true },
+  { id: "agenda",     name: "Agenda",     glyph: "calendar",  c0: "#FF9E9E", c1: "#E84A5F", content: rnApp(<AgendaApp />), rn: true },
 ];
 
 export const DOCK: AppDef[] = [
   { id: "telephone",  name: "Téléphone",  glyph: "phone",    c0: "#67D99E", c1: "#1FA870", content: phoneContent },
-  { id: "navigateur", name: "Navigateur", glyph: "compass",  c0: "#8FB0FF", c1: "#5570D6", content: navContent },
+  { id: "navigateur", name: "Navigateur", glyph: "compass",  c0: "#8FB0FF", c1: "#5570D6", content: rnApp(<NavigateurApp />), rn: true },
   { id: "messages",   name: "Messages",   glyph: "messages", c0: "#67D99E", c1: "#1FA870", content: rnApp(<MessagesApp />), rn: true },
   { id: "musique",    name: "Musique",    glyph: "music",    c0: "#FF9FB4", c1: "#E8446B", content: rnApp(<MusiqueApp />), rn: true },
 ];
