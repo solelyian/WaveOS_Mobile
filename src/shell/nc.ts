@@ -12,7 +12,7 @@ import { on } from "../system/state";
 import type { GlyphName } from "../core/icons";
 
 interface Notif { app: string; icon: GlyphName; tint: string; title: string; body: string; when: string }
-interface CardState { dx: number; op: number; gone: boolean }
+interface CardState { dx: number; op: number; gone: boolean; rel: boolean }
 
 const FEED: Notif[] = [
   { app: "Messages", icon: "messages", tint: "#1FA870", title: "Camille", body: "On se retrouve à 19h au studio ?", when: "19:02" },
@@ -32,6 +32,7 @@ export class NotificationCenter {
   private emptyEl: HTMLElement;
   private trashBtn: HTMLElement;
   private cards = new Map<HTMLElement, CardState>();
+  private clearing = false;
 
   constructor(private announce: (m: string) => void) {
     const d = new Date();
@@ -90,7 +91,7 @@ export class NotificationCenter {
         el("div", { class: "nh" }, el("span", {}, n.title), el("span", { class: "nwhen" }, n.when)),
         el("span", { class: "nb" }, n.body)));
     spotlight(c);
-    const st: CardState = { dx: 0, op: 1, gone: false };
+    const st: CardState = { dx: 0, op: 1, gone: false, rel: false };
     this.cards.set(c, st);
     let startX = 0;
     c.style.touchAction = "pan-y";
@@ -105,9 +106,13 @@ export class NotificationCenter {
         c.removeEventListener("pointermove", mv);
         if (st.dx < -110) this.dissipate(c, st);
         else {
-          st.dx = 0; st.op = 1;
+          // retour élastique : render() ne touche plus la carte pendant la
+          // transition CSS (sinon il l'écrase à chaque frame).
+          st.dx = 0; st.op = 1; st.rel = true;
           c.style.transition = "transform .34s cubic-bezier(.2,.9,.25,1.2), opacity .2s";
-          window.setTimeout(() => { c.style.transition = ""; }, 360);
+          c.style.transform = "translate(0px, 0px)";
+          c.style.opacity = "1";
+          window.setTimeout(() => { c.style.transition = ""; st.rel = false; }, 360);
         }
       };
       c.addEventListener("pointermove", mv);
@@ -120,9 +125,11 @@ export class NotificationCenter {
   /** Dissipation « light particles » : la carte file, un essaim de points
    *  lumineux dérive dans le sens du balayage puis s'éteint. */
   private dissipate(c: HTMLElement, st: CardState): void {
-    st.gone = true; st.dx = -393; st.op = 0;
-    this.burst(c, -1, 12);
+    st.gone = true;
     c.style.transition = "transform .3s cubic-bezier(.3,.8,.3,1), opacity .24s";
+    c.style.transform = "translate(-393px, 0px)";
+    c.style.opacity = "0";
+    this.burst(c, -1, 12);
     window.setTimeout(() => { this.cards.delete(c); c.remove(); this.syncEmpty(); }, 300);
     this.announce("Notification rejetée");
   }
@@ -150,13 +157,16 @@ export class NotificationCenter {
 
   private clear(): void {
     const kids = [...this.list.children] as HTMLElement[];
+    this.clearing = true; // render() s'abstient : les transitions pilotent
     kids.forEach((k, i) => {
       window.setTimeout(() => this.burst(k, -1, 7), i * 55);
       k.style.transition = `transform .3s ${i * 45}ms cubic-bezier(.4,.8,.3,1), opacity .24s ${i * 45}ms`;
       k.style.transform = "translateX(-115%)";
       k.style.opacity = "0";
     });
-    window.setTimeout(() => { this.list.replaceChildren(); this.cards.clear(); this.syncEmpty(); }, 400 + kids.length * 45);
+    window.setTimeout(() => {
+      this.list.replaceChildren(); this.cards.clear(); this.clearing = false; this.syncEmpty();
+    }, 400 + kids.length * 45);
     this.announce("Notifications effacées");
   }
 
@@ -170,19 +180,19 @@ export class NotificationCenter {
     const e = motion.easeOut(motion.clamp(p, 0, 1));
     this.node.style.transform = `translateY(${-(1 - e) * 852}px)`;
     this.node.style.visibility = p <= 0.001 ? "hidden" : "visible";
-    // cascade : chaque carte descend avec décalage ; le dx de rejet est
-    // composé carte par carte au-dessus.
+    // Cascade d'ouverture + dx de rejet composés en UN seul transform —
+    // deux écritures séparées s'écraseraient à chaque frame. Les cartes en
+    // transition CSS (rejet, retour élastique, « Tout effacer ») sont
+    // exclues pour ne pas piétiner leur animation.
     const kids = this.list.children;
     for (let i = 0; i < kids.length; i++) {
       const k = kids[i] as HTMLElement;
+      const st = this.cards.get(k);
+      if (!st || st.gone || st.rel || this.clearing) continue;
       const pi = motion.clamp(p * 1.4 - i * 0.08, 0, 1);
-      k.style.transform = `translateY(${(1 - motion.easeOut(pi)) * 30}px)`;
-      k.style.opacity = String(Math.min(1, pi * 1.7));
-    }
-    for (const [c, st] of this.cards) {
-      if (st.gone) continue;
-      c.style.transform = `translateX(${st.dx}px)`;
-      c.style.opacity = String(st.op);
+      const ty = (1 - motion.easeOut(pi)) * 30;
+      k.style.transform = `translate(${st.dx}px, ${ty}px)`;
+      k.style.opacity = String(Math.min(1, pi * 1.7) * st.op);
     }
   }
 }

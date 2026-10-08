@@ -278,7 +278,9 @@ body {
 #nc-trash .nc-trash{ width:19px; height:19px; }
 #phone[data-theme="light"] #nc-trash{ color:rgba(20,22,31,.8); }
 /* particules « light dissipation » au rejet — points chauds qui dérivent */
-.nc-part{ position:absolute; width:6px; height:6px; border-radius:50%; pointer-events:none; z-index:6;
+/* scopé à #layer-nc : sinon .sheet > :not(.sheet-bg){position:relative} gagne
+   en spécificité et les particules deviennent des spans en flux 0×0 — invisibles */
+#layer-nc .nc-part{ position:absolute; display:block; width:6px; height:6px; border-radius:50%; pointer-events:none; z-index:6;
   background:radial-gradient(circle,#fff 0%,rgba(190,205,255,.95) 38%,rgba(138,124,255,0) 75%);
   filter:drop-shadow(0 0 5px rgba(170,190,255,.75));
   animation:nc-drift var(--pd,480ms) cubic-bezier(.16,.6,.3,1) forwards; }
