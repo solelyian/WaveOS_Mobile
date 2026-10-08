@@ -243,7 +243,7 @@ body {
 /* Horloges « liquid glass » (NC + lock) : les glyphes réfractent le fond.
    .clkg = surface masquée par les chiffres (blur + reflet, masque en style
    inline car l'id diffère) ; .clkr = liseré lumineux + halo rosé/violet. */
-.nc-clock{ position:relative; width:100%; height:122px; }
+.nc-clock{ position:relative; width:100%; height:104px; }
 #lock-clock{ position:relative; width:100%; height:204px; }
 .clkg{ position:absolute; inset:0; -webkit-mask-type:luminance; mask-type:luminance;
   -webkit-backdrop-filter:blur(6px) brightness(1.62) saturate(1.5); backdrop-filter:blur(6px) brightness(1.62) saturate(1.5);
@@ -253,7 +253,7 @@ body {
 .clkrt{ font-weight:680; letter-spacing:-.01em; font-variant-numeric:tabular-nums;
   fill:rgba(255,255,255,.30); stroke:rgba(255,255,255,.66); stroke-width:.9; paint-order:stroke fill;
   text-shadow:-1px 0 0 rgba(255,140,190,.24), 1px 0 0 rgba(130,130,255,.24), 0 4px 26px rgba(200,170,255,.55), 0 0 62px rgba(140,120,255,.32); }
-.nc-clock .clkmt,.nc-clock .clkrt{ font-size:96px; }
+.nc-clock .clkmt,.nc-clock .clkrt{ font-size:82px; }
 #lock-clock .clkmt,#lock-clock .clkrt{ font-size:100px; }
 #phone[data-theme="light"] .clkg{ -webkit-backdrop-filter:blur(7px) brightness(1.02) saturate(1.25); backdrop-filter:blur(7px) brightness(1.02) saturate(1.25);
   background:linear-gradient(180deg, rgba(20,26,60,.20), rgba(20,26,60,.05) 45%, rgba(255,255,255,.30)); }

@@ -46,14 +46,14 @@ export class NotificationCenter {
     defs.setAttribute("aria-hidden", "true");
     defs.classList.add("nc-clk-defs");
     defs.innerHTML =
-      `<defs><mask id="nc-clkm" maskUnits="userSpaceOnUse" x="0" y="0" width="349" height="122">` +
-      `<text x="174.5" y="97" text-anchor="middle" class="clkmt">09:41</text></mask></defs>`;
+      `<defs><mask id="nc-clkm" maskUnits="userSpaceOnUse" x="0" y="0" width="349" height="104">` +
+      `<text x="174.5" y="83" text-anchor="middle" class="clkmt">09:41</text></mask></defs>`;
     this.mt = defs.querySelector(".clkmt") as unknown as SVGTextElement;
     const rim = document.createElementNS(SVGNS, "svg");
-    rim.setAttribute("viewBox", "0 0 349 122");
+    rim.setAttribute("viewBox", "0 0 349 104");
     rim.setAttribute("aria-hidden", "true");
     rim.classList.add("clkr");
-    rim.innerHTML = `<text x="174.5" y="97" text-anchor="middle" class="clkrt">09:41</text>`;
+    rim.innerHTML = `<text x="174.5" y="83" text-anchor="middle" class="clkrt">09:41</text>`;
     this.rt = rim.querySelector(".clkrt") as unknown as SVGTextElement;
     this.clockEl = el("div", { class: "nc-clock" }, defs,
       el("div", { class: "clkg", style: "-webkit-mask:url(#nc-clkm);mask:url(#nc-clkm)" }), rim);
