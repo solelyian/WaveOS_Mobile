@@ -105,8 +105,12 @@ void raster_ribbons(const Ribbon *rb, int n) {
         float cov = 1.f - smoothstep(R.wid * 0.30f, R.wid, dist);
         if (cov <= 0.f) continue;
         float a = cov * R.intensity;
+        // cœur nacré : le centre du ruban tire vers le blanc — effet soie/
+        // aurore au lieu d'une bande de couleur plate.
+        float core = 1.f - smoothstep(0.f, R.wid * 0.45f, dist);
+        Vec3 col = mix3(R.col, {1.f, 1.f, 1.f}, core * 0.42f);
         float *p = &g_rib[(y * g_rw + x) * 3];
-        p[0] += R.col.r * a; p[1] += R.col.g * a; p[2] += R.col.b * a;
+        p[0] += col.r * a; p[1] += col.g * a; p[2] += col.b * a;
       }
     }
   }
@@ -185,6 +189,13 @@ int wg_bake_wallpaper(int variant, int w, int h) {
     for (int x = 0; x < w; x++) {
       float nx = (x + 0.5f) / (float)w;
       Vec3 base = base_gradient(nx, ny, variant);
+      // lumière ambiante haut-gauche (même direction que le gloss des
+      // icônes) — lève le coin éclairé et donne une direction de lumière.
+      if (variant == 0) {
+        float ax = nx + 0.18f, ay = ny + 0.02f;
+        float amb = wv_exp(-(ax * ax * 2.0f + ay * ay * 2.6f));
+        base.r += amb * 0.055f; base.g += amb * 0.065f; base.b += amb * 0.085f;
+      }
       // screen blend : out = 1-(1-a)(1-b), rubans upsamplés
       float fy = (y + 0.5f) * scale - 0.5f, fx = (x + 0.5f) * scale - 0.5f;
       for (int c = 0; c < 3; c++) {
@@ -194,7 +205,7 @@ int wg_bake_wallpaper(int variant, int w, int h) {
       }
       // vignette douce
       float vx = nx - 0.5f, vy = ny - 0.5f;
-      float vig = 1.f - 0.30f * smoothstep(0.55f, 0.95f, wv_sqrt(vx * vx * 2.f + vy * vy));
+      float vig = 1.f - 0.34f * smoothstep(0.52f, 0.95f, wv_sqrt(vx * vx * 2.f + vy * vy));
       // grain fin ±2.2/255 — casse le banding des dégradés
       float grain = ((float)(hash2((unsigned)x, (unsigned)y) & 0xFF) / 255.f - 0.5f) * 4.4f / 255.f;
       for (int c = 0; c < 3; c++) {
