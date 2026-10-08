@@ -96,6 +96,66 @@ import fileTextRaw from "lucide-static/icons/file-text.svg?raw";
 import nfcRaw from "lucide-static/icons/nfc.svg?raw";
 import shareRaw from "lucide-static/icons/share-2.svg?raw";
 import fingerprintRaw from "lucide-static/icons/fingerprint.svg?raw";
+// --- compléments pour les apps RN (vague « production-ready ») ---
+import sunriseRaw from "lucide-static/icons/sunrise.svg?raw";
+import sunsetRaw from "lucide-static/icons/sunset.svg?raw";
+import windRaw from "lucide-static/icons/wind.svg?raw";
+import dropletsRaw from "lucide-static/icons/droplets.svg?raw";
+import eyeRaw from "lucide-static/icons/eye.svg?raw";
+import gaugeRaw from "lucide-static/icons/gauge.svg?raw";
+import listMusicRaw from "lucide-static/icons/list-music.svg?raw";
+import discRaw from "lucide-static/icons/disc-3.svg?raw";
+import sendRaw from "lucide-static/icons/send.svg?raw";
+import paperclipRaw from "lucide-static/icons/paperclip.svg?raw";
+import ellipsisRaw from "lucide-static/icons/ellipsis.svg?raw";
+import replyRaw from "lucide-static/icons/reply.svg?raw";
+import flagRaw from "lucide-static/icons/flag.svg?raw";
+import archiveRaw from "lucide-static/icons/archive.svg?raw";
+import bookmarkRaw from "lucide-static/icons/bookmark.svg?raw";
+import infoRaw from "lucide-static/icons/info.svg?raw";
+import zapRaw from "lucide-static/icons/zap.svg?raw";
+import apertureRaw from "lucide-static/icons/aperture.svg?raw";
+import navigationRaw from "lucide-static/icons/navigation.svg?raw";
+import locateRaw from "lucide-static/icons/locate-fixed.svg?raw";
+import bookOpenRaw from "lucide-static/icons/book-open.svg?raw";
+import slidersRaw from "lucide-static/icons/sliders-horizontal.svg?raw";
+import trendUpRaw from "lucide-static/icons/trending-up.svg?raw";
+import trendDnRaw from "lucide-static/icons/trending-down.svg?raw";
+import arrowLeftRaw from "lucide-static/icons/arrow-left.svg?raw";
+import arrowUpRightRaw from "lucide-static/icons/arrow-up-right.svg?raw";
+import inboxRaw from "lucide-static/icons/inbox.svg?raw";
+import mailOpenRaw from "lucide-static/icons/mail-open.svg?raw";
+import atSignRaw from "lucide-static/icons/at-sign.svg?raw";
+import linkRaw from "lucide-static/icons/link-2.svg?raw";
+import filterRaw from "lucide-static/icons/filter.svg?raw";
+import batteryLowRaw from "lucide-static/icons/battery-low.svg?raw";
+import tvRaw from "lucide-static/icons/tv.svg?raw";
+import printerRaw from "lucide-static/icons/printer.svg?raw";
+import hardDriveRaw from "lucide-static/icons/hard-drive.svg?raw";
+import plusCircleRaw from "lucide-static/icons/plus-circle.svg?raw";
+import circleRaw from "lucide-static/icons/circle.svg?raw";
+import repeatRaw from "lucide-static/icons/repeat.svg?raw";
+import repeat1Raw from "lucide-static/icons/repeat-1.svg?raw";
+import shuffleRaw from "lucide-static/icons/shuffle.svg?raw";
+import volumeXRaw from "lucide-static/icons/volume-x.svg?raw";
+import airplayRaw from "lucide-static/icons/airplay.svg?raw";
+import fastFwdRaw from "lucide-static/icons/fast-forward.svg?raw";
+import rewindRaw from "lucide-static/icons/rewind.svg?raw";
+import squareRaw from "lucide-static/icons/square.svg?raw";
+import switchCamRaw from "lucide-static/icons/switch-camera.svg?raw";
+import rowsRaw from "lucide-static/icons/rows-3.svg?raw";
+import pencilLineRaw from "lucide-static/icons/pencil-line.svg?raw";
+import grid2Raw from "lucide-static/icons/grid-2x2.svg?raw";
+import forwardRaw from "lucide-static/icons/forward.svg?raw";
+import listTodoRaw from "lucide-static/icons/list-todo.svg?raw";
+import sparklesRaw from "lucide-static/icons/sparkles.svg?raw";
+import micOffRaw from "lucide-static/icons/mic-off.svg?raw";
+import moonStarRaw from "lucide-static/icons/moon-star.svg?raw";
+import signalRaw from "lucide-static/icons/signal.svg?raw";
+import antennaRaw from "lucide-static/icons/antenna.svg?raw";
+import wavesRaw from "lucide-static/icons/waves.svg?raw";
+import listRaw from "lucide-static/icons/list.svg?raw";
+import cloudDrizzleRaw from "lucide-static/icons/cloud-drizzle.svg?raw";
 
 const RAW: Record<string, string> = {
   wifi: wifiRaw, "wifi-off": wifiOffRaw,
@@ -124,15 +184,38 @@ const RAW: Record<string, string> = {
   minus: minusRaw, speaker: speakerRaw, "check-circle": checkCircleRaw,
   cloud: cloudRaw, hourglass: hourglassRaw, "file-text": fileTextRaw,
   nfc: nfcRaw, "share-2": shareRaw, fingerprint: fingerprintRaw,
+  sunrise: sunriseRaw, sunset: sunsetRaw, wind: windRaw, droplets: dropletsRaw,
+  eye: eyeRaw, gauge: gaugeRaw, "list-music": listMusicRaw, "disc-3": discRaw,
+  send: sendRaw, paperclip: paperclipRaw, ellipsis: ellipsisRaw, reply: replyRaw,
+  flag: flagRaw, archive: archiveRaw, bookmark: bookmarkRaw, info: infoRaw,
+  zap: zapRaw, aperture: apertureRaw, navigation: navigationRaw, "locate-fixed": locateRaw,
+  "book-open": bookOpenRaw, "sliders-horizontal": slidersRaw,
+  "trending-up": trendUpRaw, "trending-down": trendDnRaw,
+  "arrow-left": arrowLeftRaw, "arrow-up-right": arrowUpRightRaw,
+  inbox: inboxRaw, "mail-open": mailOpenRaw, "at-sign": atSignRaw, "link-2": linkRaw,
+  filter: filterRaw, "battery-low": batteryLowRaw, tv: tvRaw, printer: printerRaw,
+  "hard-drive": hardDriveRaw, "plus-circle": plusCircleRaw, circle: circleRaw,
+  repeat: repeatRaw, "repeat-1": repeat1Raw, shuffle: shuffleRaw, "volume-x": volumeXRaw,
+  airplay: airplayRaw, "fast-forward": fastFwdRaw, rewind: rewindRaw, square: squareRaw,
+  "switch-camera": switchCamRaw, "rows-3": rowsRaw, "pencil-line": pencilLineRaw,
+  "grid-2x2": grid2Raw, forward: forwardRaw, "list-todo": listTodoRaw,
+  sparkles: sparklesRaw, "mic-off": micOffRaw, "moon-star": moonStarRaw,
+  signal: signalRaw, antenna: antennaRaw,
+  waves: wavesRaw, list: listRaw, "cloud-drizzle": cloudDrizzleRaw,
 };
+
+/** Markup interne du SVG Lucide (paths, sans l'enveloppe <svg>). */
+export function lucideInner(name: string): string {
+  const src = RAW[name];
+  return src
+    ? src.replace(/<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "")
+    : `<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/>`;
+}
 
 /** Construit un élément <svg class="glyph"> à partir du SVG Lucide nommé. */
 export function lucide(name: keyof typeof RAW | string, cls = ""): SVGElement {
   const tpl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  const src = RAW[name];
-  tpl.innerHTML = src
-    ? src.replace(/<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "")
-    : `<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/>`;
+  tpl.innerHTML = lucideInner(name);
   tpl.setAttribute("viewBox", "0 0 24 24");
   tpl.setAttribute("class", `glyph${cls ? " " + cls : ""}`);
   tpl.setAttribute("aria-hidden", "true");

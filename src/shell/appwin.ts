@@ -5,6 +5,7 @@ import { el } from "../core/el";
 import { glyph } from "../core/icons";
 import { motion } from "../core/motion";
 import { iconFor, phHero, type AppDef } from "../apps/registry";
+import { unmountRN } from "../rn/host";
 
 interface Rect { x: number; y: number; w: number; h: number }
 
@@ -31,6 +32,11 @@ export class AppWindow {
     const back = el("button", { class: "back g g-thin", "aria-label": "Retour" }, glyph("chevronL"));
     back.addEventListener("click", () => this.onBack?.());
     this.appbar.replaceChildren(back, iconFor(app, 34), el("h2", {}, app.name));
+    // Apps React Native : pleine surface (leur propre nav) + racine React.
+    // L'appbar système (icône + nom + retour) est masquée — iOS n'en a pas.
+    this.appbar.style.display = app.rn ? "none" : "";
+    this.body.classList.toggle("rn", !!app.rn);
+    unmountRN();
     const content = app.content ? app.content() : phHero(app.name, "Prototype — cette app est une coque d'exploration.");
     this.body.replaceChildren(content);
     const win = el("div", { class: "appwin", role: "dialog", "aria-label": app.name }, this.appbar, this.body);

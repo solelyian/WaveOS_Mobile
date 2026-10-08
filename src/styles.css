@@ -432,6 +432,13 @@ button{ font:inherit; color:inherit; background:none; border:none; cursor:pointe
 .app-flow{ display:flex; flex-direction:column; gap:10px; padding-bottom:20px; }
 .appbody{ flex:1; overflow-y:auto; scrollbar-width:none; }
 .appbody::-webkit-scrollbar{ display:none; }
+/* apps React Native : pleine surface, le padding est géré par l'app */
+.appbody.rn{ padding:0; overflow:hidden; display:flex; flex-direction:column; height:100%; }
+.rn-host{ flex:1; min-height:0; display:flex; flex-direction:column; }
+.stk{ position:relative; flex:1; min-height:0; overflow:hidden; }
+.stk-scr{ position:absolute; inset:0; transition:transform .38s cubic-bezier(.32,.72,0,1); will-change:transform; display:flex; flex-direction:column; }
+.stk-scr > *{ flex:1; min-height:0; }
+@keyframes msg-dot{ 0%,60%,100%{ transform:translateY(0); opacity:.5 } 30%{ transform:translateY(-4px); opacity:1 } }
 .sec-t{ font-size:calc(12.5px*var(--ts)); font-weight:650; letter-spacing:.05em; text-transform:uppercase; color:rgba(255,255,255,.55); padding:4px 6px 0; }
 .card{ border-radius:22px; background:rgba(255,255,255,.10); border:.5px solid rgba(255,255,255,.12); overflow:hidden; }
 .row{ display:flex; align-items:center; gap:12px; min-height:50px; padding:10px 14px; position:relative; text-align:left; width:100%; }
