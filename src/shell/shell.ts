@@ -193,6 +193,7 @@ export class Shell {
     this.last = now;
     tick(dt);
     tickTweens(dt * 1000);
+    if (sys.locked) this.lock.render();
     this.wp.render();
     this.home.render();
     this.di.render();

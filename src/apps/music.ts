@@ -2,7 +2,7 @@
 import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
 import { FloatingTabBar, img } from "./ui";
-import { sys, set } from "../system/state";
+import { sys, set, onChange } from "../system/state";
 
 export function MusicApp() {
   let view: "library" | "player" = "library";
@@ -38,10 +38,13 @@ export function MusicApp() {
       style: { width: "80px", height: "80px", borderRadius: "50%", background: "#fff", color: "#000", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "inset 0 -2px 4px rgba(0,0,0,.2),0 10px 30px rgba(255,255,255,.3)" },
       onClick: () => { set("playing", !sys.playing); syncPP(); },
     });
-    const syncPP = () => pp.replaceChildren(svgIcon(sys.playing ? I.pause : I.play));
+    const syncPP = () => {
+      pp.replaceChildren(svgIcon(sys.playing ? I.pause : I.play));
+      const pv = pp.querySelector("svg");
+      if (pv) { pv.setAttribute("fill", "black"); pv.style.width = "32px"; pv.style.height = "32px"; }
+    };
     syncPP();
-    const pv = pp.querySelector("svg");
-    if (pv) { pv.setAttribute("fill", "black"); }
+    onChange((k) => { if (k === "playing" && pp.isConnected) syncPP(); });
     return h("div", { style: { position: "absolute", inset: "0", zIndex: "20", display: "flex", flexDirection: "column", padding: "64px 32px 40px" } },
       h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" } },
         h("button", { class: "pressable", style: { padding: "8px", background: "rgba(255,255,255,.1)", borderRadius: "50%", border: "1px solid rgba(255,255,255,.2)", display: "flex" }, onClick: () => { view = "library"; refresh(); } }, svgIcon(I.chevronLeft)),

@@ -12,7 +12,7 @@ img { pointer-events: none; }
 button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
 input { font: inherit; }
 .no-sb { scrollbar-width: none; } .no-sb::-webkit-scrollbar { display: none; }
-.icon { display: inline-flex; } .icon svg { display: block; }
+.icon { display: inline-flex; width: 24px; height: 24px; flex: none; align-items: center; justify-content: center; } .icon svg { display: block; width: 100%; height: 100%; }
 
 /* ---------- Châssis ---------- */
 #stage { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
@@ -123,7 +123,7 @@ input { font: inherit; }
 
 #dock { margin-top: auto; margin-bottom: 32px; width: 100%; }
 #dock .dock-in { border-radius: 40px; padding: 16px; display: flex; justify-content: space-around; align-items: center; }
-#dock .aicon .nm { display: none; }
+
 
 /* ---------- Dynamic Island ---------- */
 #di { position: absolute; top: 12px; left: 0; right: 0; z-index: 250; display: flex; justify-content: center; pointer-events: none; }
@@ -249,6 +249,7 @@ input { font: inherit; }
 
 /* ---------- Composants d'apps ---------- */
 .ghdr { display: flex; flex-direction: column; padding: 56px 24px 8px; z-index: 50; position: relative; flex-shrink: 0; }
+.ghdr .icon { width: 20px; height: 20px; }
 .ghdr .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .ghdr .bk { padding: 8px; border-radius: 50%; color: rgba(0,0,0,.7); display: flex; }
 .ghdr .bk:active { transform: scale(.95); }
