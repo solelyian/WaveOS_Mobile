@@ -37,6 +37,7 @@ export const tokens = {
     "velocityCommit": 500,
     "offsetCommitPx": 100,
     "gestureThresholdPx": 8,
+    "closeTravelPx": 260,
     "rubber": 0.2,
     "predictedSec": 0.22
   },

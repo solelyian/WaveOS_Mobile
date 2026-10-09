@@ -32,19 +32,30 @@ export class AppWindow {
     this.morph.to(1);
   }
 
-  /** Suivi du doigt : résistance élastique .4 dans les DEUX sens (maquette :
-   *  dragConstraints {0,0} + dragElastic .4 — la fenêtre ne suit qu'à 40%). */
+  private progress = 0; // progression du morph de fermeture pilotée par le doigt
+
+  /** Suivi du doigt : vers le haut, la fenêtre SE RÉSORBE vers son icône à
+   *  l'unisson du geste (progress 0→1 sur closeTravelPx) ; vers le bas, simple
+   *  résistance élastique. */
   drag(dy: number) {
-    this.oy.set(dy * 0.4);
+    if (this.closing) return;
+    if (dy < 0) {
+      this.progress = Math.min(1, -dy / tokens.motion.closeTravelPx);
+      this.morph.set(1 - this.progress);
+      this.oy.set(0);
+    } else {
+      this.oy.set(dy * 0.35);
+    }
   }
-  /** offset effectif (élasticité comprise) >100 ou |vitesse|>500 -> fermeture
-   *  dans les deux sens — soit ~250px de drag réel (maquette). */
+  /** Lâcher : morph entamé >~40% ou flick -> fermeture complète ; sinon
+   *  ressort de retour à plein écran. */
   release(dy: number, vy: number): "close" | "stay" {
-    const eff = dy * 0.4;
-    if (Math.abs(eff) > tokens.motion.offsetCommitPx || Math.abs(vy) > tokens.motion.velocityCommit) {
+    if (this.progress > 0.4 || vy < -tokens.motion.velocityCommit * 0.9 || Math.abs(vy) > tokens.motion.velocityCommit * 1.6) {
       this.close();
       return "close";
     }
+    this.progress = 0;
+    this.morph.to(1);
     this.oy.to(0);
     return "stay";
   }
