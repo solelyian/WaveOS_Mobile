@@ -81,8 +81,10 @@ export class AppWindow {
     const tx = lerp(x, 0, t);
     const ty = lerp(y, 0, t) + this.oy.v;
     this.el.style.transform = `translate(${tx.toFixed(1)}px,${ty.toFixed(1)}px) scale(${sx.toFixed(4)},${sy.toFixed(4)})`;
-    // rayon visuel compensé par l'échelle (maquette : Framer corrige le radius)
-    this.el.style.borderRadius = `${(lerp(R_ICON, R_SCREEN, t) / sx).toFixed(1)}px`;
+    // rayon compensé PAR AXE (maquette : Framer corrige H et V séparément) —
+    // à l'arrivée la fenêtre reprend les coins circulaires 22px de l'icône.
+    const r = lerp(R_ICON, R_SCREEN, t);
+    this.el.style.borderRadius = `${(r / sx).toFixed(1)}px / ${(r / sy).toFixed(1)}px`;
     // contenu : fondu entrant retardé (maquette : delay .05, durée .25, blur 10 -> 0)
     if (!this.closing) {
       const c = Math.max(0, Math.min(1, (t - 0.15) / 0.45));
