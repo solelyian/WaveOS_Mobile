@@ -4,7 +4,7 @@
 // Site), filtres catégories.
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { fs, Icon, useTheme } from "../rn";
 
 interface Pin { x: number; y: number; ic: string; c: string; name: string; kind: string; info: string }
@@ -19,36 +19,15 @@ const PINS: Pin[] = [
 
 const CATS = [["Tous", "map-pin"], ["Cafés", "coffee"], ["Culture", "book-open"], ["Parcs", "camera"]] as const;
 
-function MapCanvas({ sel, onPin }: { sel: Pin | null; onPin: (p: Pin) => void }): ReactNode {
+function MapCanvas({ sel, onPin, cat }: { sel: Pin | null; onPin: (p: Pin) => void; cat: number }): ReactNode {
   return (
-    <View style={{ position: "absolute", inset: 0, backgroundColor: "#101527" }}>
-      {/* pâtés de maisons */}
-      {[
-        [8, 12, 22, 18], [36, 10, 18, 24], [60, 8, 28, 16],
-        [6, 38, 24, 16], [38, 42, 20, 14], [66, 32, 22, 20],
-        [10, 62, 26, 18], [44, 64, 18, 22], [68, 60, 24, 18],
-      ].map(([x, y, w, h], i) => (
-        <View key={i} style={{
-          position: "absolute", left: `${x}%`, top: `${y}%`, width: `${w}%`, height: `${h}%`,
-          backgroundColor: i % 3 === 0 ? "#1a2140" : "#161c36", borderRadius: 4,
-          borderWidth: 0.5, borderColor: "#232c52",
-        }} />
-      ))}
-      {/* rivière ruban */}
-      <View style={{
-        position: "absolute", left: "-20%", top: "78%", width: "150%", height: 60,
-        backgroundColor: "#24346b", transform: [{ rotate: "-10deg" }],
-        borderTopWidth: 1, borderTopColor: "#2f4488", opacity: 0.9,
-      }} />
-      {/* routes */}
-      {[[20, 0, 0.8, 100, 30], [0, 30, 100, 0.8, 0], [0, 55, 100, 0.6, 0]].map(([x, y, w, h, r], i) => (
-        <View key={"r" + i} style={{
-          position: "absolute", left: `${x}%`, top: `${y}%`, width: `${w}%`, height: `${h}%`,
-          backgroundColor: "#2a3255", transform: [{ rotate: `${r}deg` }], opacity: 0.7,
-        }} />
-      ))}
+    <View style={{ position: "absolute", inset: 0, backgroundColor: "#141824" }}>
+      {/* vraie carte (public/img/plans_map.jpg) */}
+      <Image source={{ uri: "/img/plans_map.jpg" }}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+        resizeMode="cover" />
       {/* pins */}
-      {PINS.map(pin => (
+      {PINS.filter(pin => cat === 0 || (cat === 1 && pin.kind === "Café") || (cat === 2 && pin.kind === "Culture") || (cat === 3 && pin.kind === "Parc")).map(pin => (
         <Pressable key={pin.name} onPress={() => onPin(pin)} style={{
           position: "absolute", left: `${pin.x}%`, top: `${pin.y}%`,
           width: 30, height: 30, borderRadius: 15, backgroundColor: pin.c,
@@ -68,12 +47,12 @@ function MapCanvas({ sel, onPin }: { sel: Pin | null; onPin: (p: Pin) => void })
 
 export function PlansApp(): ReactNode {
   const p = useTheme();
-  const [q] = useState("");
+  const [q, setQ] = useState("");
   const [sel, setSel] = useState<Pin | null>(null);
   const [cat, setCat] = useState(0);
   return (
     <View style={{ flex: 1, backgroundColor: "#101527" }}>
-      <MapCanvas sel={sel} onPin={setSel} />
+      <MapCanvas sel={sel} onPin={setSel} cat={cat} />
       {/* recherche flottante */}
       <View style={{ position: "absolute", top: 58, left: 14, right: 14 }}>
         <View style={{
@@ -83,7 +62,8 @@ export function PlansApp(): ReactNode {
           backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
         } as object}>
           <Icon name="search" size={15} color={p.faint} sw={2.4} />
-          <Text style={{ fontSize: fs(14, p), color: q ? p.text : p.faint, flex: 1 }}>{q || "Rechercher un lieu"}</Text>
+          <TextInput value={q} onChangeText={setQ} placeholder="Rechercher un lieu" placeholderTextColor={p.faint}
+            style={{ fontSize: fs(14, p), color: p.text, flex: 1, outlineStyle: "none", borderWidth: 0, backgroundColor: "transparent" } as object} />
           <Icon name="mic" size={14} color={p.faint} sw={2.2} />
         </View>
         {/* filtres */}

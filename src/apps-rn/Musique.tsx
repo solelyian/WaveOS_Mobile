@@ -4,23 +4,23 @@
 // 100 % React Native — l'avancement utilise un timer tick par tick.
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { fs, Group, Icon, Nav, Row, SecTitle, StackNav, useStack, useTheme } from "../rn";
 
 interface Track { t: string; d: number }
-interface Album { name: string; artist: string; hue: number; year: number; tracks: Track[] }
+interface Album { name: string; artist: string; hue: number; art: string; year: number; tracks: Track[] }
 
 const ALBUMS: Album[] = [
-  { name: "Sillage", artist: "Nyne Ensemble", hue: 230, year: 2026, tracks: [
+  { name: "Sillage", artist: "Nyne Ensemble", hue: 230, art: "/img/cov1.jpg", year: 2026, tracks: [
     { t: "Rubans", d: 214 }, { t: "Marée basse", d: 187 }, { t: "Écume", d: 242 },
     { t: "Abysses", d: 301 }, { t: "Reflet", d: 178 }, { t: "Ressac", d: 226 }] },
-  { name: "Nocturnes Électriques", artist: "Léa Voss", hue: 330, year: 2025, tracks: [
+  { name: "Nocturnes Électriques", artist: "Léa Voss", hue: 330, art: "/img/cov2.jpg", year: 2025, tracks: [
     { t: "Aube synthétique", d: 234 }, { t: "Néon froid", d: 196 }, { t: "Polarité", d: 265 }, { t: "Dernier métro", d: 288 }] },
-  { name: "Granite & Bruine", artist: "Arctique", hue: 190, year: 2024, tracks: [
+  { name: "Granite & Bruine", artist: "Arctique", hue: 190, art: "/img/cov3.jpg", year: 2024, tracks: [
     { t: "Fjord", d: 254 }, { t: "Mousse", d: 202 }, { t: "Phare", d: 219 }, { t: "Dérive", d: 275 }, { t: "Grève", d: 188 }] },
-  { name: "Papier de verre", artist: "Studio Opale", hue: 20, year: 2026, tracks: [
+  { name: "Papier de verre", artist: "Studio Opale", hue: 20, art: "/img/cov4.jpg", year: 2026, tracks: [
     { t: "Grain", d: 167 }, { t: "Polissage", d: 223 }, { t: "Nuance", d: 241 }] },
-  { name: "Haute mer", artist: "Nyne Ensemble", hue: 260, year: 2023, tracks: [
+  { name: "Haute mer", artist: "Nyne Ensemble", hue: 260, art: "/img/ph4.jpg", year: 2023, tracks: [
     { t: "Houle", d: 243 }, { t: "Brassée", d: 198 }, { t: "Amer", d: 312 }, { t: "Nerf de boeuf", d: 176 }, { t: "Ivresse", d: 267 }] },
 ];
 
@@ -30,15 +30,9 @@ function Cover({ a, size }: { a: Album; size: number }): ReactNode {
   return (
     <View style={{
       width: size, height: size, borderRadius: size * 0.14, overflow: "hidden",
-      background: `linear-gradient(145deg, hsl(${a.hue} 55% 46%), hsl(${a.hue + 45} 60% 22%))`,
-      alignItems: "center", justifyContent: "center",
       boxShadow: "0 8px 22px rgba(0,0,0,.35)",
     }}>
-      <Icon name="waves" size={size * 0.34} color="rgba(255,255,255,.85)" sw={1.6} />
-      <View style={{ position: "absolute", bottom: size * 0.08, left: size * 0.09 }}>
-        <Text style={{ fontSize: size * 0.075, fontWeight: "700", color: "#fff" }}>{a.name}</Text>
-        <Text style={{ fontSize: size * 0.058, color: "rgba(255,255,255,.7)" }}>{a.artist}</Text>
-      </View>
+      <Image source={{ uri: a.art }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
     </View>
   );
 }

@@ -4,34 +4,21 @@
 // flash auto, grille optionnelle.
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { fs, Icon, useTheme } from "../rn";
 
 const MODES = ["PANO", "PHOTO", "VIDÉO"] as const;
 
-function Scene(): ReactNode {
-  // Viseur simulé : dégradé ciel + rubans du wallpaper + skyline.
+function Scene({ zoom }: { zoom: number }): ReactNode {
+  // Viseur : photo réelle (public/img/camera_scene.jpg), le zoom
+  // agrandit l'image comme un vrai crop capteur.
   return (
     <View style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
-      <View style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,#141a3a 0%,#23306b 45%,#5a4a8a 75%,#8a5a7a 100%)" } as object} />
-      <View style={{
-        position: "absolute", left: -40, top: "30%", width: "200%", height: 90,
-        background: "linear-gradient(90deg,transparent,#7DA2FF55,transparent)",
-        transform: [{ rotate: "-16deg" }],
-      } as object} />
-      <View style={{
-        position: "absolute", left: -40, top: "55%", width: "200%", height: 60,
-        background: "linear-gradient(90deg,transparent,#2FCC9244,transparent)",
-        transform: [{ rotate: "-16deg" }],
-      } as object} />
-      {/* skyline */}
-      {[14, 22, 30, 18, 26, 12, 20].map((h, i) => (
-        <View key={i} style={{
-          position: "absolute", bottom: 0, left: `${i * 16}%`, width: "14%",
-          height: `${h + 30}%`, backgroundColor: "rgba(6,8,20,.85)",
-          borderTopLeftRadius: 3, borderTopRightRadius: 3,
-        }} />
-      ))}
+      <Image source={{ uri: "/img/camera_scene.jpg" }}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", transform: [{ scale: zoom }] } as object}
+        resizeMode="cover" />
+      {/* vignettage léger façon objectif */}
+      <View style={{ position: "absolute", inset: 0, boxShadow: "inset 0 0 90px rgba(0,0,0,.45)" } as object} pointerEvents="none" />
     </View>
   );
 }
@@ -65,7 +52,7 @@ export function CameraApp(): ReactNode {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#000" }}>
-      <Scene />
+      <Scene zoom={zoom} />
       {/* grille optionnelle */}
       {grid ? (
         <View style={{ position: "absolute", inset: 0 }} pointerEvents="none">
@@ -111,8 +98,8 @@ export function CameraApp(): ReactNode {
       {/* rangée déclencheur */}
       <View style={{ position: "absolute", bottom: 30, left: 0, right: 0, flexDirection: "row", alignItems: "center", justifyContent: "space-around" }}>
         {/* pellicule */}
-        <View style={{ width: 42, height: 42, borderRadius: 10, overflow: "hidden", backgroundColor: "#23306b", alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700" }}>{shots || ""}</Text>
+        <View style={{ width: 42, height: 42, borderRadius: 10, overflow: "hidden", backgroundColor: "#222" }}>
+          {shots > 0 ? <Image source={{ uri: "/img/camera_scene.jpg" }} style={{ width: "100%", height: "100%" }} resizeMode="cover" /> : null}
         </View>
         <Pressable onPress={shoot} style={{
           width: 72, height: 72, borderRadius: 36, borderWidth: 5, borderColor: "#fff",
