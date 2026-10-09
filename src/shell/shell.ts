@@ -36,7 +36,7 @@ export class Shell {
     this.home.onSpot = () => {
       if (sys.locked || sys.activeApp || sys.sheet) return;
       if (!this.spot) { this.spot = new Spotlight((id, rect) => this.openApp(id, rect)); this.phone.append(this.spot.el); }
-      this.spot.open();
+      this.spot.open(this.home.searchEl);
     };
     this.lock = new Lock(() => {});
     phone.append(this.wp.el, this.home.el, this.sb.el, this.di.el, this.lock.el);

@@ -13,6 +13,7 @@ export class Home {
   private op = new Spring(1, "morph");
   private onOpen: (id: AppId, rect: DOMRect) => void;
   onSpot?: () => void;
+  searchEl!: HTMLElement;
 
   constructor(onOpen: (id: AppId, rect: DOMRect) => void) {
     this.onOpen = onOpen;
@@ -35,6 +36,7 @@ export class Home {
     // capsule recherche style iOS au-dessus du dock -> Spotlight
     const search = h("button", { class: "home-search g-light", onClick: () => this.onSpot?.() },
       svgIcon(I.search), h("span", {}, "Search"));
+    this.searchEl = search;
 
     const dock = h("div", { attrs: { id: "dock" } },
       h("div", { class: "dock-in g-light" },
