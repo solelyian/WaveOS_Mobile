@@ -7,6 +7,7 @@ import { AppWindow } from "./appwin";
 import { DynamicIsland } from "./di";
 import { ControlCenter } from "./cc";
 import { NotificationCenter } from "./nc";
+import { Spotlight } from "./spotlight";
 import { renderApp } from "../apps";
 import { registerAppCloser } from "./api";
 import { sys, set, onChange } from "../system/state";
@@ -27,10 +28,16 @@ export class Shell {
   private appwin: AppWindow | null = null;
   private cc: ControlCenter | null = null;
   private nc: NotificationCenter | null = null;
+  private spot: Spotlight | null = null;
 
   constructor(phone: HTMLElement) {
     this.phone = phone;
     this.home = new Home((id, rect) => this.openApp(id, rect));
+    this.home.onSpot = () => {
+      if (sys.locked || sys.activeApp || sys.sheet) return;
+      if (!this.spot) { this.spot = new Spotlight((id, rect) => this.openApp(id, rect)); this.phone.append(this.spot.el); }
+      this.spot.open();
+    };
     this.lock = new Lock(() => {});
     phone.append(this.wp.el, this.home.el, this.sb.el, this.di.el, this.lock.el);
     this.lock.bar.style.pointerEvents = "auto";
@@ -207,6 +214,7 @@ export class Shell {
     this.home.render();
     this.di.render();
     if (this.appwin && this.appwin.render()) this.appwin = null;
+    if (this.spot && this.spot.render()) { this.spot.el.remove(); this.spot = null; }
     if (this.cc && this.cc.render() && sys.sheet !== "cc") { this.cc.el.remove(); this.cc = null; }
     if (this.nc) { this.nc.tick(); if (this.nc.render() && sys.sheet !== "nc") { this.nc.el.remove(); this.nc = null; } }
     requestAnimationFrame(this.loop);

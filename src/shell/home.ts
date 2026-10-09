@@ -12,6 +12,7 @@ export class Home {
   private sc = new Spring(1, "morph");
   private op = new Spring(1, "morph");
   private onOpen: (id: AppId, rect: DOMRect) => void;
+  onSpot?: () => void;
 
   constructor(onOpen: (id: AppId, rect: DOMRect) => void) {
     this.onOpen = onOpen;
@@ -31,11 +32,15 @@ export class Home {
     const grid = h("div", { attrs: { id: "grid" } });
     for (const app of APPS) grid.append(this.icon(app.id, false));
 
+    // capsule recherche style iOS au-dessus du dock -> Spotlight
+    const search = h("button", { class: "home-search g-light", onClick: () => this.onSpot?.() },
+      svgIcon(I.search), h("span", {}, "Search"));
+
     const dock = h("div", { attrs: { id: "dock" } },
       h("div", { class: "dock-in g-light" },
         ...DOCK.map((id) => this.icon(id, true))));
 
-    this.el.append(widgets, grid, dock);
+    this.el.append(widgets, grid, search, dock);
   }
 
   private icon(id: AppId, inDock: boolean) {

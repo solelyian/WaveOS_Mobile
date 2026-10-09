@@ -314,3 +314,26 @@ input { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- Spotlight ---------- */
+#home .home-search {
+  align-self: center; margin-top: auto; margin-bottom: 12px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px;
+  color: #fff; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,.35);
+  transition: transform .15s;
+}
+#home .home-search:active { transform: scale(.94); }
+#home .home-search .icon svg { width: 14px; height: 14px; }
+#home #dock { margin-top: 0; }
+
+#spot { position: absolute; inset: 0; z-index: 300; }
+#spot .spot-scrim { position: absolute; inset: 0; background: rgba(0,0,0,.35); backdrop-filter: blur(24px) saturate(1.3); }
+#spot .spot-in { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 96px 20px 40px; will-change: transform; }
+#spot .spot-bar { height: 56px; border-radius: 28px; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 20px; color: rgba(255,255,255,.7); }
+#spot .spot-bar .icon { color: rgba(255,255,255,.7); }
+#spot .spot-x { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; }
+#spot .spot-list { margin-top: 20px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+#spot .spot-row { display: flex; align-items: center; gap: 16px; padding: 10px 12px; border-radius: 20px; cursor: pointer; }
+#spot .spot-row:hover { background: rgba(255,255,255,.08); }
+#spot .spot-row .tile .icon svg { color: #fff; }
+#spot .spot-row .icon svg { transform: rotate(180deg); }
