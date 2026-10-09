@@ -26,6 +26,11 @@ export const tokens = {
       "k": 500,
       "d": 34,
       "m": 1
+    },
+    "pill": {
+      "k": 220,
+      "d": 24,
+      "m": 1
     }
   },
   "motion": {

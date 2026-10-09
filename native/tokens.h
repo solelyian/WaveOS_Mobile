@@ -13,6 +13,9 @@
 #define WVP_SPRING_SNAP_K 500f
 #define WVP_SPRING_SNAP_D 34f
 #define WVP_SPRING_SNAP_M 1f
+#define WVP_SPRING_PILL_K 220f
+#define WVP_SPRING_PILL_D 24f
+#define WVP_SPRING_PILL_M 1f
 #define WVP_RUBBER 0.2f
 #define WVP_SCREEN_W 400
 #define WVP_SCREEN_H 850

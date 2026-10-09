@@ -2,6 +2,7 @@
 import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
 import { FloatingTabBar, img } from "./ui";
+import type { TabBarCtl } from "./ui";
 import { sys, set, onChange } from "../system/state";
 
 export function MusicApp() {
@@ -13,7 +14,7 @@ export function MusicApp() {
     h("div", { style: { position: "absolute", bottom: "0", right: "0", width: "100%", height: "66%", background: "linear-gradient(to top,#ef4444,transparent)", filter: "blur(60px)" } }));
 
   const stage = h("div", { style: { flex: "1", display: "flex", flexDirection: "column", position: "relative", zIndex: "10" } });
-  let bar: HTMLElement | null = null;
+  let bar: TabBarCtl | null = null;
 
   const library = () =>
     h("div", { class: "app-scroll no-sb", style: { padding: "64px 24px 96px" } },
@@ -74,13 +75,11 @@ export function MusicApp() {
     { id: "search", icon: "search" as const, label: "Search" },
   ];
 
-  let tab = "library";
-  const retab = (id: string) => { tab = id; const nb = FloatingTabBar(TABS, tab, retab, true); if (bar) { bar.replaceWith(nb); bar = nb; } };
-
+  // maquette : onglets inertes — le pill glisse seul via setActive interne
   const refresh = () => {
     stage.replaceChildren(view === "library" ? library() : player());
-    if (view === "library" && !bar) { bar = FloatingTabBar(TABS, tab, retab, true); root.append(bar); }
-    if (view === "player" && bar) { bar.remove(); bar = null; }
+    if (view === "library" && !bar) { bar = FloatingTabBar(TABS, "library", () => {}, true); root.append(bar.el); }
+    if (view === "player" && bar) { bar.el.remove(); bar = null; }
   };
   root.append(glow, stage);
   refresh();

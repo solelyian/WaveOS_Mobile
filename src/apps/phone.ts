@@ -73,15 +73,14 @@ export function PhoneApp() {
     { id: "keypad", icon: "layoutGrid" as const, label: "Keypad" },
     { id: "voicemail", icon: "voicemail" as const, label: "Voicemail" },
   ];
-  let bar = FloatingTabBar(TABS, tab, (id) => { tab = id; refresh(); });
+  // la capsule persiste : le pill glisse via son ressort interne (setActive)
+  const bar = FloatingTabBar(TABS, tab, (id) => { tab = id; refresh(); });
 
   const refresh = () => {
     // maquette : seuls keypad/recents ont du contenu — les autres onglets vident l'écran
     stage.replaceChildren(tab === "keypad" ? keypad() : tab === "recents" ? recents() : h("div", { style: { flex: "1" } }));
-    const nb = FloatingTabBar(TABS, tab, (id) => { tab = id; refresh(); });
-    bar.replaceWith(nb); bar = nb;
   };
   refresh();
-  root.append(bar);
+  root.append(bar.el);
   return root;
 }
