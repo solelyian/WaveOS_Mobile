@@ -9,9 +9,9 @@ export function MessagesApp() {
   const header = h("div", { class: "g-light", style: { padding: "64px 24px 16px", background: "rgba(255,255,255,.6)", borderRadius: "0 0 32px 32px", marginBottom: "8px", zIndex: "20" } },
     h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" } },
       h("div", { style: { color: "#3b82f6", fontWeight: "500" } }, "Edit"),
-      h("div", { class: "pressable", style: { padding: "8px", background: "#3b82f6", color: "#fff", borderRadius: "50%", boxShadow: "0 4px 12px rgba(59,130,246,.3)", display: "flex" } }, svgIcon(I.send))),
+      h("div", { class: "pressable", style: { padding: "8px", background: "#3b82f6", color: "#fff", borderRadius: "50%", boxShadow: "0 4px 12px rgba(59,130,246,.3)", display: "flex" } }, svgIcon(I.send, "", 18))),
     h("h1", { style: { fontSize: "30px", fontWeight: "700", color: "rgba(0,0,0,.9)", marginBottom: "16px" } }, "Messages"),
-    h("div", { class: "search-pill" }, svgIcon(I.search), h("span", {}, "Search")));
+    h("div", { class: "search-pill" }, svgIcon(I.search, "", 16), h("span", {}, "Search")));
 
   const stories = h("div", { class: "no-sb", style: { display: "flex", gap: "16px", overflowX: "auto", padding: "8px 0 8px 8px", marginBottom: "16px" } },
     ...[1, 2, 3, 4, 5].map((i) =>
@@ -32,7 +32,7 @@ export function MessagesApp() {
             h("span", { style: { fontWeight: "700", color: "rgba(0,0,0,.9)", fontSize: "18px" } }, "Alex Morgan"),
             h("span", { style: { fontSize: "12px", color: "rgba(0,0,0,.4)", fontWeight: "700" } }, `10:${10 + i} AM`)),
           h("div", { style: { fontSize: "14px", color: "rgba(0,0,0,.6)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontWeight: "500" } }, i === 0 ? "Hey, are we still on for lunch?" : "Sent a photo")),
-        h("span", { style: { color: "#d1d5db", transform: "rotate(180deg)", display: "flex", flexShrink: "0" } }, svgIcon(I.chevronLeft)))));
+        h("span", { style: { color: "#d1d5db", transform: "rotate(180deg)", display: "flex", flexShrink: "0" } }, svgIcon(I.chevronLeft, "", 16)))));
 
   root.append(header,
     h("div", { class: "app-scroll no-sb", style: { padding: "8px 16px 96px" } }, stories, convos));

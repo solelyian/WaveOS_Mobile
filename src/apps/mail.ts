@@ -28,8 +28,8 @@ export function MailApp() {
       h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
         h("button", { style: { color: "#3b82f6", fontWeight: "500" } }, "Edit"),
         h("h1", { style: { fontSize: "24px", fontWeight: "700" } }, "Inbox"),
-        h("button", { style: { color: "#3b82f6" } }, svgIcon(I.layoutGrid))),
-      h("div", { class: "search-pill", style: { marginTop: "16px" } }, svgIcon(I.search), h("span", {}, "Search"))),
+        h("button", { style: { color: "#3b82f6" } }, svgIcon(I.layoutGrid, "", 20))),
+      h("div", { class: "search-pill", style: { marginTop: "16px" } }, svgIcon(I.search, "", 16), h("span", {}, "Search"))),
     h("div", { class: "app-scroll no-sb", style: { padding: "0 16px 80px", display: "flex", flexDirection: "column", gap: "12px" } },
       ...Array.from({ length: 6 }, (_, i) =>
         h("div", { class: "pressable card-white", style: { padding: "16px", display: "flex", flexDirection: "column", gap: "4px", position: "relative", overflow: "hidden" }, onClick: openDetail },
@@ -41,6 +41,6 @@ export function MailApp() {
           h("span", { style: { fontWeight: "500", fontSize: "14px", marginTop: "4px", color: "rgba(0,0,0,.8)" } }, "New Login Detected on MacBook Pro..."),
           h("span", { style: { fontSize: "12px", color: "rgba(0,0,0,.5)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: "2px" } }, "We detected a new login from a device you don't usually use...")))),
     h("div", { style: { position: "absolute", bottom: "32px", right: "24px", zIndex: "10" } },
-      h("button", { class: "app-fab pressable", style: { position: "static", width: "56px", height: "56px", background: "#3b82f6", color: "#fff", border: "1px solid #60a5fa" } }, svgIcon(I.plus))));
+      h("button", { class: "app-fab pressable", style: { position: "static", width: "56px", height: "56px", background: "#3b82f6", color: "#fff", border: "1px solid #60a5fa" } }, svgIcon(I.plus, "", 28))));
   return root;
 }

@@ -40,8 +40,8 @@ export function MusicApp() {
     });
     const syncPP = () => {
       pp.replaceChildren(svgIcon(sys.playing ? I.pause : I.play));
-      const pv = pp.querySelector("svg");
-      if (pv) { pv.setAttribute("fill", "black"); pv.style.width = "32px"; pv.style.height = "32px"; }
+      const pv = pp.querySelector("svg") as SVGElement | null;
+      if (pv) { pv.setAttribute("fill", "black"); pv.style.width = "28px"; pv.style.height = "28px"; if (!sys.playing) pv.style.marginLeft = "4px"; }
     };
     syncPP();
     onChange((k) => { if (k === "playing" && pp.isConnected) syncPP(); });
@@ -57,14 +57,14 @@ export function MusicApp() {
           h("h2", { style: { fontSize: "30px", fontWeight: "700" } }, "Midnight City"),
           h("p", { style: { fontSize: "18px", color: "rgba(255,255,255,.7)", fontWeight: "500" } }, "M83")),
         h("div", { class: "pressable", style: { padding: "12px", background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.2)", borderRadius: "50%", boxShadow: "inset 0 1px 1px rgba(255,255,255,.3)", display: "flex" } },
-          h("span", { style: { color: "#ef4444", display: "flex" } }, svgIcon(I.heart)))),
+          h("span", { style: { color: "#ef4444", display: "flex" } }, svgIcon(I.heart, "fill", 20)))),
       h("div", { style: { marginBottom: "40px" } },
         h("div", { style: { width: "100%", height: "6px", background: "rgba(0,0,0,.4)", border: "1px solid rgba(255,255,255,.1)", borderRadius: "3px", overflow: "hidden", boxShadow: "inset 0 1px 2px rgba(0,0,0,.5)" } },
           h("div", { style: { height: "100%", width: sys.playing ? "60%" : "30%", background: "#fff", boxShadow: "0 0 15px #fff", transition: "width .4s" } })),
         h("div", { style: { display: "flex", justifyContent: "space-between", fontSize: "12px", fontWeight: "500", opacity: ".6", marginTop: "8px" } },
           h("span", {}, "1:24"), h("span", {}, "4:03"))),
       h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 16px" } },
-        svgIcon(I.skipBack), pp, svgIcon(I.skipForward)));
+        svgIcon(I.skipBack, "", 32), pp, svgIcon(I.skipForward, "", 32)));
   };
 
   const TABS = [

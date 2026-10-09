@@ -32,9 +32,12 @@ export function h<K extends keyof HTMLElementTagNameMap>(
   return el;
 }
 
-export function svgIcon(svg: string, cls = ""): HTMLElement {
+export function svgIcon(svg: string, cls = "", px?: number): HTMLElement {
   const w = h("span", { class: "icon " + cls, html: svg });
-  const s = w.querySelector("svg");
-  if (s) { s.setAttribute("width", "100%"); s.setAttribute("height", "100%"); }
+  const s = w.querySelector("svg") as SVGElement | null;
+  if (s) {
+    s.setAttribute("width", "100%"); s.setAttribute("height", "100%");
+    if (px) { s.style.width = `${px}px`; s.style.height = `${px}px`; }
+  }
   return w;
 }

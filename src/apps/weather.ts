@@ -7,7 +7,7 @@ export function WeatherApp() {
   const hourly = ["Now", "1PM", "2PM", "3PM", "4PM", "5PM"].map((t, i) =>
     h("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", minWidth: "30px" } },
       h("span", { style: { fontSize: "12px", fontWeight: "500", opacity: ".9" } }, t),
-      svgIcon(I.cloud),
+      (() => { const c = svgIcon(I.cloud); (c.querySelector("svg") as SVGElement).style.fill = i === 0 ? "#fff" : "rgba(255,255,255,.2)"; return c; })(),
       h("span", { style: { fontSize: "18px", fontWeight: "700" } }, `${72 + i}°`)));
 
   const tile = (icon: string, label: string, big: string, sub: string, extra?: HTMLElement) =>
@@ -17,7 +17,7 @@ export function WeatherApp() {
       extra ?? h("span"));
 
   const wind = h("div", { style: { position: "relative", height: "80px", width: "80px", alignSelf: "center" } },
-    h("div", { style: { position: "absolute", inset: "0", opacity: ".2" } }, svgIcon(I.compass)),
+    h("div", { style: { position: "absolute", inset: "0", opacity: ".2" } }, svgIcon(I.compass, "", 80)),
     h("div", { style: { position: "absolute", inset: "0", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700" } }, "NW"),
     h("div", { style: { position: "absolute", inset: "0", borderTop: "4px solid #fff", borderRadius: "50%", transform: "rotate(45deg)", boxShadow: "0 2px 10px rgba(255,255,255,.5)" } }));
 
@@ -26,7 +26,7 @@ export function WeatherApp() {
     h("div", { class: "app-scroll no-sb", style: { padding: "80px 24px 96px", position: "relative", zIndex: "10" } },
       h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "64px" } },
         h("div", {},
-          h("div", { style: { fontSize: "18px", fontWeight: "500", letterSpacing: ".15em", textTransform: "uppercase", opacity: ".9", display: "flex", alignItems: "center", gap: "8px" } }, svgIcon(I.mapPin), "San Francisco"),
+          h("div", { style: { fontSize: "18px", fontWeight: "500", letterSpacing: ".15em", textTransform: "uppercase", opacity: ".9", display: "flex", alignItems: "center", gap: "8px" } }, svgIcon(I.mapPin, "", 16), "San Francisco"),
           h("div", { style: { fontSize: "112px", lineHeight: "1", fontWeight: "200", letterSpacing: "-.06em", marginTop: "8px" } }, "72°"),
           h("div", { style: { fontSize: "20px", fontWeight: "500", opacity: ".9", marginTop: "8px" } }, "Mostly Clear"),
           h("div", { style: { display: "flex", gap: "16px", marginTop: "8px", fontSize: "14px", opacity: ".8", fontWeight: "500" } },
@@ -42,5 +42,5 @@ export function WeatherApp() {
         tile(I.wind, "Wind", "", "", wind),
         tile(I.eye, "Visibility", "10 mi", "Perfect View"))),
     h("button", { class: "g-btn pressable", style: { position: "absolute", top: "56px", right: "24px", padding: "12px", borderRadius: "50%", zIndex: "50", display: "flex" }, onClick: () => shell.closeApp() },
-      svgIcon(I.x)));
+      svgIcon(I.x, "", 20)));
 }

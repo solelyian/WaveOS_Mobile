@@ -17,7 +17,7 @@ export function PhoneApp() {
   const callBtn = h("button", {
     class: "pressable", style: { width: "80px", height: "80px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", border: "1px solid #4ade80", transition: "all .2s" },
     onClick: () => { if (number) showCall(); },
-  }, svgIcon(I.phone));
+  }, svgIcon(I.phone, "fill", 32));
 
   const keypad = () => {
     numEl.textContent = number || "...";
@@ -47,7 +47,7 @@ export function PhoneApp() {
               h("div", { style: { fontSize: "14px", color: "rgba(0,0,0,.5)" } }, "Mobile"))),
           h("div", { style: { display: "flex", alignItems: "center", gap: "8px" } },
             h("span", { style: { fontSize: "12px", color: "rgba(0,0,0,.4)" } }, "Yesterday"),
-            h("span", { style: { color: "#3b82f6", display: "flex" } }, svgIcon(I.info))))));
+            h("span", { style: { color: "#3b82f6", display: "flex" } }, svgIcon(I.info, "", 20))))));
 
   const showCall = () => {
     const ov = h("div", { style: { position: "absolute", inset: "0", zIndex: "50", background: "#111827", display: "flex", flexDirection: "column", alignItems: "center", padding: "96px 0 48px", opacity: "0", transform: "scale(.9)", transition: "all .25s" } });
@@ -76,8 +76,8 @@ export function PhoneApp() {
   let bar = FloatingTabBar(TABS, tab, (id) => { tab = id; refresh(); });
 
   const refresh = () => {
-    stage.replaceChildren(tab === "keypad" ? keypad() : tab === "recents" ? recents()
-      : h("div", { style: { flex: "1", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(0,0,0,.3)", fontSize: "14px", fontWeight: "500" } }, "No " + tab));
+    // maquette : seuls keypad/recents ont du contenu — les autres onglets vident l'écran
+    stage.replaceChildren(tab === "keypad" ? keypad() : tab === "recents" ? recents() : h("div", { style: { flex: "1" } }));
     const nb = FloatingTabBar(TABS, tab, (id) => { tab = id; refresh(); });
     bar.replaceWith(nb); bar = nb;
   };

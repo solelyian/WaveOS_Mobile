@@ -13,6 +13,7 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 input { font: inherit; }
 .no-sb { scrollbar-width: none; } .no-sb::-webkit-scrollbar { display: none; }
 .icon { display: inline-flex; flex: none; align-items: center; justify-content: center; } .icon svg { display: block; width: 24px; height: 24px; }
+.icon.fill svg { fill: currentColor; }
 
 /* ---------- Châssis ---------- */
 #stage { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
