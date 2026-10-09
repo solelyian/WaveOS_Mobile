@@ -1,18 +1,19 @@
-// GENERATED from tokens.json — ne pas éditer à la main
+// GENERATED from tokens.json — ne pas éditer
 #ifndef WAVE_TOKENS_H
 #define WAVE_TOKENS_H
-
-#define WVP_SPRING_SNAPPY_K 200f
-#define WVP_SPRING_SNAPPY_D 19f
-#define WVP_SPRING_SOFT_K 150f
-#define WVP_SPRING_SOFT_D 16f
-#define WVP_SPRING_BOUNCE_K 140f
-#define WVP_SPRING_BOUNCE_D 8f
-#define WVP_SPRING_SHEET_K 195f
-#define WVP_SPRING_SHEET_D 17f
-#define WVP_RUBBER_COEF 0.55f
-#define WVP_SCREEN_W 393
-#define WVP_SCREEN_H 852
-#define WVP_SQUIRCLE_N 4.6f
-
-#endif // WAVE_TOKENS_H
+#define WVP_SPRING_MORPH_K 400f
+#define WVP_SPRING_MORPH_D 28f
+#define WVP_SPRING_MORPH_M 0.85f
+#define WVP_SPRING_SHADE_K 350f
+#define WVP_SPRING_SHADE_D 30f
+#define WVP_SPRING_SHADE_M 0.8f
+#define WVP_SPRING_ISLAND_K 400f
+#define WVP_SPRING_ISLAND_D 30f
+#define WVP_SPRING_ISLAND_M 1f
+#define WVP_SPRING_SNAP_K 500f
+#define WVP_SPRING_SNAP_D 34f
+#define WVP_SPRING_SNAP_M 1f
+#define WVP_RUBBER 0.2f
+#define WVP_SCREEN_W 400
+#define WVP_SCREEN_H 850
+#endif
