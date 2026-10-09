@@ -58,6 +58,10 @@ export class Home {
     if (t) t.style.opacity = hidden ? "0" : "1";
   }
 
+  /** entrée iOS : part réduit + transparent ; le setMode('full') qui suit
+   *  ramène au ressort vers 1 — zoom-settle du déverrouillage. */
+  enter() { this.sc.set(0.9); this.op.set(0); }
+
   /** maquette : app -> scale .95 / opacity .5 ; panneau -> scale .9 / opacity 1. */
   setMode(mode: "full" | "app" | "sheet") {
     this.sc.to(mode === "full" ? 1 : mode === "app" ? 0.95 : 0.9);

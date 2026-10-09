@@ -93,12 +93,21 @@ export class Shell {
   private closeNC() { this.nc?.close(); if (sys.sheet === "nc") set("sheet", null); }
 
   private unlock() {
-    // maquette : le lock fond + floute pendant que le home arrive
-    tween(450, (v) => {
-      this.lock.el.style.opacity = (1 - v).toFixed(3);
-      this.lock.el.style.filter = `blur(${(v * 10).toFixed(1)}px)`;
-    }, { done: () => { this.lock.visible = false; } });
-    set("locked", false);
+    // iOS-style : le lock dérive vers le haut en fondant + floutant,
+    // le springboard émerge en zoom-settle (petit → 1, léger rebond),
+    // le wallpaper dézoome 1.1 → 1 et se défloute (wp.level 2 → 0).
+    const o0 = parseFloat(this.lock.el.style.opacity || "1");
+    tween(500, (v) => {
+      this.lock.el.style.opacity = (o0 * (1 - v)).toFixed(3);
+      this.lock.el.style.filter = `blur(${(v * 12).toFixed(1)}px)`;
+      this.lock.el.style.transform = `translateY(${(-v * 90).toFixed(1)}px)`;
+    }, { done: () => {
+      this.lock.visible = false;
+      this.lock.el.style.transform = "";
+    } });
+    // entrée du home : part légèrement réduit + transparent, ressort vers 1
+    this.home.enter();
+    set("locked", false); // syncTargets → sc.to(1) op.to(1), wp 2→0, sb fondu
   }
 
   // ---------- zones de geste ----------

@@ -1,7 +1,7 @@
 // appwin.ts — morph icône→fenêtre (maquette : le conteneur coloré grandit de la tuile,
 // le contenu app crossfade par-dessus ; drag vertical -> fermeture dans les deux sens).
 import { h } from "../core/el";
-import { Spring } from "../core/motion";
+import { Spring, tween } from "../core/motion";
 import { lerp } from "../wasm/bridge";
 import { appMeta } from "../apps/registry";
 import type { AppId } from "../system/state";
@@ -32,13 +32,16 @@ export class AppWindow {
     this.morph.to(1);
   }
 
-  /** Suivi du doigt : la fenêtre entière suit dy (élasticité maquette ~.4 en haut). */
+  /** Suivi du doigt : résistance élastique .4 dans les DEUX sens (maquette :
+   *  dragConstraints {0,0} + dragElastic .4 — la fenêtre ne suit qu'à 40%). */
   drag(dy: number) {
-    this.oy.set(dy > 0 ? dy : dy * 0.4);
+    this.oy.set(dy * 0.4);
   }
-  /** |offset|>100 ou |vitesse|>500 -> fermeture, quel que soit le sens (maquette). */
+  /** offset effectif (élasticité comprise) >100 ou |vitesse|>500 -> fermeture
+   *  dans les deux sens — soit ~250px de drag réel (maquette). */
   release(dy: number, vy: number): "close" | "stay" {
-    if (Math.abs(dy) > tokens.motion.offsetCommitPx || Math.abs(vy) > tokens.motion.velocityCommit) {
+    const eff = dy * 0.4;
+    if (Math.abs(eff) > tokens.motion.offsetCommitPx || Math.abs(vy) > tokens.motion.velocityCommit) {
       this.close();
       return "close";
     }
@@ -49,8 +52,14 @@ export class AppWindow {
     if (this.closing) return;
     this.closing = true;
     this.morph.to(0);
-    this.oy.to(this.oy.v > 0 ? 160 : -60);
+    this.oy.to(0); // retour à l'icône, pas de glissé (maquette : layoutId morph direct)
+    // contenu : fondu de sortie quasi instantané (maquette : exit durée .1, scale .98)
+    tween(110, (v) => {
+      this.body.style.opacity = ((1 - v) * this.bodyOp).toFixed(3);
+      this.body.style.transform = `scale(${lerp(1, 0.98, v).toFixed(4)})`;
+    }, { from: 0, to: 1 });
   }
+  private bodyOp = 0;
 
   /** à appeler chaque frame ; renvoie true quand la fenêtre a disparu. */
   render(): boolean {
@@ -61,12 +70,18 @@ export class AppWindow {
     const tx = lerp(x, 0, t);
     const ty = lerp(y, 0, t) + this.oy.v;
     this.el.style.transform = `translate(${tx.toFixed(1)}px,${ty.toFixed(1)}px) scale(${sx.toFixed(4)},${sy.toFixed(4)})`;
-    this.el.style.borderRadius = `${lerp(R_ICON, R_SCREEN, t).toFixed(1)}px`;
+    // rayon visuel compensé par l'échelle (maquette : Framer corrige le radius)
+    this.el.style.borderRadius = `${(lerp(R_ICON, R_SCREEN, t) / sx).toFixed(1)}px`;
     // contenu : fondu entrant retardé (maquette : delay .05, durée .25, blur 10 -> 0)
-    const c = Math.max(0, Math.min(1, (t - 0.15) / 0.45));
-    this.body.style.opacity = c.toFixed(3);
-    this.body.style.filter = `blur(${((1 - c) * 10).toFixed(1)}px)`;
-    this.body.style.transform = `scale(${lerp(0.98, 1, c).toFixed(4)})`;
+    if (!this.closing) {
+      const c = Math.max(0, Math.min(1, (t - 0.15) / 0.45));
+      this.bodyOp = c;
+      this.body.style.opacity = c.toFixed(3);
+      this.body.style.filter = `blur(${((1 - c) * 10).toFixed(1)}px)`;
+      this.body.style.transform = `scale(${lerp(0.98, 1, c).toFixed(4)})`;
+    } else {
+      this.body.style.filter = "none";
+    }
     if (this.closing && t <= 0.01 && this.morph.settled()) {
       this.el.remove();
       this.onClosed?.();
