@@ -48,14 +48,14 @@ export function PhotosApp() {
           h("div", { style: { padding: "6px 16px", borderRadius: "999px", fontSize: "12px", fontWeight: "700", boxShadow: "0 1px 2px rgba(0,0,0,.05)", border: "1px solid #f3f4f6", background: i === 3 ? "#fff" : "rgba(255,255,255,.4)", color: i === 3 ? "#000" : "rgba(0,0,0,.4)" } }, t))),
       grid));
 
-  const retab = (id: string) => { tab = id; bar.replaceWith(FloatingTabBar(TABS, tab, retab)); };
+  const retab = (id: string) => { tab = id; const nb = FloatingTabBar(TABS, tab, retab); bar.replaceWith(nb); bar = nb; };
   const TABS = [
     { id: "library", icon: "layoutGrid" as const, label: "Library" },
     { id: "foryou", icon: "heart" as const, label: "For You" },
     { id: "albums", icon: "image" as const, label: "Albums" },
     { id: "search", icon: "search" as const, label: "Search" },
   ];
-  const bar = FloatingTabBar(TABS, tab, retab);
+  let bar = FloatingTabBar(TABS, tab, retab);
   root.append(bar);
   // les images du memory occupent tout le cadre
   (root.querySelector(".app-scroll img") as HTMLImageElement)?.style.setProperty("width", "100%");

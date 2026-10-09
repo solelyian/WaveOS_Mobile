@@ -37,7 +37,9 @@ export function MessagesApp() {
   root.append(header,
     h("div", { class: "app-scroll no-sb", style: { padding: "8px 16px 96px" } }, stories, convos));
 
-  let bar = FloatingTabBar(TABS, "chats", () => {});
+  let tab = "chats";
+  const retab = (id: string) => { tab = id; const nb = FloatingTabBar(TABS, tab, retab); bar.replaceWith(nb); bar = nb; };
+  let bar = FloatingTabBar(TABS, tab, retab);
   root.append(bar);
   return root;
 }

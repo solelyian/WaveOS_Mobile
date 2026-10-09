@@ -74,9 +74,12 @@ export function MusicApp() {
     { id: "search", icon: "search" as const, label: "Search" },
   ];
 
+  let tab = "library";
+  const retab = (id: string) => { tab = id; const nb = FloatingTabBar(TABS, tab, retab, true); if (bar) { bar.replaceWith(nb); bar = nb; } };
+
   const refresh = () => {
     stage.replaceChildren(view === "library" ? library() : player());
-    if (view === "library" && !bar) { bar = FloatingTabBar(TABS, "library", () => {}, true); root.append(bar); }
+    if (view === "library" && !bar) { bar = FloatingTabBar(TABS, tab, retab, true); root.append(bar); }
     if (view === "player" && bar) { bar.remove(); bar = null; }
   };
   root.append(glow, stage);
