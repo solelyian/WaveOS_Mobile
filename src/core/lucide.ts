@@ -63,6 +63,26 @@ import home from "lucide-static/icons/home.svg?raw";
 import power from "lucide-static/icons/power.svg?raw";
 import disc from "lucide-static/icons/disc.svg?raw";
 import screenShare from "lucide-static/icons/screen-share.svg?raw";
+import store from "lucide-static/icons/store.svg?raw";
+import download from "lucide-static/icons/download.svg?raw";
+import check from "lucide-static/icons/check.svg?raw";
+import cloudSun from "lucide-static/icons/cloud-sun.svg?raw";
+import cloudRain from "lucide-static/icons/cloud-rain.svg?raw";
+import micOff from "lucide-static/icons/mic-off.svg?raw";
+import sparkles from "lucide-static/icons/sparkles.svg?raw";
+import pencil from "lucide-static/icons/pencil.svg?raw";
+import phoneOutgoing from "lucide-static/icons/phone-outgoing.svg?raw";
+import phoneMissed from "lucide-static/icons/phone-missed.svg?raw";
+import trash from "lucide-static/icons/trash.svg?raw";
+import archive from "lucide-static/icons/archive.svg?raw";
+import reply from "lucide-static/icons/reply.svg?raw";
+import users from "lucide-static/icons/users.svg?raw";
+import gamepad2 from "lucide-static/icons/gamepad-2.svg?raw";
+import trophy from "lucide-static/icons/trophy.svg?raw";
+import newspaper from "lucide-static/icons/newspaper.svg?raw";
+import refreshCw from "lucide-static/icons/refresh-cw.svg?raw";
+import wifiLow from "lucide-static/icons/wifi-low.svg?raw";
+import moonStar from "lucide-static/icons/moon-star.svg?raw";
 
 export const I = {
   wifi, wifiOff, battery, signal, search, camera, flashlight, music,
@@ -73,6 +93,9 @@ export const I = {
   globe, compass, bell, shield, slidersHorizontal, mic, video, info,
   droplets, wind, eye, mapPin, navigation, share, book, plus, arrowUp,
   plane, cast, rotateCcw, trash2, home, power, disc, screenShare,
+  store, download, check, cloudSun, cloudRain, micOff, sparkles,
+  pencil, phoneOutgoing, phoneMissed, trash, archive, reply, users,
+  gamepad2, trophy, newspaper, refreshCw, wifiLow, moonStar,
 } as const;
 
 export type IconName = keyof typeof I;

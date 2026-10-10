@@ -5,6 +5,7 @@ import { I } from "../core/lucide";
 import { Spring } from "../core/motion";
 import { lerp } from "../wasm/bridge";
 import { sys, set, onChange } from "../system/state";
+import { cur, next, prev } from "../system/media";
 
 // keyframes (width, height, radius) : 0 idle / 1 lecture / 2 étendu
 const K = [
@@ -20,9 +21,11 @@ export class DynamicIsland {
   private expanded = false;
   private mini: HTMLElement;
   private big: HTMLElement;
+  private miniArt!: HTMLImageElement;
+  private prog: HTMLElement | null = null;
 
   constructor() {
-    const art = h("div", { class: "art" }, h("img", { attrs: { src: "/img/album.jpg", alt: "" } }));
+    const art = h("div", { class: "art" }, this.miniArt = h("img", { attrs: { src: "/img/album.jpg", alt: "" } }));
     const eq = h("div", { class: "di-eq" }, h("i"), h("i"), h("i"), h("i"));
     this.mini = h("div", { class: "di-mini" }, art, eq);
 
@@ -35,7 +38,7 @@ export class DynamicIsland {
       this.expanded = !this.expanded;
       this.sync();
     });
-    onChange((k) => { if (k === "playing") this.sync(); });
+    onChange((k) => { if (k === "playing" || k === "track") this.sync(); });
     this.sync();
   }
 
@@ -45,25 +48,28 @@ export class DynamicIsland {
       this.big.append(h("div", { class: "nomedia" }, svgIcon(I.music), h("span", {}, "No Media Playing")));
       return;
     }
+    const t = cur();
+    this.prog = h("i");
     this.big.append(
       h("div", { class: "row1" },
-        h("div", { class: "art" }, h("img", { attrs: { src: "/img/album.jpg", alt: "" } })),
+        h("div", { class: "art" }, h("img", { attrs: { src: t.art, alt: "" } })),
         h("div", { style: { flex: "1", minWidth: "0" } },
-          h("div", { class: "tt" }, "Midnight City"),
-          h("div", { class: "ar" }, "M83")),
+          h("div", { class: "tt" }, t.title),
+          h("div", { class: "ar" }, t.artist)),
         h("div", { class: "live" }, h("i"))),
-      h("div", { class: "prog" }, h("i")),
+      h("div", { class: "prog" }, this.prog),
       h("div", { class: "ctrl" },
-        svgIcon(I.skipBack),
+        h("button", { onClick: (e) => { e.stopPropagation(); prev(); } }, svgIcon(I.skipBack)),
         h("button", { class: "playpause", onClick: (e) => { e.stopPropagation(); set("playing", !sys.playing); } },
           svgIcon(sys.playing ? I.pause : I.play)),
-        svgIcon(I.skipForward)));
+        h("button", { onClick: (e) => { e.stopPropagation(); next(); } }, svgIcon(I.skipForward))));
   }
 
   private sync() {
     this.s.to(this.expanded ? 2 : sys.playing ? 1 : 0);
     // mini : contenu seulement en lecture (capsule vide sinon — maquette)
     this.mini.style.visibility = sys.playing ? "visible" : "hidden";
+    this.miniArt.src = cur().art;
     this.renderBig();
   }
 
@@ -81,5 +87,7 @@ export class DynamicIsland {
     this.big.style.opacity = e.toFixed(3);
     this.big.style.filter = `blur(${((1 - e) * 10).toFixed(1)}px)`;
     this.big.style.pointerEvents = e > 0.5 ? "auto" : "none";
+    // progression réelle (lire sys.position, muté par le ticker média)
+    if (this.prog) this.prog.style.width = `${Math.min(100, (sys.position / cur().dur) * 100).toFixed(1)}%`;
   }
 }

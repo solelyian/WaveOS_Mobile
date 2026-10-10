@@ -9,7 +9,7 @@ import { ControlCenter } from "./cc";
 import { NotificationCenter } from "./nc";
 import { Spotlight } from "./spotlight";
 import { renderApp } from "../apps";
-import { registerAppCloser } from "./api";
+import { registerAppCloser, registerAppOpener } from "./api";
 import { sys, set, onChange } from "../system/state";
 import { Spring, tick, tickTweens } from "../core/motion";
 import { setZoneResolver, attachGestures } from "../core/gestures";
@@ -43,6 +43,7 @@ export class Shell {
     this.lock.bar.style.pointerEvents = "auto";
     attachGestures(phone);
     registerAppCloser(() => this.closeActiveApp());
+    registerAppOpener((id) => this.swapToApp(id));
     setZoneResolver((x, y, el) => this.resolveZone(x, y, el));
     onChange(() => this.syncTargets());
     this.syncTargets();
@@ -84,6 +85,24 @@ export class Shell {
   }
 
   closeActiveApp() { this.appwin?.close(); }
+
+  /** Ouvre une app depuis une autre (liens croisés, boutons OPEN du store) :
+   * ferme l'app courante puis ouvre la cible en morph depuis son icône. */
+  private swapToApp(id: import("../system/state").AppId) {
+    if (sys.activeApp === id) return;
+    const open = () => {
+      const r = this.home.iconRect(id);
+      if (r) this.openApp(id, r);
+    };
+    if (this.appwin) {
+      const w = this.appwin;
+      const prev = w.onClosed;
+      w.onClosed = () => { prev?.(); open(); };
+      w.close();
+    } else {
+      open();
+    }
+  }
 
   private openCC() {
     const cc = this.ensureCC();

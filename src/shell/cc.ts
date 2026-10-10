@@ -3,6 +3,7 @@
 import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
 import { sys, set, onChange } from "../system/state";
+import { cur, next, prev } from "../system/media";
 import { Spring } from "../core/motion";
 
 function toggle(icon: HTMLElement, on: boolean, cls: string, el: HTMLElement) {
@@ -88,18 +89,19 @@ export class ControlCenter {
       const ic = key === "wifi" && !on ? I.wifiOff : key === "bluetooth" && !on ? I.bluetoothOff : (el as any)._ic;
       toggle(svgIcon(ic), on, (key === "cellular" ? "green" : key === "airplane" ? "orange" : "blue"), el);
     }
-    // carte média
+    // carte média — piste courante partagée (même source que Musique / DI)
     this.mediaSlot.replaceChildren();
     if (sys.playing) {
+      const t = cur();
       this.mediaSlot.append(
-        h("img", { class: "bg", attrs: { src: "/img/album.jpg", alt: "" } }),
+        h("img", { class: "bg", attrs: { src: t.art, alt: "" } }),
         h("div", { class: "grad" },
-          h("div", { class: "tt" }, "Midnight City"),
-          h("div", { class: "ar" }, "M83"),
+          h("div", { class: "tt" }, t.title),
+          h("div", { class: "ar" }, t.artist),
           h("div", { class: "ctrl" },
-            svgIcon(I.skipBack),
+            h("button", { class: "pp", onClick: () => prev() }, svgIcon(I.skipBack)),
             h("button", { class: "pp", onClick: () => set("playing", false) }, svgIcon(I.pause)),
-            svgIcon(I.skipForward))));
+            h("button", { class: "pp", onClick: () => next() }, svgIcon(I.skipForward)))));
     } else {
       this.mediaSlot.append(h("div", { class: "none" }, svgIcon(I.music), h("span", {}, "Not Playing")));
     }

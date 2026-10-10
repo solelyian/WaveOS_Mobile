@@ -77,3 +77,42 @@ export function FloatingTabBar(
 }
 
 export const img = (src: string, cls = "") => h("img", { class: cls, attrs: { src, alt: "", draggable: "false" } });
+
+// pane — sous-page qui glisse depuis la droite (detail iOS : Mail, Réglages…)
+export function pane(host: HTMLElement, build: (close: () => void) => HTMLElement) {
+  const wrap = h("div", { class: "pane" });
+  const close = () => { wrap.classList.remove("on"); setTimeout(() => wrap.remove(), 340); };
+  wrap.append(build(close));
+  host.append(wrap);
+  requestAnimationFrame(() => requestAnimationFrame(() => wrap.classList.add("on")));
+  return wrap;
+}
+
+// switchEl — interrupteur iOS.
+export function switchEl(on: boolean, onFlip: (v: boolean) => void) {
+  const el = h("button", { class: "sw" + (on ? " on" : ""), onClick: () => {
+    const v = !el.classList.contains("on");
+    el.classList.toggle("on", v);
+    onFlip(v);
+  } }, h("i"));
+  return el;
+}
+
+// setRow — ligne de liste Réglages : icône carrée colorée, libellé, valeur, chevron.
+export function setRow(icon: IconName, bg: string, label: string, opts: { value?: string; onClick?: () => void; end?: HTMLElement } = {}) {
+  const el = h("div", { class: "set-row" + (opts.onClick ? " pressable" : "") },
+    h("div", { class: "set-ic", style: { background: bg } }, svgIcon(I[icon])),
+    h("span", { class: "set-lbl" }, label),
+    opts.value ? h("span", { class: "set-val" }, opts.value) : null,
+    opts.end ?? (opts.onClick ? h("span", { class: "chev" }, svgIcon(I.chevronLeft)) : null));
+  if (opts.onClick) el.addEventListener("click", opts.onClick);
+  return el;
+}
+
+// toast — pastille éphémère en bas de l'app (confirmation d'action).
+export function toast(host: HTMLElement, text: string) {
+  const el = h("div", { class: "toast g-dark" }, text);
+  host.append(el);
+  requestAnimationFrame(() => el.classList.add("on"));
+  setTimeout(() => { el.classList.remove("on"); setTimeout(() => el.remove(), 300); }, 1600);
+}

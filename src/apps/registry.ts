@@ -1,4 +1,4 @@
-// registry.ts — les 11 apps de la maquette : couleurs/icônes/ordre exacts.
+// registry.ts — les apps de la maquette + App Store : couleurs/icônes/ordre.
 import type { AppId } from "../system/state";
 import type { IconName } from "../core/lucide";
 
@@ -23,6 +23,7 @@ export const APPS: AppMeta[] = [
   { id: "messages",   name: "Messages",   icon: "messageCircle", color: "#4ade80",                                 theme: "light" },
   { id: "music",      name: "Music",      icon: "music",         color: "#ef4444",                                 theme: "dark" },
   { id: "safari",     name: "Safari",     icon: "compass",       color: "#3b82f6",                                 theme: "light" },
+  { id: "store",      name: "App Store",  icon: "store",         color: "linear-gradient(135deg,#7dd3fc,#1d4ed8)", theme: "light" },
 ];
 
 export const appMeta = (id: AppId) => APPS.find((a) => a.id === id)!;

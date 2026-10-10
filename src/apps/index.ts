@@ -11,6 +11,7 @@ import { MailApp } from "./mail";
 import { MessagesApp } from "./messages";
 import { MusicApp } from "./music";
 import { SafariApp } from "./safari";
+import { StoreApp } from "./store";
 
 const RENDERERS: Record<AppId, () => HTMLElement> = {
   weather: WeatherApp,
@@ -24,6 +25,7 @@ const RENDERERS: Record<AppId, () => HTMLElement> = {
   messages: MessagesApp,
   music: MusicApp,
   safari: SafariApp,
+  store: StoreApp,
 };
 
 export function renderApp(id: AppId): HTMLElement {

@@ -1,86 +1,119 @@
-// phone.ts — Téléphone : clavier + récents + écran d'appel (maquette).
+// phone.ts — téléphone complet : clavier (effacement), favoris, contacts,
+// récents cliquables, voicemail, écran d'appel avec chrono et boutons réels.
 import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
-import { FloatingTabBar, img } from "./ui";
+import { GlassHeader, FloatingTabBar, img, pane, toast } from "./ui";
 
-const KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, "*", 0, "#"];
+const CONTACTS = [
+  ["Alex Morgan", "+1 (415) 555-0142", "/img/avatar/a-2.jpg"],
+  ["Jordan Lee", "+1 (628) 555-0177", "/img/avatar/a-5.jpg"],
+  ["Sam Rivera", "+1 (510) 555-0109", "/img/avatar/a-8.jpg"],
+  ["Mom", "+1 (925) 555-0134", "/img/avatar/a-12.jpg"],
+  ["Chris Park", "+1 (650) 555-0190", "/img/avatar/a-21.jpg"],
+  ["Taylor Kim", "+1 (415) 555-0128", "/img/avatar/a-24.jpg"],
+] as const;
+
+const RECENTS = [
+  ["Alex Morgan", "phoneIncoming", "9:10 AM", "mobile"],
+  ["Mom", "phoneMissed", "Yesterday", "mobile"],
+  ["Jordan Lee", "phoneOutgoing", "Yesterday", "FaceTime audio"],
+  ["Sam Rivera", "phoneIncoming", "Monday", "mobile"],
+] as const;
+
+const KEYS = [["1", ""], ["2", "ABC"], ["3", "DEF"], ["4", "GHI"], ["5", "JKL"], ["6", "MNO"], ["7", "PQRS"], ["8", "TUV"], ["9", "WXYZ"], ["*", ""], ["0", "+"], ["#", ""]] as const;
 
 export function PhoneApp() {
-  let tab = "keypad";
-  let number = "";
+  const root = h("div", { class: "pg", style: { height: "100%", display: "flex", flexDirection: "column", background: "#f4f4f5" } });
+  const scroll = h("div", { class: "app-scroll no-sb", style: { padding: "0 20px 120px", display: "flex", flexDirection: "column" } });
+  let digits = "";
 
-  const root = h("div", { style: { height: "100%", display: "flex", flexDirection: "column", position: "relative" } });
-  const stage = h("div", { style: { flex: "1", display: "flex", flexDirection: "column" } });
-  root.append(stage);
-
-  const numEl = h("div", { style: { height: "80px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px", fontWeight: "300", marginBottom: "16px", letterSpacing: ".05em" } });
-  const callBtn = h("button", {
-    class: "pressable", style: { width: "80px", height: "80px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", border: "1px solid #4ade80", transition: "all .2s" },
-    onClick: () => { if (number) showCall(); },
-  }, svgIcon(I.phone, "fill", 32));
+  function call(name: string, avatar?: string) {
+    pane(root, (close) => {
+      const st = h("div", { style: { fontSize: "15px", color: "rgba(255,255,255,.75)", marginTop: "4px" } }, "calling…");
+      let secs = -1;
+      const iv = setInterval(() => {
+        secs++;
+        st.textContent = secs < 0 ? "calling…" : secs === 0 ? "00:00" : `${String(Math.floor(secs / 60)).padStart(2, "0")}:${String(secs % 60).padStart(2, "0")}`;
+        if (secs === 0) st.textContent = "00:00";
+      }, 800);
+      setTimeout(() => { if (secs < 0) st.textContent = "00:00"; }, 1500);
+      const end = () => { clearInterval(iv); close(); };
+      const btn = (ic: keyof typeof I, l: string, fn?: () => void) =>
+        h("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" } },
+          h("button", { class: "g-btn pressable", style: { width: "62px", height: "62px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }, onClick: fn ?? (() => toast(root, l + " toggled")) }, svgIcon(I[ic], "", 22)),
+          h("span", { style: { fontSize: "11px", color: "rgba(255,255,255,.7)" } }, l));
+      return h("div", { class: "pg", style: { background: "linear-gradient(180deg,#1f2937,#050505)", color: "#fff", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", padding: "70px 28px 60px" } },
+        avatar ? h("div", { style: { width: "90px", height: "90px", borderRadius: "50%", overflow: "hidden", marginBottom: "14px", border: "2px solid rgba(255,255,255,.2)" } }, img(avatar, "img-fill")) : h("div", { style: { width: "90px", height: "90px", borderRadius: "50%", background: "rgba(255,255,255,.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "14px" } }, svgIcon(I.user, "", 40)),
+        h("div", { style: { fontSize: "28px", fontWeight: "700" } }, name), st,
+        h("div", { style: { flex: "1" } }),
+        h("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "18px 26px", marginBottom: "34px" } },
+          btn("micOff", "mute"), btn("layoutGrid", "keypad"), btn("volume2", "speaker"), btn("plus", "add call"), btn("video", "FaceTime"), btn("user", "contacts")),
+        h("button", { class: "pressable", style: { width: "72px", height: "72px", borderRadius: "50%", background: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center" }, onClick: end },
+          h("span", { style: { display: "flex", transform: "rotate(135deg)" } }, svgIcon(I.phone, "", 30))));
+    });
+  }
 
   const keypad = () => {
-    numEl.textContent = number || "...";
-    numEl.style.color = number ? "#000" : "#d1d5db";
-    callBtn.style.background = number ? "#22c55e" : "#d1d5db";
-    callBtn.style.borderColor = number ? "#4ade80" : "#d1d5db";
-    callBtn.style.boxShadow = number ? "0 10px 25px -5px rgba(34,197,94,.4)" : "none";
-    return h("div", { style: { flex: "1", display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "center", paddingBottom: "112px" } },
-      numEl,
-      h("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,80px)", columnGap: "24px", rowGap: "16px", marginBottom: "32px" } },
-        ...KEYS.map((n) =>
-          h("button", { class: "pk-key", onClick: () => { if (number.length < 12) { number += n; refresh(); } } },
-            h("span", { class: "n" }, String(n)),
-            typeof n === "number" ? h("span", { class: "s" }, "ABC") : null))),
-      callBtn);
+    const disp = h("div", { style: { textAlign: "center", fontSize: "36px", fontWeight: "300", letterSpacing: ".02em", minHeight: "46px", margin: "4px 0 12px", fontVariantNumeric: "tabular-nums" } }, " ");
+    const upd = () => disp.textContent = digits || " ";
+    const callRow = h("div", { style: { display: "flex", justifyContent: "center", alignItems: "center", gap: "20px", marginTop: "14px" } },
+      h("button", { class: "pressable", style: { width: "68px", height: "68px", borderRadius: "50%", background: "#22c55e", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" },
+        onClick: () => { if (!digits) { toast(root, "Enter a number"); return; } call(digits); } }, svgIcon(I.phone, "", 28)),
+      h("button", { style: { width: "68px", height: "68px", color: "#9ca3af", display: "flex", alignItems: "center", justifyContent: "center" },
+        onClick: () => { digits = digits.slice(0, -1); upd(); } }, svgIcon(I.chevronLeft, "", 26)));
+    scroll.append(disp,
+      h("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,80px)", gap: "12px", justifyContent: "center" } },
+        ...KEYS.map(([n, s]) => h("button", { class: "pk-key", onClick: () => { digits += n; upd(); } },
+          h("span", { class: "n" }, n), s ? h("span", { class: "s" }, s) : h("span", { class: "s" }, " ")))),
+      callRow);
   };
 
-  const recents = () =>
-    h("div", { class: "app-scroll no-sb", style: { padding: "64px 16px 96px" } },
-      h("h1", { style: { fontSize: "30px", fontWeight: "700", marginBottom: "16px" } }, "Recents"),
-      ...Array.from({ length: 10 }, (_, i) =>
-        h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0", borderBottom: "1px solid rgba(243,244,246,.5)" } },
-          h("div", { style: { display: "flex", alignItems: "center", gap: "16px" } },
-            h("div", { style: { width: "48px", height: "48px", borderRadius: "50%", background: "#e5e7eb", overflow: "hidden" } }, (() => { const im = img(`/img/avatar/a-${i}.jpg`); im.style.cssText = "width:100%;height:100%;object-fit:cover"; return im; })()),
-            h("div", {},
-              h("div", { style: { fontWeight: "700", fontSize: "18px", color: i === 0 ? "#ef4444" : "rgba(0,0,0,.9)" } }, "John Doe"),
-              h("div", { style: { fontSize: "14px", color: "rgba(0,0,0,.5)" } }, "Mobile"))),
-          h("div", { style: { display: "flex", alignItems: "center", gap: "8px" } },
-            h("span", { style: { fontSize: "12px", color: "rgba(0,0,0,.4)" } }, "Yesterday"),
-            h("span", { style: { color: "#3b82f6", display: "flex" } }, svgIcon(I.info, "", 20))))));
+  const personRow = (name: string, avatar: string, sub: string, ic: keyof typeof I = "phone", red = false) =>
+    h("div", { class: "lrow" },
+      img(avatar, "av rd"),
+      h("div", { class: "tx" }, h("div", { class: "t1", style: red ? { color: "#ef4444" } : {} }, name), h("div", { class: "t2" }, sub)),
+      h("button", { class: "pressable", style: { width: "34px", height: "34px", borderRadius: "50%", background: "#dcfce7", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" },
+        onClick: () => call(name, avatar) }, svgIcon(I[ic], "", 16)));
 
-  const showCall = () => {
-    const ov = h("div", { style: { position: "absolute", inset: "0", zIndex: "50", background: "#111827", display: "flex", flexDirection: "column", alignItems: "center", padding: "96px 0 48px", opacity: "0", transform: "scale(.9)", transition: "all .25s" } });
-    const bg = img("/img/contact-john.jpg"); bg.style.cssText = "position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.3;filter:blur(40px) saturate(1.5)";
-    const av = h("div", { style: { width: "96px", height: "96px", borderRadius: "50%", overflow: "hidden", marginBottom: "24px", boxShadow: "0 25px 50px -12px rgba(0,0,0,.5)", border: "2px solid rgba(255,255,255,.2)" } },
-      (() => { const im = img("/img/contact-john.jpg"); im.style.cssText = "width:100%;height:100%;object-fit:cover"; return im; })());
-    ov.append(bg,
-      h("div", { style: { position: "relative", zIndex: "10", display: "flex", flexDirection: "column", alignItems: "center", flex: "1" } },
-        av,
-        h("h2", { style: { fontSize: "30px", fontWeight: "700", color: "#fff" } }, "John Doe"),
-        h("p", { style: { color: "rgba(255,255,255,.7)", marginTop: "4px" } }, "calling mobile...")),
-      h("div", { style: { position: "relative", zIndex: "10" } },
-        h("button", { class: "pressable", style: { width: "64px", height: "64px", borderRadius: "50%", background: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 10px 25px -5px rgba(239,68,68,.4)", border: "1px solid #f87171" }, onClick: () => { ov.style.opacity = "0"; setTimeout(() => ov.remove(), 250); } },
-          h("span", { style: { transform: "rotate(135deg)", display: "flex" } }, svgIcon(I.phone)))));
-    root.append(ov);
-    requestAnimationFrame(() => { ov.style.opacity = "1"; ov.style.transform = "scale(1)"; });
+  const show = (tab: string) => {
+    scroll.replaceChildren();
+    if (tab === "keypad") { keypad(); return; }
+    if (tab === "favorites") {
+      scroll.append(h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" } },
+        ...CONTACTS.slice(0, 4).map(([n, , a]) => h("div", { class: "card-white pressable", style: { padding: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }, onClick: () => call(n, a) },
+          h("div", { style: { position: "relative" } },
+            h("div", { style: { width: "64px", height: "64px", borderRadius: "50%", overflow: "hidden" } }, img(a, "img-fill")),
+            h("div", { style: { position: "absolute", top: "-4px", right: "-4px", background: "#f59e0b", borderRadius: "50%", width: "22px", height: "22px", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" } }, svgIcon(I.star, "fill", 12))),
+          h("span", { style: { fontWeight: "600", fontSize: "14px" } }, n),
+          h("span", { style: { fontSize: "11px", color: "#9ca3af", marginTop: "-6px" } }, "mobile")))));
+    } else if (tab === "contacts") {
+      scroll.append(h("div", { class: "card-white", style: { padding: "2px 14px" } },
+        ...CONTACTS.map(([n, num, a]) => personRow(n, a, num))));
+    } else if (tab === "voicemail") {
+      scroll.append(h("div", { class: "card-white", style: { padding: "2px 14px" } },
+        ...[["Mom", "2:14", "Yesterday"], ["Unknown", "0:37", "Monday"]].map(([n, d, t]) =>
+          h("div", { class: "lrow" },
+            h("div", { class: "set-ic", style: { background: "#6b7280" } }, svgIcon(I.voicemail)),
+            h("div", { class: "tx" }, h("div", { class: "t1" }, n), h("div", { class: "t2" }, `${d} · ${t}`)),
+            h("button", { class: "pressable", style: { color: "#2563eb" }, onClick: () => toast(root, "Playing voicemail…") }, svgIcon(I.play, "fill", 20))))));
+    } else {
+      scroll.append(h("div", { class: "card-white", style: { padding: "2px 14px" } },
+        ...RECENTS.map(([n, ic, t, how]) => {
+          const c = CONTACTS.find((x) => x[0] === n);
+          return personRow(n, c ? c[2] : "/img/avatar/a-0.jpg", `${how} · ${t}`, ic as keyof typeof I, ic === "phoneMissed");
+        })));
+    }
   };
 
-  const TABS = [
-    { id: "favorites", icon: "star" as const, label: "Favorites" },
-    { id: "recents", icon: "clock" as const, label: "Recents" },
-    { id: "contacts", icon: "user" as const, label: "Contacts" },
-    { id: "keypad", icon: "layoutGrid" as const, label: "Keypad" },
-    { id: "voicemail", icon: "voicemail" as const, label: "Voicemail" },
-  ];
-  // la capsule persiste : le pill glisse via son ressort interne (setActive)
-  const bar = FloatingTabBar(TABS, tab, (id) => { tab = id; refresh(); });
+  const tabs = FloatingTabBar([
+    { id: "favorites", icon: "star", label: "Favorites" },
+    { id: "recents", icon: "clock", label: "Recents" },
+    { id: "contacts", icon: "user", label: "Contacts" },
+    { id: "keypad", icon: "layoutGrid", label: "Keypad" },
+    { id: "voicemail", icon: "voicemail", label: "Voicemail" },
+  ], "keypad", show);
 
-  const refresh = () => {
-    // maquette : seuls keypad/recents ont du contenu — les autres onglets vident l'écran
-    stage.replaceChildren(tab === "keypad" ? keypad() : tab === "recents" ? recents() : h("div", { style: { flex: "1" } }));
-  };
-  refresh();
-  root.append(bar.el);
+  show("keypad");
+  root.append(GlassHeader("Phone", {}), scroll, tabs.el);
   return root;
 }

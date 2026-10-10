@@ -1,7 +1,8 @@
 // state.ts — état OS central (pub-sub), équivalent du OSContext React.
 export type AppId =
   | "weather" | "calendar" | "photos" | "calculator" | "settings"
-  | "maps" | "phone" | "mail" | "messages" | "music" | "safari";
+  | "maps" | "phone" | "mail" | "messages" | "music" | "safari"
+  | "store";
 
 export type Sheet = "cc" | "nc" | null;
 
@@ -12,6 +13,8 @@ export interface SysState {
   brightness: number; // 0..100
   volume: number;     // 0..100
   playing: boolean;
+  track: number;      // index dans TRACKS (system/media)
+  position: number;   // secondes — mutée par le ticker média, sans événement
   wifi: boolean;
   bluetooth: boolean;
   airplane: boolean;
@@ -25,6 +28,8 @@ export const sys: SysState = {
   brightness: 80,
   volume: 50,
   playing: false,
+  track: 0,
+  position: 0,
   wifi: true,
   bluetooth: true,
   airplane: false,
