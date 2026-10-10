@@ -23,6 +23,9 @@ export class RecentsSwitcher {
     const strip = h("div", { class: "rct-strip" });
     for (const id of ids) strip.append(this.card(id, cb));
     const hint = ids.length ? h("div", { class: "rct-hint" }, "Swipe up to close · tap outside to exit") : null;
+    const clearAll = ids.length ? h("button", { class: "rct-clear pressable",
+      onClick: (e) => { e.stopPropagation(); this.clearAll(cb); } },
+      svgIcon(I.trash, "", 15), "Clear all") : null;
 
     // fond + pill home : tout clic hors card referme
     this.el.addEventListener("click", (e) => {
@@ -31,7 +34,7 @@ export class RecentsSwitcher {
     this.el.append(
       h("div", { class: "rct-scrim" }),
       strip,
-      ids.length ? hint! : h("div", { class: "rct-empty" }, "No recent apps"),
+      ids.length ? h("div", { class: "rct-foot" }, clearAll!, hint!) : h("div", { class: "rct-empty" }, "No recent apps"),
       h("div", { class: "rct-homebar", onClick: (e) => { e.stopPropagation(); cb.onClose(); } }, h("i")),
     );
     // entrée : strip glisse depuis le bas
@@ -42,6 +45,20 @@ export class RecentsSwitcher {
       strip.style.transform = "none";
       strip.style.opacity = "1";
     });
+  }
+
+  /** vide toute la pile : les cards filent vers le haut en cascade. */
+  private clearAll(cb: RecentsCallbacks) {
+    let i = 0;
+    for (const [id, card] of this.cards) {
+      const delay = i++ * 55;
+      setTimeout(() => {
+        card.style.transition = "transform .3s cubic-bezier(.4,0,.8,.4), opacity .3s";
+        card.style.transform = "translateY(-900px)";
+        card.style.opacity = "0";
+        setTimeout(() => { card.remove(); cb.onKill(id); }, 300);
+      }, delay);
+    }
   }
 
   private card(id: AppId, cb: RecentsCallbacks) {

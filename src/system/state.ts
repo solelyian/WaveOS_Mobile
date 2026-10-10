@@ -5,7 +5,7 @@ export type AppId =
   | "store"
   | "notes" | "files" | "clock" | "arcade";
 
-export type Sheet = "cc" | "nc" | null;
+export type Sheet = "cc" | "nc" | "sd" | null;
 
 export interface SysState {
   locked: boolean;
@@ -14,10 +14,13 @@ export interface SysState {
   brightness: number; // 0..100
   volume: number;     // 0..100
   playing: boolean;
+  track: number;      // index dans TRACKS (system/media)
+  position: number;   // secondes — mutée par le ticker média, sans événement
   wifi: boolean;
   bluetooth: boolean;
   airplane: boolean;
   cellular: boolean;
+  darkMode: boolean;
 }
 
 export const sys: SysState = {
@@ -27,10 +30,13 @@ export const sys: SysState = {
   brightness: 80,
   volume: 50,
   playing: false,
+  track: 0,
+  position: 0,
   wifi: true,
   bluetooth: true,
   airplane: false,
   cellular: true,
+  darkMode: false,
 };
 
 type Listener = (key: keyof SysState) => void;

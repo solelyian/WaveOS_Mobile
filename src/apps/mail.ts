@@ -1,110 +1,163 @@
-// mail.ts — Mail : inbox réelle, détail par mail, composer, recherche live.
+// mail.ts — boîte de réception vivante : dossiers réels (Envoyés, Brouillons,
+// Suivis), mails distincts, détail avec reply/archive/trash/flag, composer
+// fonctionnel (envoi → Envoyés, fermeture → Brouillons), recherche.
 import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
+import { GlassHeader, FloatingTabBar, img, pane, toast } from "./ui";
 
+type Folder = "inbox" | "sent" | "drafts";
 interface Mail {
-  from: string; initial: string; color: string;
-  subj: string; prev: string; time: string; body: string; unread?: boolean;
+  from: string; to?: string; avatar: string; subject: string; preview: string;
+  body: string; time: string; unread?: boolean; archived?: boolean;
+  flagged?: boolean; folder: Folder;
+}
+
+const MAILS: Mail[] = [
+  { from: "Nyne Support", avatar: "/img/avatar/a-1.jpg", subject: "New Login Detected", preview: "We noticed a new sign-in to your account from San Francisco, CA…", body: "Hi Ian,\n\nWe noticed a new sign-in to your Nyne account from San Francisco, CA on a Mac.\n\nIf this was you, you can safely ignore this email. If not, secure your account immediately.\n\n— Nyne Support", time: "9:41 AM", unread: true, folder: "inbox" },
+  { from: "Design Team", avatar: "/img/avatar/a-4.jpg", subject: "Figma: WaveOS v2 ready", preview: "The new glass components are ready for review…", body: "Hey!\n\nThe WaveOS v2 components are now in Figma — new glass tiles, the app store templates and the dynamic island states.\n\nTake a look when you can!\n\n— Design Team", time: "8:52 AM", unread: true, flagged: true, folder: "inbox" },
+  { from: "GitHub", avatar: "/img/avatar/a-9.jpg", subject: "[WaveOS_Mobile] PR #2 updated", preview: "devin pushed 3 new commits to the branch…", body: "devin pushed 3 new commits to devin/1791534600-calque-react:\n\n  • feat: enrich apps with interactive content\n  • feat: add App Store\n  • fix: visual bugs in apps\n\nView it on GitHub.", time: "Yesterday", folder: "inbox" },
+  { from: "Calendar", avatar: "/img/avatar/a-11.jpg", subject: "Reminder: Sprint review", preview: "Design Sync starts in 30 minutes…", body: "Sprint review & Design Sync\nToday, 10:00 – 11:00 AM\nNyne HQ — Room 4\n\nJoin: waveos.link/sync", time: "Yesterday", folder: "inbox" },
+  { from: "Apple Store", avatar: "/img/avatar/a-15.jpg", subject: "Your receipt", preview: "Thank you for your purchase. Total: $4.99…", body: "Dear Ian,\n\nThank you for your purchase.\n\n  Procreate Pocket — $4.99\n\nYour receipt is attached.\n\n— Apple", time: "Saturday", flagged: true, folder: "inbox" },
+  { from: "Jordan Lee", avatar: "/img/avatar/a-5.jpg", subject: "Trip photos 📷", preview: "Here are all the shots from Big Sur — pick your favorites…", body: "Yo!\n\nFinally uploaded the Big Sur trip photos — 120 shots in the shared album.\nPick your favorites, I'm making prints.\n\n— J", time: "Saturday", folder: "inbox" },
+  { from: "Me", to: "Design Team", avatar: "/img/contact-john.jpg", subject: "Re: WaveOS v2 glass", preview: "The spring curves look perfect — shipping the morph today…", body: "The spring curves look perfect — shipping the morph today.\n\nI'll send the tokens file over once the WASM build is green.\n\n— Ian", time: "9:02 AM", folder: "sent" },
+  { from: "Me", to: "Sam Rivera", avatar: "/img/contact-john.jpg", subject: "Re: Big Sur prints", preview: "Pick shots 12, 34 and 87 — those are the keepers…", body: "Pick shots 12, 34 and 87 — those are the keepers.\n\nThanks for uploading them!\n\n— Ian", time: "Yesterday", folder: "sent" },
+  { from: "Me", to: "Mom", avatar: "/img/contact-john.jpg", subject: "Sunday dinner", preview: "Count me in — I'll bring dessert…", body: "Count me in — I'll bring dessert.\n\nLove,\nIan", time: "Monday", folder: "sent" },
+  { from: "Me", to: "Alex Morgan", avatar: "/img/contact-john.jpg", subject: "(no subject)", preview: "hey — still need the token values for…", body: "hey — still need the token values for", time: "10:04 AM", folder: "drafts" },
+  { from: "Me", to: "Jordan Lee", avatar: "/img/contact-john.jpg", subject: "Print order", preview: "Can you also send the framing options…", body: "Can you also send the framing options for", time: "Yesterday", folder: "drafts" },
+];
+
+function mailDetail(host: HTMLElement, m: Mail, refresh: () => void, openComposer: (opts: { to: string; subject: string; body: string }) => void) {
+  m.unread = false;
+  pane(host, (close) => {
+    const flagBtn = h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: m.flagged ? "#f59e0b" : "#2563eb" },
+      onClick: (e) => {
+        m.flagged = !m.flagged;
+        (e.currentTarget as HTMLElement).style.color = m.flagged ? "#f59e0b" : "#2563eb";
+        (e.currentTarget as HTMLElement).replaceChildren(svgIcon(I.flag, m.flagged ? "fill" : "", 16) as Node);
+        refresh();
+        toast(host, m.flagged ? "Flagged" : "Unflagged");
+      } }, svgIcon(I.flag, m.flagged ? "fill" : "", 16));
+    const who = m.folder === "sent" || m.folder === "drafts" ? `To: ${m.to}` : m.from;
+    return h("div", { class: "pg", style: { background: "#f4f4f5", height: "100%", display: "flex", flexDirection: "column" } },
+      h("div", { style: { display: "flex", alignItems: "center", gap: "10px", padding: "60px 16px 10px" } },
+        h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }, onClick: () => { refresh(); close(); } }, svgIcon(I.chevronLeft, "", 18)),
+        h("div", { style: { flex: "1" } }),
+        flagBtn,
+        ...([["archive", () => { m.archived = true; refresh(); close(); toast(host, "Archived"); }], ["trash2", () => { m.archived = true; refresh(); close(); toast(host, "Moved to Bin"); }], ["reply", () => { close(); openComposer({ to: m.folder === "inbox" ? m.from : (m.to ?? ""), subject: m.subject.startsWith("Re:") ? m.subject : `Re: ${m.subject}`, body: `\n\n—— Original message ——\n${m.body}` }); }]] as [keyof typeof I, () => void][]).map(([ic, fn]) =>
+          h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb" }, onClick: fn }, svgIcon(I[ic], "", 16)))),
+      h("div", { class: "no-sb", style: { flex: "1", overflowY: "auto", padding: "0 20px 40px" } },
+        h("h2", { style: { fontSize: "22px", fontWeight: "700", letterSpacing: "-.01em", margin: "8px 0 14px" } }, m.subject),
+        h("div", { class: "card-white", style: { display: "flex", alignItems: "center", gap: "12px", padding: "12px" } },
+          img(m.avatar, "av rd"),
+          h("div", { style: { flex: "1", minWidth: "0" } },
+            h("div", { style: { fontWeight: "700", fontSize: "15px" } }, who),
+            h("div", { style: { fontSize: "12px", color: "#9ca3af" } }, m.folder === "inbox" ? "To: ian.alexandre1@pm.me" : "From: ian.alexandre1@pm.me")),
+          h("span", { style: { fontSize: "12px", color: "#9ca3af" } }, m.time)),
+        h("div", { class: "card-white", style: { marginTop: "14px", padding: "18px" } },
+          ...m.body.split("\n\n").map((p) => h("p", { style: { fontSize: "15px", lineHeight: "1.55", color: "#374151", marginBottom: "12px", whiteSpace: "pre-wrap" } }, p))),
+        h("button", { class: "pressable", style: { width: "100%", marginTop: "14px", padding: "13px", borderRadius: "16px", background: "#2563eb", color: "#fff", fontWeight: "700", fontSize: "15px" },
+          onClick: () => { close(); openComposer({ to: m.folder === "inbox" ? m.from : (m.to ?? ""), subject: m.subject.startsWith("Re:") ? m.subject : `Re: ${m.subject}`, body: `\n\n—— Original message ——\n${m.body}` }); } }, "Reply")));
+  });
 }
 
 export function MailApp() {
-  const root = h("div", { style: { height: "100%", display: "flex", flexDirection: "column", position: "relative" } });
-  const mails: Mail[] = [
-    { from: "Nyne Support", initial: "N", color: "#000", subj: "New Login Detected on MacBook Pro", prev: "We detected a new login from a device you don't usually use...", time: "10:42 AM", unread: true, body: "Your Nyne ID was used to sign in to a new device in San Francisco. If this wasn't you, please change your password immediately." },
-    { from: "GitHub", initial: "G", color: "#24292f", subj: "[WaveOS_Mobile] PR #3 merged", prev: "solelyian merged commit 2186c6a into devin/1791399182-sillage-prototype...", time: "9:15 AM", body: "Merged: feat: Weather refaite style HarmonyOS. 4 files changed, +481 −67. View the pull request on GitHub." },
-    { from: "Linear", initial: "L", color: "#5e6ad2", subj: "WAV-128 assigned to you", prev: "Weather app — polish pass on remaining apps...", time: "Yesterday", body: "Ian assigned WAV-128 to you: \"The apps needs some fixing here and there.\" Priority: high. Due end of week." },
-    { from: "Figma", initial: "F", color: "#f24e1e", subj: "Weekly digest", prev: "12 new comments in WaveOS Design System...", time: "Yesterday", body: "This week in WaveOS Design System: 12 new comments, 4 resolved threads, 2 new components published." },
-    { from: "Apple", initial: "A", color: "#555", subj: "Your receipt from App Store", prev: "Purchase: Procreate — $12.99...", time: "Friday", body: "Dear Customer, this is a receipt for your purchase of Procreate ($12.99) on the App Store. Invoice #INV-2044." },
-    { from: "Mom", initial: "M", color: "#b45309", subj: "Dinner Sunday?", prev: "Are you still coming? Bring dessert...", time: "Thursday", body: "Hi! Are you still coming Sunday around 6? Your sister will be there too. Can you bring dessert? Love, Mom" },
-  ];
-  let query = "";
+  const root = h("div", { class: "pg", style: { height: "100%", display: "flex", flexDirection: "column", background: "#f4f4f5" } });
+  const scroll = h("div", { class: "app-scroll no-sb", style: { padding: "0 16px 120px" } });
+  let curTab = "inbox";
 
-  const compose = (prefill?: { to: string; subj: string }) => {
-    const to = h("input", { attrs: { type: "text", placeholder: "To:" }, style: { width: "100%", padding: "12px 0", borderBottom: "1px solid #e5e7eb", outline: "none", fontSize: "15px", background: "transparent" } }) as HTMLInputElement;
-    const subj = h("input", { attrs: { type: "text", placeholder: "Subject:" }, style: { width: "100%", padding: "12px 0", borderBottom: "1px solid #e5e7eb", outline: "none", fontSize: "15px", background: "transparent" } }) as HTMLInputElement;
-    const body = h("textarea", { attrs: { placeholder: "Message…", rows: "8" }, style: { flex: "1", padding: "16px 0", outline: "none", border: "none", resize: "none", fontSize: "16px", fontFamily: "inherit", background: "transparent" } }) as HTMLTextAreaElement;
-    if (prefill) { to.value = prefill.to; subj.value = prefill.subj; }
-    const close = () => { ov.style.opacity = "0"; sheet.style.transform = "translateY(100%)"; setTimeout(() => ov.remove(), 250); };
-    const send = () => {
-      mails.unshift({
-        from: `To: ${to.value.trim() || "—"}`, initial: "✉", color: "#3b82f6",
-        subj: subj.value.trim() || "(no subject)", prev: body.value.trim() || "…",
-        time: "Now", body: body.value.trim() || "…",
-      });
-      paint();
-      close();
+  const composer = (opts: { to?: string; subject?: string; body?: string; draft?: Mail } = {}) => {
+    pane(root, (close) => {
+      const to = h("input", { attrs: { placeholder: "To:" }, style: { flex: "1", border: "none", outline: "none", background: "none", fontSize: "15px" } }) as HTMLInputElement;
+      const subj = h("input", { attrs: { placeholder: "Subject:" }, style: { flex: "1", border: "none", outline: "none", background: "none", fontSize: "15px" } }) as HTMLInputElement;
+      const body = h("textarea", { attrs: { placeholder: "Write your message…" }, style: { flex: "1", border: "none", outline: "none", resize: "none", background: "none", fontSize: "15px", lineHeight: "1.5", padding: "14px 20px" } }) as HTMLTextAreaElement;
+      to.value = opts.to ?? ""; subj.value = opts.subject ?? ""; body.value = opts.body ?? "";
+      const fld = (inp: HTMLElement) => h("div", { style: { display: "flex", padding: "12px 20px", borderBottom: "1px solid rgba(0,0,0,.05)" } }, inp);
+      const send = () => {
+        if (!to.value.trim() && !subj.value.trim() && !body.value.trim()) { toast(root, "Empty message"); return; }
+        if (opts.draft) MAILS.splice(MAILS.indexOf(opts.draft), 1);
+        MAILS.unshift({
+          from: "Me", to: to.value.trim() || "Unknown", avatar: "/img/contact-john.jpg",
+          subject: subj.value.trim() || "(no subject)",
+          preview: body.value.trim().split("\n")[0].slice(0, 60) || "(empty)",
+          body: body.value.trim(), time: "now", folder: "sent",
+        });
+        close(); show(curTab); toast(root, "Message sent");
+      };
+      const dismiss = () => {
+        if (to.value.trim() || subj.value.trim() || body.value.trim()) {
+          if (opts.draft) {
+            opts.draft.to = to.value.trim() || "Unknown";
+            opts.draft.subject = subj.value.trim() || "(no subject)";
+            opts.draft.body = body.value;
+            opts.draft.preview = body.value.trim().split("\n")[0].slice(0, 60) || "(empty)";
+          } else {
+            MAILS.unshift({
+              from: "Me", to: to.value.trim() || "Unknown", avatar: "/img/contact-john.jpg",
+              subject: subj.value.trim() || "(no subject)",
+              preview: body.value.trim().split("\n")[0].slice(0, 60) || "(empty)",
+              body: body.value, time: "now", folder: "drafts",
+            });
+          }
+          close(); show(curTab); toast(root, "Saved to drafts");
+        } else close();
+      };
+      setTimeout(() => to.focus(), 80);
+      return h("div", { class: "pg", style: { background: "#f4f4f5", height: "100%", display: "flex", flexDirection: "column" } },
+        h("div", { style: { display: "flex", alignItems: "center", padding: "60px 16px 10px" } },
+          h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }, onClick: dismiss }, svgIcon(I.x, "", 16)),
+          h("span", { style: { flex: "1", textAlign: "center", fontWeight: "700", fontSize: "17px" } }, "New Message"),
+          h("button", { class: "pressable", style: { padding: "8px 18px", borderRadius: "999px", background: "#2563eb", color: "#fff", fontWeight: "700", fontSize: "14px" }, onClick: send }, "Send")),
+        fld(to), fld(subj), body);
+    });
+  };
+
+  const row = (m: Mail) => {
+    const who = m.folder === "sent" || m.folder === "drafts" ? `To: ${m.to}` : m.from;
+    return h("div", { class: "lrow pressable", onClick: () =>
+      m.folder === "drafts"
+        ? composer({ to: m.to, subject: m.subject === "(no subject)" ? "" : m.subject, body: m.body, draft: m })
+        : mailDetail(root, m, () => show(curTab), composer) },
+      img(m.avatar, "av rd"),
+      h("div", { class: "tx" },
+        h("div", { style: { display: "flex", gap: "6px", alignItems: "center" } },
+          m.unread ? h("i", { style: { width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb", flex: "none" } }) : null,
+          m.flagged ? h("span", { style: { color: "#f59e0b", display: "flex" } }, svgIcon(I.flag, "fill", 12)) : null,
+          h("div", { class: "t1" }, who)),
+        h("div", { class: "t1", style: { fontSize: "13px", fontWeight: "600", color: m.folder === "drafts" ? "#d97706" : "#4b5563" } }, m.subject),
+        h("div", { class: "t2" }, m.preview)),
+      h("span", { class: "rt" }, m.time));
+  };
+
+  const show = (tab: string) => {
+    curTab = tab;
+    scroll.replaceChildren();
+    const input = h("input", { attrs: { placeholder: "Search" }, style: { flex: "1", border: "none", outline: "none", background: "none", fontSize: "14px" } }) as HTMLInputElement;
+    const list = h("div", { class: "card-white", style: { padding: "2px 14px" } });
+    const box = tab === "sent" ? MAILS.filter((m) => m.folder === "sent" && !m.archived)
+      : tab === "drafts" ? MAILS.filter((m) => m.folder === "drafts" && !m.archived)
+      : tab === "flag" ? MAILS.filter((m) => m.flagged && !m.archived)
+      : MAILS.filter((m) => m.folder === "inbox" && !m.archived);
+    const draw = () => {
+      const q = input.value.trim().toLowerCase();
+      const hits = box.filter((m) => !q || (m.from + (m.to ?? "") + m.subject + m.preview).toLowerCase().includes(q));
+      list.replaceChildren(...(hits.length ? hits.map(row) : [h("div", { style: { padding: "24px", textAlign: "center", color: "#9ca3af", fontSize: "14px" } }, `No ${tab === "flag" ? "flagged" : tab} mail`)]));
     };
-    const sheet = h("div", { style: { position: "absolute", left: "0", right: "0", bottom: "0", height: "70%", background: "#fff", borderRadius: "28px 28px 0 0", padding: "0 20px 24px", display: "flex", flexDirection: "column", transform: "translateY(100%)", transition: "transform .28s cubic-bezier(.32,.72,.35,1)", boxShadow: "0 -10px 40px rgba(0,0,0,.18)" } },
-      h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 0", borderBottom: "1px solid #e5e7eb" } },
-        h("button", { class: "pressable", style: { color: "#3b82f6", fontWeight: "500" }, onClick: close }, "Cancel"),
-        h("span", { style: { fontWeight: "700" } }, "New Message"),
-        h("button", { class: "pressable", style: { color: "#3b82f6", fontWeight: "700", display: "flex" }, onClick: send }, svgIcon(I.send, "", 18))),
-      to, subj, body);
-    const ov = h("div", { style: { position: "absolute", inset: "0", zIndex: "30", background: "rgba(0,0,0,.12)", opacity: "0", transition: "opacity .25s" } }, sheet);
-    root.append(ov);
-    requestAnimationFrame(() => { ov.style.opacity = "1"; sheet.style.transform = "none"; });
+    input.addEventListener("input", draw); draw();
+    scroll.append(h("div", { class: "search-pill", style: { margin: "2px 0 8px" } }, svgIcon(I.search), input), list);
   };
 
-  const openDetail = (m: Mail) => {
-    m.unread = false;
-    const close = () => { d.style.opacity = "0"; d.style.transform = "translateX(50px)"; setTimeout(() => { d.remove(); paint(); }, 200); };
-    const removeMail = () => { mails.splice(mails.indexOf(m), 1); close(); };
-    const act = (icon: string, fn: () => void, tint = "#3b82f6") =>
-      h("button", { class: "pressable", style: { color: tint, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", fontSize: "10px", fontWeight: "600" }, onClick: fn }, svgIcon(icon as never, "", 20));
-    const d = h("div", { style: { position: "absolute", inset: "0", zIndex: "20", background: "#f8fafc", display: "flex", flexDirection: "column", paddingTop: "48px", transform: "translateX(50px)", opacity: "0", transition: "all .2s" } },
-      h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", borderBottom: "1px solid #e5e7eb", background: "rgba(255,255,255,.5)", backdropFilter: "blur(12px)" } },
-        h("button", { class: "pressable", style: { display: "flex", alignItems: "center", color: "#3b82f6", fontWeight: "500" }, onClick: close },
-          svgIcon(I.chevronLeft), "Inbox"),
-        h("div", { style: { fontSize: "12px", color: "#9ca3af" } }, m.time)),
-      h("div", { class: "app-scroll no-sb", style: { flex: "1", padding: "24px" } },
-        h("h1", { style: { fontSize: "24px", fontWeight: "700", marginBottom: "24px" } }, m.subj),
-        h("div", { style: { display: "flex", alignItems: "center", gap: "12px", marginBottom: "32px" } },
-          h("div", { style: { width: "40px", height: "40px", borderRadius: "50%", background: m.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", flexShrink: "0" } }, m.initial),
-          h("div", {}, h("div", { style: { fontWeight: "700" } }, m.from), h("div", { style: { fontSize: "12px", color: "#6b7280" } }, "To: You"))),
-        h("p", { style: { color: "#374151", lineHeight: "1.6", fontSize: "17px" } }, m.body)),
-      h("div", { style: { display: "flex", justifyContent: "space-around", padding: "14px 24px 36px", borderTop: "1px solid #e5e7eb", background: "rgba(255,255,255,.6)", backdropFilter: "blur(12px)" } },
-        act(I.reply, () => { close(); setTimeout(() => compose({ to: m.from, subj: `Re: ${m.subj}` }), 220); }),
-        act(I.archive, removeMail, "#f59e0b"),
-        act(I.trash2, removeMail, "#ef4444")));
-    root.append(d);
-    requestAnimationFrame(() => { d.style.opacity = "1"; d.style.transform = "none"; });
-  };
+  const tabs = FloatingTabBar([
+    { id: "inbox", icon: "mail", label: "Inbox" },
+    { id: "sent", icon: "send", label: "Sent" },
+    { id: "drafts", icon: "file", label: "Drafts" },
+    { id: "flag", icon: "flag", label: "Flagged" },
+  ], "inbox", show);
 
-  const row = (m: Mail) =>
-    h("div", { class: "pressable card-white", style: { padding: "16px", display: "flex", flexDirection: "column", gap: "4px", position: "relative", overflow: "hidden" }, onClick: () => openDetail(m) },
-      h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
-        h("span", { style: { fontWeight: "700", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px", color: "rgba(0,0,0,.9)" } },
-          m.unread ? h("span", { style: { width: "10px", height: "10px", borderRadius: "50%", background: "#3b82f6", boxShadow: "0 1px 2px rgba(0,0,0,.1)", flexShrink: "0" } }) : null,
-          m.from),
-        h("span", { style: { fontSize: "12px", color: "rgba(0,0,0,.4)", flexShrink: "0" } }, m.time)),
-      h("span", { style: { fontWeight: "600", fontSize: "14px", marginTop: "4px", color: "rgba(0,0,0,.8)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, m.subj),
-      h("span", { style: { fontSize: "12px", color: "rgba(0,0,0,.5)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: "2px" } }, m.prev));
-
-  const list = h("div", { class: "app-scroll no-sb", style: { padding: "0 16px 80px", display: "flex", flexDirection: "column", gap: "12px" } });
-  const paint = () => {
-    const q = query.trim().toLowerCase();
-    const hits = q ? mails.filter((m) => (m.from + m.subj + m.prev).toLowerCase().includes(q)) : mails;
-    list.replaceChildren(...(hits.length
-      ? hits.map(row)
-      : [h("div", { style: { textAlign: "center", color: "rgba(0,0,0,.4)", padding: "40px 0", fontSize: "14px" } }, `No mail matching “${query}”`)]));
-  };
-  paint();
-
-  const searchInput = h("input", {
-    attrs: { type: "search", placeholder: "Search" },
-    style: { flex: "1", border: "none", outline: "none", background: "transparent", fontSize: "14px", fontFamily: "inherit" },
-  }) as HTMLInputElement;
-  searchInput.addEventListener("input", () => { query = searchInput.value; paint(); });
-
+  show("inbox");
   root.append(
-    h("div", { style: { padding: "64px 24px 8px" } },
-      h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
-        h("span", { style: { color: "#3b82f6", fontWeight: "500" } }, `${mails.length} messages`),
-        h("h1", { style: { fontSize: "24px", fontWeight: "700" } }, "Inbox"),
-        h("span", { style: { color: "#3b82f6" } }, svgIcon(I.layoutGrid, "", 20))),
-      h("div", { class: "search-pill", style: { marginTop: "16px" } }, svgIcon(I.search, "", 16), searchInput)),
-    list,
-    h("div", { style: { position: "absolute", bottom: "32px", right: "24px", zIndex: "10" } },
-      h("button", { class: "app-fab pressable", style: { position: "static", width: "56px", height: "56px", background: "#3b82f6", color: "#fff", border: "1px solid #60a5fa" }, onClick: () => compose() }, svgIcon(I.plus, "", 28))));
+    GlassHeader("Inbox", { large: true }),
+    scroll, tabs.el,
+    h("button", { class: "app-fab", style: { width: "56px", height: "56px", right: "20px", bottom: "116px", background: "#2563eb", color: "#fff" },
+      onClick: () => composer() }, svgIcon(I.pencil)));
   return root;
 }

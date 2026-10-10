@@ -16,6 +16,8 @@ import calendar from "lucide-static/icons/calendar.svg?raw";
 import map from "lucide-static/icons/map.svg?raw";
 import phone from "lucide-static/icons/phone.svg?raw";
 import phoneIncoming from "lucide-static/icons/phone-incoming.svg?raw";
+import phoneOutgoing from "lucide-static/icons/phone-outgoing.svg?raw";
+import phoneMissed from "lucide-static/icons/phone-missed.svg?raw";
 import mail from "lucide-static/icons/mail.svg?raw";
 import chevronLeft from "lucide-static/icons/chevron-left.svg?raw";
 import play from "lucide-static/icons/play.svg?raw";
@@ -31,6 +33,7 @@ import x from "lucide-static/icons/x.svg?raw";
 import lock from "lucide-static/icons/lock.svg?raw";
 import user from "lucide-static/icons/user.svg?raw";
 import star from "lucide-static/icons/star.svg?raw";
+import sparkle from "lucide-static/icons/sparkle.svg?raw";
 import clock from "lucide-static/icons/clock.svg?raw";
 import voicemail from "lucide-static/icons/voicemail.svg?raw";
 import layoutGrid from "lucide-static/icons/layout-grid.svg?raw";
@@ -85,19 +88,39 @@ import navigation2 from "lucide-static/icons/navigation-2.svg?raw";
 import chevronDown from "lucide-static/icons/chevron-down.svg?raw";
 import check from "lucide-static/icons/check.svg?raw";
 import archive from "lucide-static/icons/archive.svg?raw";
+import users from "lucide-static/icons/users.svg?raw";
+import micOff from "lucide-static/icons/mic-off.svg?raw";
+import moonStar from "lucide-static/icons/moon-star.svg?raw";
+import link from "lucide-static/icons/link.svg?raw";
+import shuffle from "lucide-static/icons/shuffle.svg?raw";
+import repeat from "lucide-static/icons/repeat.svg?raw";
+import repeat1 from "lucide-static/icons/repeat-1.svg?raw";
+import flag from "lucide-static/icons/flag.svg?raw";
+import deleteIcon from "lucide-static/icons/delete.svg?raw";
+import laptop from "lucide-static/icons/laptop.svg?raw";
+import tablet from "lucide-static/icons/tablet.svg?raw";
+import watch from "lucide-static/icons/watch.svg?raw";
+import headphones from "lucide-static/icons/headphones.svg?raw";
+import tv from "lucide-static/icons/tv.svg?raw";
+import fileUp from "lucide-static/icons/file-up.svg?raw";
+import airplay from "lucide-static/icons/airplay.svg?raw";
 
 export const I = {
   wifi, wifiOff, battery, signal, search, camera, flashlight, music,
   messageCircle, image, settings, cloud, calculator, calendar, map,
   phone, phoneIncoming, mail, chevronLeft, play, pause, skipForward,
+  phoneOutgoing, phoneMissed,
   skipBack, sun, moon, volume2, bluetooth, bluetoothOff, x, lock,
-  user, star, clock, voicemail, layoutGrid, heart, list, send, ellipsis,
+  user, star, sparkle, clock, voicemail, layoutGrid, heart, list, send, ellipsis,
   globe, compass, bell, shield, slidersHorizontal, mic, video, info,
   droplets, wind, eye, mapPin, navigation, share, book, plus, arrowUp,
   plane, cast, rotateCcw, trash2, home, power, disc, screenShare,
   store, download, gamepad2, trash, folderOpen, file, pencil, squarePen,
   reply, sunrise, sunset, cloudRain, cloudSun, cloudMoon, cloudy,
   thermometer, umbrella, gauge, navigation2, chevronDown, check, archive,
+  users, micOff, moonStar, link, shuffle, repeat, repeat1, flag,
+  delete: deleteIcon,
+  laptop, tablet, watch, headphones, tv, fileUp, airplay,
 } as const;
 
 export type IconName = keyof typeof I;

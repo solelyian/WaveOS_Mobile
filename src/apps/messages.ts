@@ -1,144 +1,206 @@
-// messages.ts — Messages : en-tête verre, stories, conversations ouvrables,
-// fil de discussion avec envoi + réponse simulée.
+// messages.ts — conversations vivantes : fils de discussion avec envoi,
+// indicateur de frappe + réponse simulée, envoi de photos, nouveau message
+// (création de conversation), appels avec fiche contact, réglages.
 import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
-import { FloatingTabBar, img } from "./ui";
+import { GlassHeader, FloatingTabBar, img, pane, toast } from "./ui";
 
-const NAMES = ["Alex Morgan", "Sam Rivera", "Jordan Lee", "Casey Kim", "Robin Park", "Ari Chen", "Noa Blanc", "Léo Martin"];
-const REPLIES = ["Sounds good!", "On my way", "Haha yes", "Can't wait", "Let's do it", "Perfect 👌", "See you then!"];
+interface Msg { me?: boolean; text?: string; im?: string }
+interface Convo { name: string; avatar: string; time: string; unread?: number; msgs: Msg[] }
+
+const CONVOS: Convo[] = [
+  { name: "Alex Morgan", avatar: "/img/avatar/a-2.jpg", time: "9:41 AM", unread: 2, msgs: [
+    { text: "Did you see the new build?" }, { text: "The animations are insane 🤯" },
+    { me: true, text: "Just tested it — the morph is perfect" }, { im: "/img/photos/ph-4.jpg", text: "Look at this" }] },
+  { name: "Jordan Lee", avatar: "/img/avatar/a-5.jpg", time: "8:15 AM", msgs: [
+    { text: "Lunch at the usual place?" }, { me: true, text: "12:30 works" }, { text: "Perfect, see you there" }] },
+  { name: "Sam Rivera", avatar: "/img/avatar/a-8.jpg", time: "Yesterday", msgs: [
+    { me: true, text: "Can you review my PR?" }, { text: "On it — looks clean, one comment" }, { text: "Ship it 🚢" }] },
+  { name: "Mom", avatar: "/img/avatar/a-12.jpg", time: "Yesterday", msgs: [
+    { text: "Call me when you can ❤️" }, { me: true, text: "Will do tonight!" }] },
+  { name: "Design Team", avatar: "/img/avatar/a-16.jpg", time: "Thursday", msgs: [
+    { text: "New mockups are in Figma" }, { text: "The glass theme got approved" }, { me: true, text: "Nice, porting it now" }] },
+  { name: "Chris Park", avatar: "/img/avatar/a-21.jpg", time: "Tuesday", msgs: [
+    { text: "Game night Friday?" }, { me: true, text: "I'm in. Bringing Mario Kart" }] },
+];
+
+// contacts sans conversation — proposés par le composer « New Message »
+const MORE: [string, string][] = [
+  ["Taylor Kim", "/img/avatar/a-24.jpg"], ["Casey Kim", "/img/avatar/a-18.jpg"], ["Robin Park", "/img/avatar/a-26.jpg"],
+];
+
+const REPLIES = ["Sounds good!", "Haha nice", "On my way", "Let me check and get back to you", "👍", "Perfect — thanks!"];
+const CALLS: [string, string, string][] = [
+  ["Alex Morgan", "phoneOutgoing", "Today, 9:10 AM"], ["Mom", "phoneIncoming", "Yesterday"],
+  ["Jordan Lee", "phoneMissed", "Yesterday"], ["Sam Rivera", "phoneOutgoing", "Monday"],
+];
+const PHOTOS = [3, 4, 7, 9, 11, 15, 18, 22, 26];
 
 export function MessagesApp() {
-  const root = h("div", { style: { height: "100%", display: "flex", flexDirection: "column", position: "relative", zIndex: "10" } });
-  const stage = h("div", { style: { flex: "1", display: "flex", flexDirection: "column", minHeight: "0" } });
-  let tab = "chats";
+  const root = h("div", { class: "pg", style: { height: "100%", display: "flex", flexDirection: "column", background: "#f4f4f5" } });
+  const scroll = h("div", { class: "app-scroll no-sb", style: { padding: "0 16px 120px" } });
+  let curTab = "chats";
 
-  const header = h("div", { class: "g-light", style: { padding: "64px 24px 16px", background: "rgba(255,255,255,.6)", borderRadius: "0 0 32px 32px", marginBottom: "8px", zIndex: "20" } },
-    h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" } },
-      h("div", { style: { color: "#3b82f6", fontWeight: "500" } }, "Edit"),
-      h("div", { class: "pressable", style: { padding: "8px", background: "#3b82f6", color: "#fff", borderRadius: "50%", boxShadow: "0 4px 12px rgba(59,130,246,.3)", display: "flex" } }, svgIcon(I.send, "", 18))),
-    h("h1", { style: { fontSize: "30px", fontWeight: "700", color: "rgba(0,0,0,.9)", marginBottom: "16px" } }, "Messages"),
-    h("div", { class: "search-pill" }, svgIcon(I.search, "", 16), h("span", {}, "Search")));
+  // ---- fiche contact -------------------------------------------------------
+  const contactCard = (name: string, avatar: string) => pane(root, (close) =>
+    h("div", { class: "pg", style: { background: "#f4f4f5", height: "100%", display: "flex", flexDirection: "column" } },
+      h("div", { style: { display: "flex", alignItems: "center", padding: "60px 16px 4px" } },
+        h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }, onClick: close }, svgIcon(I.chevronLeft, "", 18))),
+      h("div", { style: { flex: "1", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "30px" } },
+        h("div", { style: { width: "96px", height: "96px", borderRadius: "50%", overflow: "hidden", marginBottom: "12px", boxShadow: "0 12px 30px rgba(0,0,0,.15)" } }, img(avatar, "img-fill")),
+        h("div", { style: { fontSize: "22px", fontWeight: "800" } }, name),
+        h("div", { style: { fontSize: "12px", color: "#22c55e", fontWeight: "600", marginTop: "3px" } }, "Online"),
+        h("div", { style: { display: "flex", gap: "16px", marginTop: "24px" } },
+          ...([["messageCircle", "Message", "#22c55e", () => { close(); openConvo(convoFor(name, avatar)); }],
+               ["phone", "Call", "#2563eb", () => toast(root, `Calling ${name.split(" ")[0]}…`)],
+               ["video", "Nyne Vision", "#0ea5e9", () => toast(root, "Starting Nyne Vision…")]] as [keyof typeof I, string, string, () => void][]).map(([ic, l, bg, fn]) =>
+            h("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" } },
+              h("button", { class: "pressable", style: { width: "54px", height: "54px", borderRadius: "50%", background: bg, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }, onClick: fn }, svgIcon(I[ic], "", 20)),
+              h("span", { style: { fontSize: "11px", color: "#6b7280", fontWeight: "600" } }, l)))))));
 
-  const stories = h("div", { class: "no-sb", style: { display: "flex", gap: "16px", overflowX: "auto", padding: "8px 0 8px 8px", marginBottom: "16px" } },
-    ...[1, 2, 3, 4, 5].map((i) =>
-      h("div", { class: "pressable", style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", flexShrink: "0", cursor: "pointer" }, onClick: () => thread(NAMES[i - 1], i + 10) },
-        h("div", { style: { width: "64px", height: "64px", borderRadius: "50%", background: "linear-gradient(45deg,#60a5fa,#4ade80)", padding: "2px", boxShadow: "0 4px 6px -1px rgba(0,0,0,.1)" } },
-          h("div", { style: { width: "100%", height: "100%", borderRadius: "50%", background: "#fff", padding: "2px" } },
-            (() => { const im = img(`/img/avatar/a-${i + 10}.jpg`); im.style.cssText = "width:100%;height:100%;border-radius:50%;object-fit:cover"; return im; })())),
-        h("span", { style: { fontSize: "10px", fontWeight: "700", color: "rgba(0,0,0,.5)" } }, NAMES[i - 1].split(" ")[0]))));
+  // ---- fil de discussion ---------------------------------------------------
+  const thread = (c: Convo) => {
+    c.unread = 0;
+    pane(root, (close) => {
+      const list = h("div", { class: "no-sb", style: { flex: "1", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px", padding: "8px 16px 16px" } });
+      const draw = () => {
+        list.replaceChildren(...c.msgs.map((m) => m.im
+          ? h("div", { class: "bub im " + (m.me ? "me" : "them") }, img(m.im))
+          : h("div", { class: "bub " + (m.me ? "me" : "them") }, m.text ?? "")));
+        list.scrollTop = list.scrollHeight;
+      };
+      const reply = () => {
+        const typing = h("div", { class: "bub them typing" }, h("i"), h("i"), h("i"));
+        list.append(typing); list.scrollTop = list.scrollHeight;
+        setTimeout(() => {
+          typing.remove();
+          c.msgs.push({ text: REPLIES[Math.floor(Math.random() * REPLIES.length)] });
+          draw();
+        }, 1100 + Math.random() * 800);
+      };
+      const input = h("input", { attrs: { type: "text", placeholder: "Nyne Message" }, style: { flex: "1", border: "none", outline: "none", background: "none", fontSize: "15px" } }) as HTMLInputElement;
+      const send = () => {
+        const t = input.value.trim(); if (!t) return;
+        c.msgs.push({ me: true, text: t }); input.value = ""; draw(); reply();
+      };
+      const sendPhoto = (src: string) => { c.msgs.push({ me: true, im: src }); draw(); reply(); };
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
 
-  const lastMsg: Record<string, string> = {};
-  const convos = h("div", { style: { display: "flex", flexDirection: "column", gap: "12px" } },
-    ...NAMES.map((name, i) =>
-      h("div", { class: "pressable card-white", style: { padding: "16px", display: "flex", gap: "16px", alignItems: "center", cursor: "pointer" }, onClick: () => thread(name, i + 20) },
-        h("div", { style: { position: "relative", flexShrink: "0" } },
-          (() => { const im = img(`/img/avatar/a-${i + 20}.jpg`); im.style.cssText = "width:56px;height:56px;border-radius:50%;object-fit:cover;background:#e5e7eb;border:1px solid #f3f4f6"; return im; })(),
-          i < 3 ? h("div", { style: { position: "absolute", top: "-4px", right: "-4px", width: "16px", height: "16px", background: "#3b82f6", borderRadius: "50%", border: "2px solid #fff", boxShadow: "0 1px 2px rgba(0,0,0,.1)" } }) : null),
-        h("div", { style: { flex: "1", minWidth: "0" } },
-          h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "2px" } },
-            h("span", { style: { fontWeight: "700", color: "rgba(0,0,0,.9)", fontSize: "18px" } }, name),
-            h("span", { style: { fontSize: "12px", color: "rgba(0,0,0,.4)", fontWeight: "700" } }, `10:${10 + i} AM`)),
-          h("div", { class: "last-msg", style: { fontSize: "14px", color: "rgba(0,0,0,.6)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontWeight: "500" } }, i === 0 ? "Hey, are we still on for lunch?" : "Sent a photo")),
-        h("span", { style: { color: "#d1d5db", transform: "rotate(180deg)", display: "flex", flexShrink: "0" } }, svgIcon(I.chevronLeft, "", 16)))));
+      const photoPicker = () => pane(root, (close2) =>
+        h("div", { class: "pg", style: { background: "#f4f4f5", height: "100%", display: "flex", flexDirection: "column" } },
+          h("div", { style: { display: "flex", alignItems: "center", gap: "10px", padding: "60px 16px 10px" } },
+            h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }, onClick: close2 }, svgIcon(I.x, "", 16)),
+            h("span", { style: { fontWeight: "700", fontSize: "17px" } }, "Send a photo")),
+          h("div", { class: "no-sb", style: { flex: "1", overflowY: "auto", padding: "6px 16px 40px" } },
+            h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" } },
+              ...PHOTOS.map((i) => h("div", { class: "pressable", style: { aspectRatio: "1", borderRadius: "14px", overflow: "hidden", cursor: "pointer" },
+                onClick: () => { close2(); sendPhoto(`/img/photos/ph-${i}.jpg`); } },
+                img(`/img/photos/ph-${i}.jpg`, "img-fill")))))));
 
-  // fil de discussion : bulles + champ d'envoi + réponse simulée
-  const thread = (name: string, av: number) => {
-    const feed = h("div", { class: "msg-thread app-scroll no-sb", style: { flex: "1", overflowY: "auto" } },
-      h("div", { class: "msg-b in" }, lastMsg[name] ?? (name === "Alex Morgan" ? "Hey, are we still on for lunch?" : "Sent a photo")),
-      h("div", { class: "msg-b out" }, "Yes! Noon at the usual place?"),
-      h("div", { class: "msg-b in" }, "Perfect, see you there"));
-    const input = h("input", { attrs: { type: "text", placeholder: "iMessage" } }) as HTMLInputElement;
-    const send = () => {
-      const v = input.value.trim();
-      if (!v) return;
-      input.value = "";
-      feed.append(h("div", { class: "msg-b out" }, v));
-      feed.scrollTop = feed.scrollHeight;
-      lastMsg[name] = v;
-      setTimeout(() => {
-        const r = REPLIES[Math.floor(Math.random() * REPLIES.length)];
-        feed.append(h("div", { class: "msg-b in" }, r));
-        feed.scrollTop = feed.scrollHeight;
-        lastMsg[name] = r;
-      }, 900 + Math.random() * 800);
+      draw();
+      return h("div", { class: "pg", style: { background: "#f4f4f5", height: "100%", display: "flex", flexDirection: "column" } },
+        h("div", { style: { display: "flex", alignItems: "center", gap: "10px", padding: "60px 16px 10px", background: "rgba(244,244,245,.9)" } },
+          h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }, onClick: () => { show(curTab); close(); } }, svgIcon(I.chevronLeft, "", 18)),
+          h("button", { class: "pressable", style: { width: "44px", height: "44px", borderRadius: "50%", overflow: "hidden", flex: "none" }, onClick: () => contactCard(c.name, c.avatar) }, img(c.avatar)),
+          h("button", { style: { flex: "1", textAlign: "left" }, onClick: () => contactCard(c.name, c.avatar) },
+            h("div", { style: { fontWeight: "700", fontSize: "16px" } }, c.name),
+            h("div", { style: { fontSize: "11px", color: "#22c55e", fontWeight: "600" } }, "Online")),
+          h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb" }, onClick: () => toast(root, "Starting Nyne Vision…") }, svgIcon(I.video, "", 16)),
+          h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb" }, onClick: () => toast(root, `Calling ${c.name.split(" ")[0]}…`) }, svgIcon(I.phone, "", 16))),
+        list,
+        h("div", { style: { display: "flex", alignItems: "center", gap: "8px", padding: "10px 12px 96px" } },
+          h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280", flex: "none" }, onClick: photoPicker }, svgIcon(I.plus, "", 16)),
+          h("div", { class: "search-pill", style: { flex: "1" } }, input),
+          h("button", { class: "pressable", style: { width: "36px", height: "36px", borderRadius: "50%", background: "#22c55e", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }, onClick: send }, svgIcon(I.arrowUp, "", 16))));
+    });
+  };
+
+  const convoFor = (name: string, avatar: string) => {
+    let c = CONVOS.find((x) => x.name === name);
+    if (!c) { c = { name, avatar, time: "now", msgs: [] }; CONVOS.unshift(c); }
+    return c;
+  };
+  const openConvo = (c: Convo) => { c.unread = 0; thread(c); };
+
+  // ---- composer « New Message » --------------------------------------------
+  const newMessage = () => pane(root, (close) => {
+    const all: [string, string][] = [...CONVOS.map((c) => [c.name, c.avatar] as [string, string]), ...MORE];
+    const input = h("input", { attrs: { placeholder: "To:" }, style: { flex: "1", border: "none", outline: "none", background: "none", fontSize: "15px" } }) as HTMLInputElement;
+    const list = h("div", { class: "card-white", style: { margin: "0 16px", padding: "2px 14px" } });
+    const draw = () => {
+      const q = input.value.trim().toLowerCase();
+      const hits = all.filter(([n]) => !q || n.toLowerCase().includes(q));
+      list.replaceChildren(...(hits.length ? hits.map(([n, a]) =>
+        h("div", { class: "lrow pressable", onClick: () => { close(); openConvo(convoFor(n, a)); } },
+          img(a, "av rd"), h("div", { class: "tx" }, h("div", { class: "t1" }, n)),
+          h("span", { class: "chev", style: { color: "#d1d5db", transform: "rotate(180deg)" } }, svgIcon(I.chevronLeft, "", 16))))
+        : [h("div", { style: { padding: "24px", textAlign: "center", color: "#9ca3af", fontSize: "14px" } }, "No contact")]));
     };
-    input.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
-    const d = h("div", { style: { position: "absolute", inset: "0", zIndex: "60", background: "#f4f4f5", display: "flex", flexDirection: "column", transform: "translateX(60px)", opacity: "0", transition: "all .22s ease-out" } },
-      h("div", { class: "g-light", style: { padding: "60px 16px 12px", display: "flex", alignItems: "center", gap: "12px", background: "rgba(255,255,255,.7)", borderRadius: "0 0 24px 24px" } },
-        h("button", { class: "pressable", style: { color: "#3b82f6", display: "flex" }, onClick: () => { d.style.opacity = "0"; d.style.transform = "translateX(60px)"; setTimeout(() => d.remove(), 220); } }, svgIcon(I.chevronLeft)),
-        (() => { const im = img(`/img/avatar/a-${av}.jpg`); im.style.cssText = "width:36px;height:36px;border-radius:50%;object-fit:cover"; return im; })(),
-        h("div", {}, h("div", { style: { fontWeight: "700", fontSize: "16px", color: "#111" } }, name), h("div", { style: { fontSize: "11px", color: "#22c55e", fontWeight: "600" } }, "Online")),
-        h("span", { style: { marginLeft: "auto", color: "#3b82f6", display: "flex" } }, svgIcon(I.phone, "", 20))),
-      feed,
-      h("div", { class: "msg-inrow" },
-        input,
-        h("button", { class: "msg-send pressable", onClick: send }, svgIcon(I.send, "", 16))));
-    root.append(d);
-    requestAnimationFrame(() => { d.style.opacity = "1"; d.style.transform = "none"; });
-    feed.scrollTop = feed.scrollHeight;
+    input.addEventListener("input", draw); draw();
+    setTimeout(() => input.focus(), 80);
+    return h("div", { class: "pg", style: { background: "#f4f4f5", height: "100%", display: "flex", flexDirection: "column" } },
+      h("div", { style: { display: "flex", alignItems: "center", gap: "10px", padding: "60px 16px 10px" } },
+        h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }, onClick: close }, svgIcon(I.chevronLeft, "", 18)),
+        h("span", { style: { fontWeight: "700", fontSize: "17px" } }, "New Message")),
+      h("div", { class: "search-pill", style: { margin: "0 16px 10px" } }, svgIcon(I.search), input),
+      list);
+  });
+
+  const convoRow = (c: Convo) => h("div", { class: "lrow pressable", onClick: () => openConvo(c) },
+    img(c.avatar, "av rd"),
+    h("div", { class: "tx" },
+      h("div", { class: "t1" }, c.name),
+      h("div", { class: "t2" }, c.msgs.length ? (c.msgs[c.msgs.length - 1].text ?? "📷 Photo") : "New conversation")),
+    h("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px", flex: "none" } },
+      h("span", { class: "rt" }, c.time),
+      c.unread ? h("span", { style: { background: "#22c55e", color: "#fff", fontSize: "11px", fontWeight: "700", minWidth: "18px", height: "18px", borderRadius: "9px", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px" } }, String(c.unread)) : null));
+
+  const show = (tab: string) => {
+    curTab = tab;
+    scroll.replaceChildren();
+    if (tab === "chats") {
+      const input = h("input", { attrs: { placeholder: "Search" }, style: { flex: "1", border: "none", outline: "none", background: "none", fontSize: "14px" } }) as HTMLInputElement;
+      const list = h("div", { class: "card-white", style: { padding: "2px 14px" } });
+      const draw = () => {
+        const q = input.value.trim().toLowerCase();
+        list.replaceChildren(...CONVOS.filter((c) => c.name.toLowerCase().includes(q)).map(convoRow));
+      };
+      input.addEventListener("input", draw); draw();
+      scroll.append(h("div", { class: "search-pill", style: { margin: "2px 0 8px" } }, svgIcon(I.search), input), list);
+    } else if (tab === "calls") {
+      scroll.append(h("div", { class: "card-white", style: { padding: "2px 14px" } },
+        ...CALLS.map(([n, ic, t]) => {
+          const c = CONVOS.find((x) => x.name === n);
+          return h("div", { class: "lrow pressable", onClick: () => c ? contactCard(n, c.avatar) : undefined },
+            h("div", { class: "set-ic", style: { background: ic === "phoneMissed" ? "#ef4444" : "#22c55e" } }, svgIcon(I[ic as keyof typeof I])),
+            h("div", { class: "tx" }, h("div", { class: "t1", style: { color: ic === "phoneMissed" ? "#ef4444" : "#111" } }, n), h("div", { class: "t2" }, t)),
+            h("button", { class: "pressable", style: { color: "#2563eb" }, onClick: (e) => { e.stopPropagation(); if (c) contactCard(n, c.avatar); } }, svgIcon(I.info, "", 20)));
+        })));
+    } else if (tab === "people") {
+      scroll.append(h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px", padding: "4px" } },
+        ...CONVOS.map((c) => h("div", { class: "pressable", style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }, onClick: () => contactCard(c.name, c.avatar) },
+          h("div", { style: { width: "72px", height: "72px", borderRadius: "24px", overflow: "hidden" } }, img(c.avatar)),
+          h("span", { style: { fontSize: "12px", fontWeight: "600" } }, c.name.split(" ")[0])))));
+    } else {
+      scroll.append(h("div", { class: "card-white", style: { padding: "2px 14px" } },
+        ...["Notifications", "Message previews", "Send read receipts", "Filter unknown senders"].map((l, i) =>
+          h("div", { class: "lrow", style: { justifyContent: "space-between" } }, h("span", { style: { fontWeight: "600", fontSize: "15px" } }, l),
+            h("button", { class: "sw" + (i < 2 ? " on" : ""), onClick: (e) => (e.currentTarget as HTMLElement).classList.toggle("on") }, h("i"))))));
+    }
   };
 
-  const calls = () =>
-    h("div", { class: "app-scroll no-sb", style: { padding: "70px 16px 96px" } },
-      h("h1", { style: { fontSize: "30px", fontWeight: "700", color: "rgba(0,0,0,.9)", marginBottom: "20px" } }, "Calls"),
-      ...NAMES.slice(0, 6).map((n, i) =>
-        h("div", { class: "pressable card-white", style: { padding: "14px 16px", display: "flex", alignItems: "center", gap: "14px", marginBottom: "10px", cursor: "pointer" }, onClick: () => thread(n, i + 20) },
-          (() => { const im = img(`/img/avatar/a-${i + 20}.jpg`); im.style.cssText = "width:44px;height:44px;border-radius:50%;object-fit:cover;background:#e5e7eb"; return im; })(),
-          h("div", { style: { flex: "1" } },
-            h("div", { style: { fontWeight: "700", fontSize: "16px", color: i === 1 ? "#ef4444" : "rgba(0,0,0,.9)" } }, n),
-            h("div", { style: { fontSize: "13px", color: "rgba(0,0,0,.5)" } }, i === 1 ? "Missed · 9:41 AM" : i % 2 ? "Outgoing · Yesterday" : "Incoming · Today")),
-          h("span", { style: { color: "#22c55e", display: "flex" } }, svgIcon(I.phone, "", 18)))));
+  const tabs = FloatingTabBar([
+    { id: "chats", icon: "messageCircle", label: "Chats" },
+    { id: "calls", icon: "phone", label: "Calls" },
+    { id: "people", icon: "users", label: "People" },
+    { id: "settings", icon: "settings", label: "Settings" },
+  ], "chats", show);
 
-  const people = () =>
-    h("div", { class: "app-scroll no-sb", style: { padding: "70px 20px 96px" } },
-      h("h1", { style: { fontSize: "30px", fontWeight: "700", color: "rgba(0,0,0,.9)", marginBottom: "20px" } }, "People"),
-      h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" } },
-        ...NAMES.map((n, i) =>
-          h("div", { class: "pressable card-white", style: { padding: "20px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", cursor: "pointer" }, onClick: () => thread(n, i + 20) },
-            (() => { const im = img(`/img/avatar/a-${i + 20}.jpg`); im.style.cssText = "width:64px;height:64px;border-radius:50%;object-fit:cover;background:#e5e7eb"; return im; })(),
-            h("div", { style: { fontWeight: "700", fontSize: "14px", color: "rgba(0,0,0,.9)", textAlign: "center" } }, n)))));
-
-  const toggleRow = (label: string, on: boolean) => {
-    const knob = h("div", { style: { position: "absolute", top: "2px", left: on ? "22px" : "2px", width: "28px", height: "28px", borderRadius: "50%", background: "#fff", boxShadow: "0 2px 6px rgba(0,0,0,.25)", transition: "left .18s" } });
-    const t = h("button", { class: "pressable", style: { position: "relative", width: "52px", height: "32px", borderRadius: "16px", background: on ? "#22c55e" : "#d1d5db", transition: "background .2s", flexShrink: "0" } },
-      knob);
-    t.onmousedown = () => {
-      const next = t.style.background.includes("34,197,94") || t.style.background.includes("rgb(34, 197, 94)") ? false : true;
-      t.style.background = next ? "#22c55e" : "#d1d5db";
-      knob.style.left = next ? "22px" : "2px";
-    };
-    return h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 18px", background: "#fff", borderRadius: "18px", marginBottom: "10px", boxShadow: "0 2px 8px rgba(0,0,0,.04)" } },
-      h("span", { style: { fontWeight: "600", fontSize: "16px", color: "rgba(0,0,0,.85)" } }, label), t);
-  };
-
-  const settings = () =>
-    h("div", { class: "app-scroll no-sb", style: { padding: "70px 20px 96px" } },
-      h("h1", { style: { fontSize: "30px", fontWeight: "700", color: "rgba(0,0,0,.9)", marginBottom: "20px" } }, "Messages Settings"),
-      toggleRow("iMessage", true),
-      toggleRow("Send Read Receipts", true),
-      toggleRow("Notifications", true),
-      toggleRow("Low Quality Image Mode", false),
-      toggleRow("Filter Unknown Senders", false));
-
-  const render = () => {
-    stage.replaceChildren(...(
-      tab === "chats"
-        ? [header, h("div", { class: "app-scroll no-sb", style: { padding: "8px 16px 96px" } }, stories, convos)]
-        : tab === "calls" ? [calls()]
-        : tab === "people" ? [people()]
-        : [settings()]));
-  };
-  render();
-  root.append(stage);
-
-  const bar = FloatingTabBar(TABS, "chats", (id) => { tab = id; render(); });
-  root.append(bar.el);
+  show("chats");
+  root.append(
+    GlassHeader("Messages", { large: true, action: "pencil", onAction: newMessage }),
+    scroll, tabs.el,
+    h("button", { class: "app-fab", style: { width: "56px", height: "56px", right: "20px", bottom: "116px", background: "#22c55e", color: "#fff" },
+      onClick: newMessage }, svgIcon(I.pencil)));
   return root;
 }
-
-const TABS = [
-  { id: "chats", icon: "messageCircle" as const, label: "Chats" },
-  { id: "calls", icon: "phone" as const, label: "Calls" },
-  { id: "people", icon: "user" as const, label: "People" },
-  { id: "settings", icon: "settings" as const, label: "Settings" },
-];

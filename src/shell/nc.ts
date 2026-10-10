@@ -3,12 +3,14 @@ import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
 import { Spring } from "../core/motion";
 import { fmtDate, fmtTime } from "../system/state";
+import { glassClock } from "./glassClock";
 
 const NOTIFS = [
-  { app: "Messages", user: "Sarah Connor", text: "The future is not set.", time: "2m ago", icon: I.messageCircle, color: "#22c55e" },
-  { app: "Mail", user: "Nyne ID", text: "New login detected on MacBook Pro.", time: "15m ago", icon: I.mail, color: "#3b82f6" },
-  { app: "Home", user: "Security", text: "Front door motion detected.", time: "1h ago", icon: I.lock, color: "#f97316" },
-  { app: "Calendar", user: "Up Next", text: "Design Review in 30 mins.", time: "1h ago", icon: I.calendar, color: "#ef4444" },
+  { user: "Sarah Connor", text: "The future is not set. There is no fate but what we make for ourselves.", time: "2m ago", icon: I.messageCircle, color: "#22c55e" },
+  { user: "Nyne ID", text: "New login detected on MacBook Pro.", time: "15m ago", icon: I.mail, color: "#3b82f6" },
+  { user: "Security", text: "Front door motion detected.", time: "1h ago", icon: I.lock, color: "#f97316" },
+  { user: "Up Next", text: "Design Review in 30 mins.", time: "1h ago", icon: I.calendar, color: "#ef4444" },
+  { user: "Music", text: "Your daily mix is ready.", time: "3h ago", icon: I.music, color: "#ec4899" },
 ];
 
 export class NotificationCenter {
@@ -20,12 +22,11 @@ export class NotificationCenter {
 
   constructor() {
     const head = h("div", { class: "nc-head" }, this.dateEl, this.clockEl);
-    const title = h("div", { class: "nc-title" },
-      h("span", {}, "Notification Center"),
-      h("button", { onClick: () => this.clear() }, svgIcon(I.trash2)));
     this.buildList();
+    const clearBtn = h("div", { class: "nc-clear" },
+      h("button", { class: "pressable", onClick: () => this.clear() }, svgIcon(I.trash2)));
     const handle = h("div", { class: "handle" }, h("i"));
-    this.el.append(head, title, this.list, handle);
+    this.el.append(head, this.list, clearBtn, handle);
     this.tick();
   }
 
@@ -39,8 +40,7 @@ export class NotificationCenter {
       const card = h("div", { class: "nc-card g-dark", style: { opacity: "0", transform: "translateX(-50px) scale(.9)", transition: `opacity .3s ${i * 0.05}s, transform .3s ${i * 0.05}s` } },
         h("div", { class: "bd", style: { background: n.color } }, svgIcon(n.icon)),
         h("div", { class: "tx" },
-          h("div", { class: "r1" }, h("span", { class: "app" }, n.app), h("span", { class: "tm" }, n.time)),
-          h("div", { class: "usr" }, n.user),
+          h("div", { class: "r1" }, h("span", { class: "app" }, n.user), h("span", { class: "tm" }, n.time)),
           h("div", { class: "txt" }, n.text)));
       this.list.append(card);
       requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -52,7 +52,13 @@ export class NotificationCenter {
 
   open() { this.sy.to(0); }
   close() { this.sy.to(-850); }
-  tick() { this.clockEl.textContent = fmtTime(); this.dateEl.textContent = fmtDate(); }
+  tick() {
+    const t = fmtTime();
+    const n = this.clockEl.firstChild;
+    if (n && n.nodeType === 3) n.nodeValue = t; else this.clockEl.prepend(t);
+    glassClock(this.clockEl, t);
+    this.dateEl.textContent = fmtDate();
+  }
   render(): boolean {
     this.el.style.transform = `translateY(${this.sy.v.toFixed(1)}px)`;
     return this.sy.v <= -849 && this.sy.settled();

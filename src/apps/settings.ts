@@ -1,160 +1,358 @@
-// settings.ts — Réglages : profil, sous-pages Wi-Fi/Bluetooth/Cellular/Hotspot,
-// Notifications/Sounds/Focus câblées au système, recherche live.
+// settings.ts — Réglages vivants : recherche, sous-pages complètes (Wi-Fi avec
+// connexion réelle, Bluetooth, Notifications, Sons, Concentration, Général,
+// Luminosité câblée sur le Control Center, Fond d'écran appliqué, Batterie,
+// Temps d'écran, Confidentialité, App Store, Hotspot).
 import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
 import type { IconName } from "../core/lucide";
-import { GlassHeader } from "./ui";
-import { sys, set } from "../system/state";
+import { sys, set, onChange } from "../system/state";
+import { GlassHeader, img, pane, setRow, switchEl, toast } from "./ui";
 
-function tog(on: boolean, fn: (v: boolean) => void) {
-  const t = h("button", {
-    class: "g-tog pressable" + (on ? " on" : ""),
-    onClick: (e) => { e.stopPropagation(); const v = !t.classList.contains("on"); t.classList.toggle("on", v); fn(v); },
-  }, h("em"));
-  return t;
+const NETWORKS = ["Home_5G", "Nyne Guest", "CoffeeShop WiFi", "Airport_Free"];
+let wifiNet = "Home_5G";
+const btConnected = new Set<string>(["AirPods Pro", "MacBook Pro 16″"]);
+const BT_DEVICES = ["AirPods Pro", "MacBook Pro 16″", "Nyne Watch", "MX Master 3S"];
+
+const WALLPAPERS = [
+  "/img/wallpaper.jpg", "/img/memory.jpg", "/img/photos/ph-3.jpg",
+  "/img/photos/ph-7.jpg", "/img/photos/ph-11.jpg", "/img/photos/ph-18.jpg",
+];
+let wallpaper = WALLPAPERS[0];
+
+function page(host: HTMLElement, title: string, build: (scroll: HTMLElement) => void) {
+  pane(host, (close) => {
+    const scroll = h("div", { class: "no-sb", style: { flex: "1", overflowY: "auto", padding: "0 16px 40px" } });
+    build(scroll);
+    return h("div", { class: "pg", style: { background: "#f4f4f5", height: "100%", display: "flex", flexDirection: "column" } },
+      h("div", { style: { display: "flex", alignItems: "center", gap: "10px", padding: "60px 16px 10px" } },
+        h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }, onClick: close }, svgIcon(I.chevronLeft, "", 18)),
+        h("span", { style: { fontWeight: "700", fontSize: "17px" } }, title)),
+      scroll);
+  });
 }
-function toggle(key: "wifi" | "bluetooth" | "airplane" | "cellular") {
-  return tog(sys[key], (v) => set(key, v));
-}
-function row(icon: IconName, color: string, label: string, val = "", extra?: HTMLElement, onClick?: () => void) {
-  const r = h("div", { class: onClick ? "set-row pressable" : "set-row", style: onClick ? { cursor: "pointer" } : {} },
-    h("div", { class: "set-ic", style: { background: color } }, svgIcon(I[icon])),
-    h("span", { class: "set-lbl" }, label),
-    val ? h("span", { class: "set-val" }, val) : null,
-    extra ?? h("span", { class: "chev" }, svgIcon(I.chevronLeft, "", 16)));
-  if (onClick) r.addEventListener("click", onClick);
-  return r;
-}
+
+const grp = (...rows: HTMLElement[]) => h("div", { class: "set-group", style: { marginBottom: "14px" } }, ...rows);
+const cap = (t: string) => h("div", { style: { fontSize: "12px", fontWeight: "700", color: "#9ca3af", textTransform: "uppercase", letterSpacing: ".06em", margin: "4px 4px 6px" } }, t);
+
+// barre horizontale de stat (Temps d'écran, Batterie, Stockage)
+const bar = (frac: number, color: string, hgt = "8px") =>
+  h("div", { style: { height: hgt, borderRadius: "4px", background: "rgba(0,0,0,.08)", overflow: "hidden" } },
+    h("div", { style: { height: "100%", width: `${Math.round(frac * 100)}%`, borderRadius: "4px", background: color, transition: "width .8s cubic-bezier(.2,.7,.2,1)" } }));
 
 export function SettingsApp() {
-  const root = h("div", { class: "harm-set", style: { height: "100%", display: "flex", flexDirection: "column", position: "relative", background: "linear-gradient(180deg,#e9f1fb 0%,#f5f7fa 340px)" } });
+  const root = h("div", { class: "pg", style: { height: "100%", display: "flex", flexDirection: "column", background: "#f4f4f5" } });
+  const scroll = h("div", { class: "app-scroll no-sb", style: { padding: "0 16px 60px" } });
+  const groups: { label: string; el: HTMLElement }[] = [];
+  const wifiVal = h("span", { class: "set-val" }, wifiNet);
 
-  const sub = (title: string, ...content: HTMLElement[]) => {
-    const d = h("div", { style: { position: "absolute", inset: "0", zIndex: "100", background: "linear-gradient(180deg,#e9f1fb 0%,#f5f7fa 340px)", display: "flex", flexDirection: "column", transform: "translateX(60px)", opacity: "0", transition: "all .22s ease-out" } },
-      h("div", { style: { position: "relative", padding: "60px 20px 12px", display: "flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,.7)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(0,0,0,.06)" } },
-        h("button", { class: "pressable", style: { position: "relative", zIndex: "2", color: "#007dff", display: "flex", alignItems: "center", fontSize: "16px", fontWeight: "600" }, onClick: () => { d.style.opacity = "0"; d.style.transform = "translateX(60px)"; setTimeout(() => d.remove(), 220); } }, svgIcon(I.chevronLeft, "", 20), "Settings"),
-        h("span", { style: { position: "absolute", left: "0", right: "0", textAlign: "center", fontWeight: "700", fontSize: "16px", pointerEvents: "none" } }, title)),
-      h("div", { class: "app-scroll no-sb", style: { padding: "24px 20px 40px", display: "flex", flexDirection: "column", gap: "20px" } }, ...content));
-    root.append(d);
-    requestAnimationFrame(() => { d.style.opacity = "1"; d.style.transform = "none"; });
-  };
+  const wifiSub = () => page(root, "Wi-Fi", (s) => {
+    const netList = h("div", { class: "set-group" });
+    const draw = () => netList.replaceChildren(...NETWORKS.map((n) =>
+      setRow("wifi", n === wifiNet && sys.wifi ? "#2563eb" : "#9ca3af", n, {
+        end: n === wifiNet && sys.wifi ? svgIcon(I.check, "", 18) : undefined,
+        onClick: () => {
+          if (!sys.wifi) { toast(root, "Turn Wi-Fi on first"); return; }
+          if (n === wifiNet) return;
+          wifiNet = n; wifiVal.textContent = n; draw();
+          toast(root, `Joined “${n}”`);
+        },
+      })));
+    s.append(
+      grp(h("div", { class: "set-row" }, h("div", { class: "set-ic", style: { background: "#2563eb" } }, svgIcon(I.wifi)),
+        h("span", { class: "set-lbl" }, "Wi-Fi"), switchEl(sys.wifi, (v) => { set("wifi", v); draw(); }))),
+      cap("Known networks — tap to join"),
+      netList);
+    draw();
+  });
 
-  const group = (...rows: HTMLElement[]) => h("div", { class: "set-group g-light" }, ...rows);
-  const note = (t: string) => h("div", { style: { fontSize: "12px", color: "rgba(0,0,0,.45)", padding: "0 12px" } }, t);
-
-  const wifiPage = () => {
-    const nets = ["Home_5G", "NyneOffice", "CoffeeShop_Guest"];
-    const wrap = h("div", { class: "set-group g-light" });
-    const paint = () => wrap.replaceChildren(...nets.map((n, i) => {
-      const on = i === 0 && sys.wifi;
-      const r = row("wifi", "#007dff", n, "", on ? h("span", { style: { color: "#007dff", display: "flex" } }, svgIcon(I.check, "", 18)) : h("span", {}));
-      r.addEventListener("click", () => { if (sys.wifi) { nets.unshift(nets.splice(i, 1)[0]); paint(); } });
-      return r;
+  const btSub = () => page(root, "Bluetooth", (s) => {
+    const devList = h("div", { class: "set-group" });
+    const draw = () => devList.replaceChildren(...BT_DEVICES.map((n) => {
+      const on = btConnected.has(n) && sys.bluetooth;
+      return setRow("bluetooth", on ? "#2563eb" : "#9ca3af", n, {
+        value: on ? "Connected" : "Not Connected",
+        onClick: () => {
+          if (!sys.bluetooth) { toast(root, "Turn Bluetooth on first"); return; }
+          const was = btConnected.has(n);
+          was ? btConnected.delete(n) : btConnected.add(n);
+          draw();
+          toast(root, was ? `Disconnected “${n}”` : `Connected to “${n}”`);
+        },
+      });
     }));
-    paint();
-    sub("Wi-Fi",
-      group(row("wifi", "#007dff", "Wi-Fi", "", toggle("wifi"))),
-      note("Available networks"),
-      wrap);
+    s.append(
+      grp(h("div", { class: "set-row" }, h("div", { class: "set-ic", style: { background: "#2563eb" } }, svgIcon(I.bluetooth)),
+        h("span", { class: "set-lbl" }, "Bluetooth"), switchEl(sys.bluetooth, (v) => { set("bluetooth", v); draw(); }))),
+      cap("My devices — tap to connect"),
+      devList);
+    draw();
+  });
+
+  const cellularSub = () => page(root, "Cellular", (s) => {
+    s.append(
+      grp(h("div", { class: "set-row" }, h("div", { class: "set-ic", style: { background: "#22c55e" } }, svgIcon(I.signal)),
+        h("span", { class: "set-lbl" }, "Cellular Data"), switchEl(sys.cellular, (v) => set("cellular", v)))),
+      cap("Data usage this month"),
+      grp(
+        h("div", { class: "set-row", style: { display: "block" } },
+          h("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "8px" } },
+            h("span", { class: "set-lbl" }, "Wave One 5G"), h("span", { class: "set-val" }, "4.2 / 10 GB")),
+          bar(0.42, "#22c55e")),
+        setRow("download", "#0ea5e9", "Data roaming", { end: switchEl(false, () => {}) })));
+  });
+
+  const hotspotSub = () => page(root, "Personal Hotspot", (s) => {
+    let allow = true;
+    const row = h("div", { class: "set-row" }, h("div", { class: "set-ic", style: { background: "#22c55e" } }, svgIcon(I.link)),
+      h("span", { class: "set-lbl" }, "Allow Others to Join"), switchEl(allow, (v) => { allow = v; toast(root, v ? "Hotspot on — 1 device nearby" : "Hotspot off"); }));
+    s.append(
+      grp(row),
+      grp(setRow("lock", "#6b7280", "Wi-Fi Password", { value: "wave-8842" }),
+          setRow("wifi", "#2563eb", "Network name", { value: "Wave Phone" })),
+      cap("Compatibility"),
+      grp(setRow("signal", "#f59e0b", "Maximize Compatibility", { end: switchEl(false, () => {}) })));
+  });
+
+  const notifSub = () => page(root, "Notifications", (s) => {
+    s.append(cap("Notification style"),
+      grp(...[["Messages", "#22c55e", "messageCircle"], ["Mail", "#3b82f6", "mail"], ["Calendar", "#ef4444", "calendar"], ["Nyne Store", "#0ea5e9", "store"]].map(([n, bg, ic]) =>
+        setRow(ic as IconName, bg as string, n as string, { end: switchEl(n !== "Nyne Store", () => {}) }))),
+      grp(setRow("bell", "#f59e0b", "Scheduled summary", { end: switchEl(false, () => {}) }),
+          setRow("moonStar", "#6366f1", "Show on lock screen", { end: switchEl(true, () => {}) })));
+  });
+
+  const soundSub = () => page(root, "Sounds & Haptics", (s) => {
+    const slider = h("input", { attrs: { type: "range", min: "0", max: "100", value: String(sys.volume) },
+      style: { width: "100%", accentColor: "#2563eb" }, onInput: (e) => set("volume", +(e.target as HTMLInputElement).value) }) as HTMLInputElement;
+    onChange((k) => { if (k === "volume") slider.value = String(sys.volume); });
+    let ring = 0;
+    const tones = ["Ripples", "Aurora", "Zen Bell", "Nova"];
+    const toneGrp = h("div", { class: "set-group" });
+    const drawTones = () => toneGrp.replaceChildren(...tones.map((r, i) =>
+      setRow("music", i === ring ? "#22c55e" : "#9ca3af", r,
+        { end: i === ring ? svgIcon(I.check, "", 18) : undefined, onClick: () => { ring = i; drawTones(); toast(root, `Ringtone “${r}”`); } })));
+    s.append(
+      cap("Ringer and alerts"),
+      grp(h("div", { class: "set-row" }, h("div", { class: "set-ic", style: { background: "#f43f5e" } }, svgIcon(I.volume2)), h("div", { style: { flex: "1" } }, slider))),
+      cap("Ringtone — tap to pick"),
+      (drawTones(), toneGrp),
+      grp(setRow("slidersHorizontal", "#6b7280", "Haptic feedback", { end: switchEl(true, () => {}) }),
+          setRow("messageCircle", "#f59e0b", "Keyboard haptics", { end: switchEl(true, () => {}) })));
+  });
+
+  const focusSub = () => page(root, "Zen Mode", (s) => {
+    s.append(
+      grp(h("div", { class: "set-row" }, h("div", { class: "set-ic", style: { background: "#6366f1" } }, svgIcon(I.moon)),
+        h("span", { class: "set-lbl" }, "Do Not Disturb"), switchEl(false, () => {}))),
+      cap("Schedule"),
+      grp(setRow("clock", "#0ea5e9", "Sleep", { value: "22:30 – 07:00" }), setRow("clock", "#22c55e", "Work", { value: "09:00 – 12:00" })),
+      grp(setRow("bell", "#f59e0b", "Allowed notifications", { value: "People" })));
+  });
+
+  const aboutSub = () => page(root, "About", (s) => {
+    s.append(grp(
+      setRow("phone", "#22c55e", "Name", { value: "Wave Phone" }),
+      setRow("settings", "#6b7280", "Model", { value: "WaveOS Prototype" }),
+      setRow("info", "#0ea5e9", "Version", { value: "WaveOS 2.0 (26A1)" }),
+      setRow("disc", "#f59e0b", "Capacity", { value: "256 GB" }),
+      setRow("cloud", "#8b5cf6", "Available", { value: "198.4 GB" })));
+  });
+
+  const updateSub = () => page(root, "Software Update", (s) => {
+    const pct = h("span", { class: "set-val" }, "");
+    const pfill = h("div", { style: { height: "100%", width: "0%", borderRadius: "4px", background: "#2563eb", transition: "width .5s" } });
+    const btn = h("button", { class: "pressable", style: { width: "100%", padding: "14px", borderRadius: "16px", background: "#2563eb", color: "#fff", fontWeight: "700", fontSize: "15px" },
+      onClick: (e) => {
+        const b = e.currentTarget as HTMLButtonElement;
+        b.style.opacity = ".5"; b.style.pointerEvents = "none"; b.textContent = "Downloading…";
+        let p = 0;
+        const iv = setInterval(() => {
+          p = Math.min(100, p + 4 + Math.random() * 7);
+          pfill.style.width = `${p}%`; pct.textContent = `${Math.round(p)}%`;
+          if (p >= 100) { clearInterval(iv); b.textContent = "Update ready — WaveOS 2.1"; b.style.background = "#22c55e"; b.style.opacity = "1"; toast(root, "WaveOS 2.1 downloaded"); }
+        }, 180);
+      } }, "Download and Install");
+    s.append(
+      grp(h("div", { class: "set-row", style: { display: "block" } },
+          h("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "8px" } },
+            h("span", { class: "set-lbl" }, "WaveOS 2.1"), h("span", { class: "set-val" }, "1.8 GB")),
+          h("div", { style: { fontSize: "13px", color: "#6b7280", lineHeight: "1.45" } }, "New glass shaders, faster app morphs and stability improvements."))),
+      h("div", { style: { margin: "6px 0 14px" } }, btn),
+      h("div", { style: { display: "flex", alignItems: "center", gap: "8px" } },
+        h("div", { style: { flex: "1", height: "6px", borderRadius: "3px", background: "rgba(0,0,0,.08)", overflow: "hidden" } }, pfill), pct));
+  });
+
+  const generalSub = () => page(root, "General", (s) => {
+    let airdrop = 1;
+    const ads = ["Receiving Off", "Contacts Only", "Everyone"];
+    const airSub = () => page(root, "Nyne Share", (ss) => {
+      const g = h("div", { class: "set-group" });
+      const draw = () => g.replaceChildren(...ads.map((n, i) =>
+        setRow("share", i === airdrop ? "#2563eb" : "#9ca3af", n, { end: i === airdrop ? svgIcon(I.check, "", 18) : undefined, onClick: () => { airdrop = i; draw(); } })));
+      ss.append(g); draw();
+    });
+    const storageSub = () => page(root, "Storage", (ss) => {
+      const segs: [string, number, string][] = [["System", .22, "#6b7280"], ["Apps", .31, "#2563eb"], ["Photos", .14, "#f59e0b"], ["Media", .08, "#ef4444"], ["Other", .05, "#9ca3af"]];
+      ss.append(
+        grp(h("div", { class: "set-row", style: { display: "block" } },
+          h("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "10px" } },
+            h("span", { class: "set-lbl" }, "57.6 GB of 256 GB used"), h("span", { class: "set-val" }, "")),
+          h("div", { style: { display: "flex", height: "10px", borderRadius: "5px", overflow: "hidden", gap: "2px" } },
+            ...segs.map(([, f, c]) => h("div", { style: { width: `${f * 100}%`, background: c } }))))),
+        cap("Categories"),
+        grp(...segs.map(([n, f, c]) => setRow("disc", c, n, { value: `${(f * 256).toFixed(0)} GB` }))));
+    });
+    s.append(grp(
+      setRow("info", "#0ea5e9", "About", { onClick: aboutSub }),
+      setRow("download", "#2563eb", "Software Update", { value: "2.1 available", onClick: updateSub }),
+      setRow("share", "#22c55e", "Nyne Share", { value: "Contacts Only", onClick: airSub }),
+      setRow("disc", "#f59e0b", "Storage", { value: "57.6 GB used", onClick: storageSub }),
+      setRow("globe", "#6b7280", "Language & Region", { value: "English (US)" }),
+      setRow("calendar", "#ef4444", "Date & Time", { value: "Automatic" })));
+  });
+
+  const displaySub = () => page(root, "Display & Brightness", (s) => {
+    const slider = h("input", { attrs: { type: "range", min: "0", max: "100", value: String(sys.brightness) },
+      style: { width: "100%", accentColor: "#2563eb" }, onInput: (e) => set("brightness", +(e.target as HTMLInputElement).value) }) as HTMLInputElement;
+    onChange((k) => { if (k === "brightness") slider.value = String(sys.brightness); });
+    const night = () => { const h = new Date().getHours(); return h < 7 || h >= 19; };
+    let mode = sys.darkMode ? 1 : 0;
+    const modes = ["Light", "Dark", "Automatic"];
+    const modeGrp = h("div", { class: "set-group" });
+    const drawModes = () => modeGrp.replaceChildren(...modes.map((m, i) =>
+      setRow(i === 0 ? "sun" : i === 1 ? "moon" : "clock", i === mode ? "#2563eb" : "#9ca3af", m,
+        { end: i === mode ? svgIcon(I.check, "", 18) : undefined,
+          onClick: () => { mode = i; set("darkMode", i === 1 || (i === 2 && night())); drawModes(); } })));
+    s.append(
+      cap("Brightness — mirrors Control Center"),
+      grp(h("div", { class: "set-row" }, h("div", { class: "set-ic", style: { background: "#f59e0b" } }, svgIcon(I.sun)), h("div", { style: { flex: "1" } }, slider))),
+      cap("Appearance"),
+      (drawModes(), modeGrp),
+      grp(setRow("eye", "#8b5cf6", "True Tone", { end: switchEl(true, () => {}) }),
+          setRow("moonStar", "#6366f1", "Night Shift", { value: "Sunset – 07:00" })));
+  });
+
+  const wallpaperSub = () => page(root, "Wallpaper", (s) => {
+    const g = h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" } });
+    const draw = () => g.replaceChildren(...WALLPAPERS.map((w) =>
+      h("div", { class: "pressable", style: { position: "relative", aspectRatio: "9/16", borderRadius: "14px", overflow: "hidden", border: w === wallpaper ? "3px solid #2563eb" : "1px solid #e5e7eb", cursor: "pointer" },
+        onClick: () => {
+          wallpaper = w;
+          const wp = document.getElementById("wp");
+          if (wp) wp.style.backgroundImage = `url(${w})`;
+          draw(); toast(root, "Wallpaper applied");
+        } },
+        img(w, "img-fill"),
+        w === wallpaper ? h("div", { style: { position: "absolute", top: "6px", right: "6px", width: "20px", height: "20px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" } }, svgIcon(I.check, "", 12)) : null)));
+    s.append(cap("Pick a wallpaper — applied to the home screen"), g);
+    draw();
+  });
+
+  const batterySub = () => page(root, "Battery", (s) => {
+    s.append(
+      grp(h("div", { class: "set-row", style: { display: "block" } },
+          h("div", { style: { display: "flex", alignItems: "baseline", gap: "6px", marginBottom: "8px" } },
+            h("span", { style: { fontSize: "34px", fontWeight: "800", letterSpacing: "-.02em" } }, "84"),
+            h("span", { style: { fontSize: "15px", color: "#9ca3af", fontWeight: "600" } }, "%")),
+          bar(0.84, "#22c55e"))),
+      grp(setRow("battery", "#f59e0b", "Low Power Mode", { end: switchEl(false, () => {}) }),
+          setRow("battery", "#22c55e", "Battery Health", { value: "98%" })),
+      cap("Usage by app — last 24 h"),
+      grp(...[["Nyne Store", .34], ["Music", .22], ["Surf", .18], ["Messages", .12], ["Photos", .08]].map(([n, f]) =>
+        h("div", { class: "set-row", style: { display: "block" } },
+          h("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "6px" } },
+            h("span", { class: "set-lbl" }, n as string), h("span", { class: "set-val" }, `${Math.round((f as number) * 100)}%`)),
+          bar(f as number, "#22c55e", "6px")))));
+  });
+
+  const screenTimeSub = () => page(root, "Nyne Time", (s) => {
+    const hrs: [string, number, string][] = [["Instagram", 1.7, "#e1306c"], ["Surf", .97, "#2563eb"], ["Messages", .68, "#22c55e"], ["Music", .55, "#f43f5e"], ["Maps", .3, "#f59e0b"]];
+    s.append(
+      grp(h("div", { class: "set-row", style: { display: "block" } },
+          h("div", { style: { fontSize: "12px", color: "#9ca3af", fontWeight: "600", marginBottom: "4px" } }, "Daily average"),
+          h("div", { style: { fontSize: "34px", fontWeight: "800", letterSpacing: "-.02em" } }, "4h 12m"))),
+      cap("Most used"),
+      grp(...hrs.map(([n, hr, c]) =>
+        h("div", { class: "set-row", style: { display: "block" } },
+          h("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "6px" } },
+            h("span", { class: "set-lbl" }, n), h("span", { class: "set-val" }, `${Math.floor(hr)}h ${String(Math.round((hr % 1) * 60)).padStart(2, "0")}m`)),
+          bar(hr / 2, c as string, "6px")))),
+      grp(setRow("moon", "#6366f1", "Downtime", { value: "22:00 – 07:00" }),
+          setRow("clock", "#22c55e", "App Limits", { end: switchEl(true, () => {}) })));
+  });
+
+  const privacySub = () => page(root, "Privacy & Security", (s) => {
+    s.append(
+      cap("Permissions"),
+      grp(
+        setRow("mapPin", "#2563eb", "Location Services", { value: "While Using" }),
+        setRow("image", "#f59e0b", "Photos", { value: "Selected Photos" }),
+        setRow("mic", "#ef4444", "Microphone", { value: "2 apps" }),
+        setRow("camera", "#22c55e", "Camera", { value: "3 apps" }),
+        setRow("bluetooth", "#8b5cf6", "Bluetooth", { value: "4 apps" })),
+      cap("Tracking"),
+      grp(setRow("eye", "#6b7280", "Allow apps to request tracking", { end: switchEl(false, () => {}) })),
+      cap("Security"),
+      grp(setRow("lock", "#2563eb", "Lockdown Mode", { end: switchEl(false, () => {}) })));
+  });
+
+  const storeSub = () => page(root, "Nyne Store", (s) => {
+    s.append(
+      cap("Automatic downloads"),
+      grp(setRow("download", "#0ea5e9", "App Updates", { end: switchEl(true, () => {}) }),
+          setRow("store", "#8b5cf6", "New Apps", { end: switchEl(true, () => {}) })),
+      cap("Cellular data"),
+      grp(setRow("signal", "#22c55e", "Download over cellular", { end: switchEl(false, () => {}) })),
+      grp(setRow("user", "#6b7280", "Nyne ID", { value: "john@nyne.dev" })));
+  });
+
+  const build = (q = "") => {
+    scroll.replaceChildren();
+    groups.length = 0;
+    const add = (label: string, el: HTMLElement) => { groups.push({ label, el }); };
+
+    add("john account profile about", h("div", { class: "card-white pressable", style: { display: "flex", alignItems: "center", gap: "14px", padding: "16px", marginBottom: "14px" }, onClick: aboutSub },
+      img("/img/contact-john.jpg", "av rd"),
+      h("div", { style: { flex: "1" } },
+        h("div", { style: { fontSize: "18px", fontWeight: "700" } }, "John Doe"),
+        h("div", { style: { fontSize: "12px", color: "#9ca3af" } }, "Wave Account, Nyne Cloud+, Media & Purchases")),
+      h("span", { class: "chev" }, svgIcon(I.chevronLeft))));
+
+    add("airplane wifi cellular bluetooth hotspot", grp(
+      setRow("plane", "#f97316", "Airplane Mode", { end: switchEl(sys.airplane, (v) => set("airplane", v)) }),
+      h("div", { class: "set-row pressable", onClick: wifiSub },
+        h("div", { class: "set-ic", style: { background: "#2563eb" } }, svgIcon(I.wifi)),
+        h("span", { class: "set-lbl" }, "Wi-Fi"), wifiVal, h("span", { class: "chev" }, svgIcon(I.chevronLeft))),
+      setRow("signal", "#22c55e", "Cellular", { onClick: cellularSub }),
+      setRow("bluetooth", "#2563eb", "Bluetooth", { value: "On", onClick: btSub }),
+      setRow("link", "#22c55e", "Personal Hotspot", { onClick: hotspotSub })));
+
+    add("notifications sounds zen mode nyne time", grp(
+      setRow("bell", "#ef4444", "Notifications", { onClick: notifSub }),
+      setRow("volume2", "#f43f5e", "Sounds & Haptics", { onClick: soundSub }),
+      setRow("moon", "#6366f1", "Zen Mode", { onClick: focusSub }),
+      setRow("clock", "#22c55e", "Nyne Time", { value: "4h 12m", onClick: screenTimeSub })));
+
+    add("general display wallpaper battery privacy", grp(
+      setRow("settings", "#6b7280", "General", { onClick: generalSub }),
+      setRow("sun", "#2563eb", "Display & Brightness", { value: "Light", onClick: displaySub }),
+      setRow("image", "#0ea5e9", "Wallpaper", { onClick: wallpaperSub }),
+      setRow("battery", "#22c55e", "Battery", { value: "84%", onClick: batterySub }),
+      setRow("shield", "#2563eb", "Privacy & Security", { onClick: privacySub })));
+
+    add("nyne store updates", grp(setRow("store", "#0ea5e9", "Nyne Store", { value: "Automatic updates", onClick: storeSub })));
+
+    const needle = q.toLowerCase();
+    for (const g of groups) if (!needle || g.label.includes(needle)) scroll.append(g.el);
   };
 
-  const btPage = () => {
-    const devs: [string, boolean][] = [["AirPods Pro", true], ["Wave Watch", true], ["Magic Keyboard", false]];
-    const wrap = h("div", { class: "set-group g-light" });
-    const paint = () => wrap.replaceChildren(...devs.map(([n, conn], i) => {
-      const r = row("bluetooth", "#007dff", n, "", h("span", { style: { fontSize: "13px", color: conn ? "#007dff" : "rgba(0,0,0,.4)", fontWeight: "600" } }, conn ? "Connected" : "Not Connected"));
-      r.classList.add("pressable");
-      r.style.cursor = "pointer";
-      r.addEventListener("click", () => { if (sys.bluetooth) { devs[i][1] = !conn; paint(); } });
-      return r;
-    }));
-    paint();
-    sub("Bluetooth",
-      group(row("bluetooth", "#007dff", "Bluetooth", "", toggle("bluetooth"))),
-      note("My devices"),
-      wrap);
-  };
-
-  const cellularPage = () =>
-    sub("Cellular",
-      group(row("signal", "#22c55e", "Cellular Data", "", toggle("cellular"))),
-      note("Data usage — October"),
-      group(row("globe", "#007dff", "Data Used", "4.2 GB of 20 GB"),
-        h("div", { style: { padding: "4px 16px 16px" } },
-          h("div", { style: { height: "6px", borderRadius: "3px", background: "#e5e7eb", overflow: "hidden" } },
-            h("div", { style: { height: "100%", width: "21%", borderRadius: "3px", background: "#22c55e" } })))));
-
-  const hotspotPage = () => {
-    let on = false;
-    sub("Personal Hotspot",
-      group(row("globe", "#007dff", "Allow Others to Join", "", tog(on, (v) => { on = v; }))),
-      note(on ? "Other devices can now find this phone." : "When off, only your own devices can connect."),
-      group(row("lock", "#71717a", "Wi-Fi Password", "wave-2049")));
-  };
-
-  const notifPage = () =>
-    sub("Notifications",
-      ...(["Messages", "Mail", "Calendar", "Weather"] as const).map((n) =>
-        group(row("bell", "#ef4444", n, "", tog(true, () => {})))));
-
-  const soundsPage = () => {
-    const slider = h("input", { attrs: { type: "range", min: "0", max: "100", value: String(sys.volume) }, style: { width: "100%", accentColor: "#ec4899" } }) as HTMLInputElement;
-    slider.addEventListener("input", () => set("volume", Number(slider.value)));
-    return sub("Sounds & Haptics",
-      group(row("volume2", "#ec4899", "Ringtone", "Ripple"), row("bell", "#f59e0b", "Vibration", "", tog(true, () => {}))),
-      note("Volume"),
-      h("div", { class: "card-white", style: { padding: "18px 20px" } }, slider));
-  };
-
-  const focusPage = () => {
-    let cur = "off";
-    const MODES: [string, IconName, string][] = [["Do Not Disturb", "moon", "#6366f1"], ["Work", "pencil", "#007dff"], ["Sleep", "bell", "#10b981"], ["Off", "x", "#71717a"]];
-    const wrap = h("div", { class: "set-group g-light" });
-    const paint = () => wrap.replaceChildren(...MODES.map(([n, ic, c]) => {
-      const id = n.toLowerCase();
-      return row(ic, c, n, "", cur === id ? h("span", { style: { color: "#007dff", display: "flex" } }, svgIcon(I.check, "", 18)) : h("span", {}), () => { cur = id; paint(); });
-    }));
-    paint();
-    sub("Focus", wrap, note("Focus filters notifications across the system."));
-  };
-
-  const GROUPS: [string, HTMLElement][] = [
-    ["wifi", group(row("wifi", "#007dff", "Wi-Fi", "Home_5G", toggle("wifi"), wifiPage),
-      row("bluetooth", "#007dff", "Bluetooth", "On", toggle("bluetooth"), btPage),
-      row("plane", "#f97316", "Airplane Mode", "", toggle("airplane")),
-      row("signal", "#22c55e", "Cellular", "", undefined, cellularPage),
-      row("globe", "#007dff", "Personal Hotspot", "Off", undefined, hotspotPage))],
-    ["notif", group(row("bell", "#ef4444", "Notifications", "", undefined, notifPage),
-      row("volume2", "#ec4899", "Sounds & Haptics", "", undefined, soundsPage),
-      row("moon", "#6366f1", "Focus", "", undefined, focusPage))],
-  ];
-
-  const scroll = h("div", { class: "app-scroll no-sb", style: { padding: "0 24px 40px", display: "flex", flexDirection: "column", gap: "24px" } });
-  const profile = h("div", { class: "pressable card-white", style: { padding: "18px 20px", display: "flex", alignItems: "center", gap: "16px", borderRadius: "24px", background: "#fff", boxShadow: "0 2px 10px rgba(0,0,0,.04)", cursor: "pointer" } },
-    h("div", { style: { width: "60px", height: "60px", borderRadius: "50%", background: "linear-gradient(135deg,#007dff,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "20px", fontWeight: "700", boxShadow: "inset 0 1px 1px rgba(255,255,255,.4),0 4px 10px rgba(0,0,0,.1)", flexShrink: "0" } }, "JD"),
-    h("div", { style: { flex: "1" } },
-      h("div", { style: { fontSize: "20px", fontWeight: "700", color: "rgba(0,0,0,.9)" } }, "John Doe"),
-      h("div", { style: { fontSize: "13px", color: "rgba(0,0,0,.45)", fontWeight: "500", marginTop: "2px" } }, "Nyne ID")),
-    h("span", { class: "chev" }, svgIcon(I.chevronLeft, "", 16)));
-
-  const searchIn = h("input", { attrs: { type: "search", placeholder: "Search Settings" }, style: { flex: "1", border: "none", outline: "none", background: "transparent", fontSize: "14px", fontFamily: "inherit" } }) as HTMLInputElement;
-  const paint = () => {
-    const q = searchIn.value.trim().toLowerCase();
-    if (!q) { scroll.replaceChildren(profile, ...GROUPS.map(([, g]) => g)); return; }
-    const flat: HTMLElement[] = [];
-    GROUPS.forEach(([, g]) => g.querySelectorAll<HTMLElement>(".set-row").forEach((r) => {
-      const lbl = r.querySelector(".set-lbl")?.textContent ?? "";
-      if (lbl.toLowerCase().includes(q)) flat.push(r);
-    }));
-    scroll.replaceChildren(...(flat.length ? [group(...flat)] : [note(`No settings matching “${searchIn.value}”`)]));
-  };
-  searchIn.addEventListener("input", paint);
-  paint();
+  const input = h("input", { attrs: { placeholder: "Search" }, style: { flex: "1", border: "none", outline: "none", background: "none", fontSize: "14px" } }) as HTMLInputElement;
+  input.addEventListener("input", () => build(input.value.trim()));
+  build();
 
   root.append(
     GlassHeader("Settings", { large: true }),
-    h("div", { style: { padding: "8px 24px 16px" } },
-      h("div", { class: "search-pill", style: { borderRadius: "999px", height: "44px", padding: "0 18px", background: "rgba(255,255,255,.55)", backdropFilter: "blur(18px)", border: "1px solid rgba(255,255,255,.7)", boxShadow: "0 4px 16px rgba(10,89,247,.08)" } }, svgIcon(I.search, "", 16), searchIn)),
+    h("div", { class: "search-pill", style: { margin: "0 16px 10px" } }, svgIcon(I.search), input),
     scroll);
   return root;
 }

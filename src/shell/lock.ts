@@ -2,6 +2,7 @@
 import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
 import { fmtDate, fmtTime } from "../system/state";
+import { glassClock } from "./glassClock";
 
 export class Lock {
   el = h("div", { attrs: { id: "lock" } });
@@ -28,7 +29,10 @@ export class Lock {
   }
 
   render() {
-    this.clockEl.textContent = fmtTime();
+    const t = fmtTime();
+    const n = this.clockEl.firstChild;
+    if (n && n.nodeType === 3) n.nodeValue = t; else this.clockEl.prepend(t);
+    glassClock(this.clockEl, t);
     this.dateEl.textContent = fmtDate();
   }
 

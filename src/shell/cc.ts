@@ -40,13 +40,20 @@ export class ControlCenter {
       h("div", { class: "cc-mini" },
         h("div", { class: "cc-focus g-dark" },
           h("div", { class: "mic-ic" }, svgIcon(I.moon)),
-          h("span", {}, "Focus")),
+          h("span", {}, "Zen Mode")),
         h("button", { class: "cc-sq g-dark" }, svgIcon(I.rotateCcw)),
         h("button", { class: "cc-sq g-dark" }, svgIcon(I.screenShare))));
 
     const r3 = h("div", { class: "cc-r3" },
       ...[I.flashlight, I.clock, I.calculator, I.camera].map((ic) =>
         h("button", { class: "cc-util g-dark" }, svgIcon(ic))));
+
+    const sdBtn = h("button", { class: "cc-sd g-dark", onClick: () => { this.close(); set("sheet", "sd"); } },
+      h("div", { class: "ic" }, svgIcon(I.link)),
+      h("div", { class: "tx" },
+        h("span", { class: "nm" }, "Nyne Link"),
+        h("span", { class: "sub" }, "5 devices nearby")),
+      svgIcon(I.chevronLeft, "chev", 16));
 
     const home = h("div", { class: "cc-home g-dark" },
       h("div", { class: "l" },
@@ -55,7 +62,7 @@ export class ControlCenter {
       h("div", { class: "sub" }, "3 Scenes Active"));
 
     const handle = h("div", { class: "handle" }, h("i"));
-    this.el.append(r1, r2, r3, home, handle);
+    this.el.append(r1, r2, r3, sdBtn, home, handle);
     onChange(() => this.sync());
     this.sync();
   }
