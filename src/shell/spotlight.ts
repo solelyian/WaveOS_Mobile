@@ -5,7 +5,7 @@ import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
 import { Spring } from "../core/motion";
 import { lerp } from "../wasm/bridge";
-import { APPS, appMeta } from "../apps/registry";
+import { APPS, EXTRA_APPS, INSTALLED, appMeta } from "../apps/registry";
 import type { AppId } from "../system/state";
 
 export class Spotlight {
@@ -41,7 +41,8 @@ export class Spotlight {
 
   private filter() {
     const q = this.input.value.trim().toLowerCase();
-    const matches = APPS.filter((a) => a.name.toLowerCase().includes(q));
+    const searchable = [...APPS, ...EXTRA_APPS.filter((a) => INSTALLED.has(a.id))];
+    const matches = searchable.filter((a) => a.name.toLowerCase().includes(q));
     this.list.replaceChildren(...matches.map((a) => {
       const m = appMeta(a.id);
       const tile = h("div", { class: "tile", style: { background: m.color, width: "52px", height: "52px", borderRadius: "16px", flex: "none" } }, svgIcon(I[m.icon]));

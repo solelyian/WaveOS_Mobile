@@ -3,6 +3,7 @@ import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
 import { Spring } from "../core/motion";
 import { APPS, DOCK, appMeta } from "../apps/registry";
+import type { AppMeta } from "../apps/registry";
 import type { AppId } from "../system/state";
 
 export class Home {
@@ -32,6 +33,7 @@ export class Home {
 
     const grid = h("div", { attrs: { id: "grid" } });
     for (const app of APPS) grid.append(this.icon(app.id, false));
+    this.grid = grid;
 
     // capsule recherche style iOS au-dessus du dock -> Spotlight
     const search = h("button", { class: "home-search g-light", onClick: () => this.onSpot?.() },
@@ -43,6 +45,14 @@ export class Home {
         ...DOCK.map((id) => this.icon(id, true))));
 
     this.el.append(widgets, grid, search, dock);
+  }
+
+  private grid!: HTMLElement;
+
+  /** App installée depuis l'App Store : nouvelle tuile en fin de grille. */
+  addIcon(m: AppMeta) {
+    if (this.tiles.has(m.id)) return;
+    this.grid.append(this.icon(m.id, false));
   }
 
   private icon(id: AppId, inDock: boolean) {

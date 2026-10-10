@@ -1,7 +1,9 @@
 // state.ts — état OS central (pub-sub), équivalent du OSContext React.
 export type AppId =
   | "weather" | "calendar" | "photos" | "calculator" | "settings"
-  | "maps" | "phone" | "mail" | "messages" | "music" | "safari";
+  | "maps" | "phone" | "mail" | "messages" | "music" | "safari"
+  | "store"
+  | "notes" | "files" | "clock" | "arcade";
 
 export type Sheet = "cc" | "nc" | null;
 

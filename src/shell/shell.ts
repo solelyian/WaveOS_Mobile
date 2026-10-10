@@ -9,7 +9,8 @@ import { ControlCenter } from "./cc";
 import { NotificationCenter } from "./nc";
 import { Spotlight } from "./spotlight";
 import { renderApp } from "../apps";
-import { registerAppCloser } from "./api";
+import { registerAppCloser, registerAppLauncher, registerAppInstaller } from "./api";
+import { appMeta, INSTALLED } from "../apps/registry";
 import { sys, set, onChange } from "../system/state";
 import { Spring, tick, tickTweens } from "../core/motion";
 import { setZoneResolver, attachGestures } from "../core/gestures";
@@ -43,6 +44,11 @@ export class Shell {
     this.lock.bar.style.pointerEvents = "auto";
     attachGestures(phone);
     registerAppCloser(() => this.closeActiveApp());
+    registerAppLauncher((id) => this.launchApp(id));
+    registerAppInstaller((id) => {
+      INSTALLED.add(id);
+      this.home.addIcon(appMeta(id));
+    });
     setZoneResolver((x, y, el) => this.resolveZone(x, y, el));
     onChange(() => this.syncTargets());
     this.syncTargets();
@@ -84,6 +90,23 @@ export class Shell {
   }
 
   closeActiveApp() { this.appwin?.close(); }
+
+  /** « Open » depuis une app (App Store) : referme l'app courante puis
+   *  morph depuis la tuile du springboard une fois la fermeture jouée. */
+  private launchApp(id: import("../system/state").AppId) {
+    if (!this.appwin) { this.openFromIcon(id); return; }
+    this.appwin.close();
+    const wait = () => {
+      if (!this.appwin) this.openFromIcon(id);
+      else setTimeout(wait, 60); // borne ~1.5s via garde ci-dessous
+    };
+    setTimeout(wait, 60);
+    setTimeout(() => { if (!sys.activeApp) this.openFromIcon(id); }, 1600);
+  }
+  private openFromIcon(id: import("../system/state").AppId) {
+    const rect = this.home.iconRect(id);
+    if (rect && !sys.locked && !sys.activeApp) this.openApp(id, rect);
+  }
 
   private openCC() {
     const cc = this.ensureCC();
