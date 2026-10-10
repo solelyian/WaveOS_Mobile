@@ -22,6 +22,7 @@ static inline float wv_max(float a,float b){ return a>b?a:b; }
 static inline float wv_clampf(float x,float lo,float hi){ return x<lo?lo:(x>hi?hi:x); }
 static inline float wv_lerpf(float a,float b,float t){ return a+(b-a)*t; }
 static inline float wv_fract(float x){ return x-__builtin_floorf(x); }
+static inline float wv_fmodf(float x,float y){ return x-wv_floor(x/y)*y; }
 
 // ldexp équivalent : x * 2^n, n borné (utilisé par exp2/log2).
 static inline float wv_scalbn(float x,int n){

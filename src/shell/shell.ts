@@ -1,285 +1,222 @@
-// shell.ts — l'orchestrateur : machine à états des modes (lock / home / app /
-// switcher) et des sheets (cc / nc), routage gestuel, composition du frame.
-// Tout le mouvement vit dans la banque de ressorts WASM ; ici on pilote.
-import { Spring } from "../wasm/spring";
-import { motion } from "../core/motion";
-import { GestureRouter, type GestureInfo } from "../core/gestures";
-import { a11y } from "../core/a11y";
-import { on, set, sys } from "../system/state";
+// shell.ts — orchestrateur : couches, boucle RAF unique, routage gestes/état.
 import { Wallpaper } from "./wallpaper";
 import { StatusBar } from "./statusbar";
-import { LockScreen } from "./lock";
-import { HomeScreen } from "./home";
+import { Lock } from "./lock";
+import { Home } from "./home";
+import { AppWindow } from "./appwin";
+import { DynamicIsland } from "./di";
 import { ControlCenter } from "./cc";
 import { NotificationCenter } from "./nc";
-import { Switcher } from "./switcher";
-import { AppWindow } from "./appwin";
-import { APPS, DOCK, type AppDef } from "../apps/registry";
+import { Spotlight } from "./spotlight";
+import { renderApp } from "../apps";
+import { registerAppCloser } from "./api";
+import { sys, set, onChange } from "../system/state";
+import { Spring, tick, tickTweens } from "../core/motion";
+import { setZoneResolver, attachGestures } from "../core/gestures";
+import type { Drag } from "../core/gestures";
+import { tween } from "../core/motion";
 
-type Mode = "lock" | "home" | "app" | "switcher";
-type DragKind =
-  | "none" | "unlock" | "cc" | "nc" | "sheetClose"
-  | "sw" | "swScroll" | "swKill" | "appClose" | "back";
-
-const TRAVEL = { unlock: 340, sheet: 560, app: 430, back: 300, sw: 480 };
-
-function findApp(id: string): AppDef {
-  return [...APPS, ...DOCK].find((a) => a.id === id) ?? APPS[0];
-}
+const H = 850;
 
 export class Shell {
   private phone: HTMLElement;
-  private wallpaper: Wallpaper;
-  private lock: LockScreen;
-  private home: HomeScreen;
-  private cc: ControlCenter;
-  private nc: NotificationCenter;
-  private sw: Switcher;
-  private appwin: AppWindow;
+  private wp = new Wallpaper();
+  private sb = new StatusBar();
+  private lock: Lock;
+  private home: Home;
+  private di = new DynamicIsland();
+  private appwin: AppWindow | null = null;
+  private cc: ControlCenter | null = null;
+  private nc: NotificationCenter | null = null;
+  private spot: Spotlight | null = null;
 
-  private mode: Mode = "lock";
-  private unlockP = new Spring(0, "snappy");
-  private homeP = new Spring(0, "soft");
-  private ccP = new Spring(0, "sheet");
-  private ncP = new Spring(0, "sheet");
-  private readonly sb = new StatusBar();
-  private swP = new Spring(0, "soft");
-  private appP = new Spring(0, "soft");
-
-  private drag: DragKind = "none";
-  private dragBase = 0;
-  private killNode: HTMLElement | null = null;
-  private running: string[] = [];
-
-  constructor() {
-    this.phone = document.getElementById("phone")!;
-    const layers = document.getElementById("layers")!;
-    this.wallpaper = new Wallpaper(document.getElementById("wallpaper") as HTMLCanvasElement);
-    this.home = new HomeScreen((app) => this.openApp(app));
-    this.appwin = new AppWindow();
-    this.lock = new LockScreen(() => {});
-    this.cc = new ControlCenter(() => this.relock());
-    this.nc = new NotificationCenter((m) => a11y.announce(m));
-    this.sw = new Switcher((app) => this.openFromSwitcher(app));
-    this.cc.onClose = () => this.closeSheet("cc");
-    this.nc.onClose = () => this.closeSheet("nc");
-    this.sw.onClose = () => this.closeSwitcher();
-
-    layers.append(this.home.node, this.appwin.node, this.lock.node, this.sw.node, this.cc.node, this.nc.node);
-    document.getElementById("chrome")!.append(this.sb.node);
-
-    this.lock.onPinPass = () => { this.unlockP.to(1); this.unlock(); };
-    this.lock.onPinDismiss = () => { /* la face est déjà revenue à 0 */ };
-
-    new GestureRouter(this.phone, {
-      onDragStart: (g) => this.dragStart(g),
-      onDrag: (g) => this.dragMove(g),
-      onDragEnd: (g) => this.dragEnd(g),
-    });
-
-    // Wallpaper spatial : la scène se décale en parallaxe sous le pointeur et
-    // une lumière discrète suit le doigt (« light follows finger »).
-    const wpl = document.getElementById("wplight")!;
-    this.phone.addEventListener("pointermove", (e) => {
-      const r = this.phone.getBoundingClientRect();
-      this.wallpaper.setParallax(
-        (e.clientX - r.left) / r.width - 0.5,
-        (e.clientY - r.top) / r.height - 0.5);
-      wpl.style.setProperty("--wx", `${e.clientX - r.left}px`);
-      wpl.style.setProperty("--wy", `${e.clientY - r.top}px`);
-      wpl.style.setProperty("--wl", "1");
-    });
-    this.phone.addEventListener("pointerleave", () => {
-      this.wallpaper.setParallax(0, 0);
-      wpl.style.setProperty("--wl", "0");
-    });
-
-    // état système → présentation
-    on("theme", (v) => {
-      this.phone.dataset.theme = v;
-      if (v === "light" && sys.wallpaper === 0) set("wallpaper", 1);
-      if (v === "dark" && sys.wallpaper === 1) set("wallpaper", 0);
-    });
-    on("reduced", (v) => a11y.setReduceMotion(v));
-    on("textScale", (v) => a11y.setTextScale(v));
-    this.phone.dataset.theme = sys.theme;
-    this.wallpaper.bake();
-
-    motion.every(() => this.frame());
-  }
-
-  // ---------- transitions ----------
-  private unlock(): void {
-    this.mode = "home";
-    this.homeP.to(1);
-    a11y.announce("Déverrouillé — accueil");
-  }
-
-  private relock(): void {
-    this.ccP.to(0);
-    this.lock.resetPin();
-    this.mode = "lock";
-    this.unlockP.set(0);
-    this.homeP.set(0);
-    this.swP.set(0);
-    this.appP.set(0);
-    this.appwin.node.style.visibility = "hidden";
-    
-    this.lock.tick();
-    a11y.announce("Verrouillé");
-  }
-
-  private openApp(app: AppDef): void {
-    const r = this.home.iconRect(app) ?? { x: 166, y: 396, w: 60, h: 60 };
-    
-    if (!this.running.includes(app.id)) this.running.push(app.id);
-    this.appwin.show(app, r, () => this.closeApp());
-    this.appP.to(1, 2.4); // élan initial — la fenêtre « part » de la tuile
-    this.mode = "app";
-    a11y.announce(`${app.name} ouverte`);
-  }
-
-  private openFromSwitcher(app: AppDef): void {
-    const rect = this.sw.cardRect(app);
-    const pr = this.phone.getBoundingClientRect();
-    const s = Math.min(pr.width / 393, pr.height / 852);
-    const from = rect
-      ? { x: (rect.left - pr.left) / s, y: (rect.top - pr.top) / s, w: rect.width / s, h: rect.height / s }
-      : { x: 76, y: 150, w: 240, h: 520 };
-    
-    this.appwin.show(app, from, () => this.closeApp());
-    this.swP.to(0);
-    this.appP.to(1, 1.5);
-    this.mode = "app";
-  }
-
-  private closeApp(): void { this.appP.to(0); }
-  private closeSheet(which: "cc" | "nc"): void { (which === "cc" ? this.ccP : this.ncP).to(0); }
-  private closeSwitcher(): void { this.swP.to(0); }
-
-  // ---------- gestes ----------
-  private dragStart(g: GestureInfo): boolean {
-    const targetEl = g.target as HTMLElement | null;
-    const onInteractive = !!targetEl?.closest(".cc-slider, .set-row, .nc-card, button, .toggle, .slider-h");
-    if (onInteractive) return false;
-
-    const sheetOpen = this.ccP.v > 0.02 || this.ncP.v > 0.02;
-
-    if (sheetOpen) {
-      // un sheet ouvert n'écoute que « refermer » — drag vers le haut
-      if (g.dy < -2) { this.drag = "sheetClose"; this.dragBase = this.ccP.v > this.ncP.v ? this.ccP.v : this.ncP.v; return true; }
-      return false;
-    }
-
-    switch (this.mode) {
-      case "lock":
-        if (this.lock.pinOpen) return false; // le pavé PIN capture l'écran
-        if (g.dy < -2) { this.drag = "unlock"; this.dragBase = this.unlockP.v; return true; }
-        if (g.dy > 2) { this.drag = "nc"; this.dragBase = 0; return true; }
-        return false;
-      case "home":
-        if (g.edge === "top-right" && g.dy > 2) { this.drag = "cc"; return true; }
-        if ((g.edge === "top-left" || g.edge === "top-mid") && g.dy > 2) { this.drag = "nc"; return true; }
-        if (g.edge === "bottom" && g.dy < -2 && this.running.length) { this.drag = "sw"; this.dragBase = this.swP.v; this.sw.setRunning(this.running.map(findApp)); return true; }
-        if (g.edge === "bottom" && g.dy < -2) { this.drag = "sw"; this.dragBase = 0; this.sw.setRunning(this.running.map(findApp)); return true; }
-        return false;
-      case "app":
-        if (g.edge === "top-right" && g.dy > 2) { this.drag = "cc"; return true; }
-        if ((g.edge === "top-left" || g.edge === "top-mid") && g.dy > 2) { this.drag = "nc"; return true; }
-        if (g.edge === "bottom" && g.dy < -2) { this.drag = "appClose"; this.dragBase = this.appP.v; return true; }
-        if (g.edge === "left" && g.dx > 2) { this.drag = "back"; this.dragBase = this.appP.v; return true; }
-        return false;
-      case "switcher": {
-        const card = this.sw.cardAt(g.startX);
-        if (g.dy < -2 && Math.abs(g.dy) > Math.abs(g.dx) && card) {
-          this.drag = "swKill"; this.killNode = card; return true;
-        }
-        if (g.dy > 2 && Math.abs(g.dy) > Math.abs(g.dx)) { this.drag = "sw"; this.dragBase = 1; return true; }
-        this.drag = "swScroll"; this.sw.dragStart(); return true;
-      }
-    }
-  }
-
-  private dragMove(g: GestureInfo): void {
-    switch (this.drag) {
-      case "unlock": this.unlockP.set(motion.clamp(this.dragBase - g.dy / TRAVEL.unlock, 0, 1)); break;
-      case "cc": this.ccP.set(motion.clamp(g.dy / TRAVEL.sheet, 0, 1)); break;
-      case "nc": this.ncP.set(motion.clamp(g.dy / TRAVEL.sheet, 0, 1)); break;
-      case "sheetClose": {
-        const base = this.dragBase;
-        const p = motion.clamp(base + g.dy / TRAVEL.sheet, 0, 1);
-        if (this.ccP.v > this.ncP.v) this.ccP.set(p); else this.ncP.set(p);
-        break;
-      }
-      case "sw": this.swP.set(motion.clamp(this.dragBase - g.dy / TRAVEL.sw, 0, 1)); break;
-      case "swScroll": this.sw.drag(g.dx); break;
-      case "swKill": if (this.killNode) this.sw.killDrag(this.killNode, g.dy); break;
-      case "appClose": this.appP.set(motion.clamp(this.dragBase + g.dy / TRAVEL.app, 0, 1)); break;
-      case "back": this.appP.set(motion.clamp(this.dragBase - g.dx / TRAVEL.back, 0, 1)); break;
-      case "none": break;
-    }
-  }
-
-  private dragEnd(g: GestureInfo): void {
-    const kind = this.drag;
-    this.drag = "none";
-    const commit = (spring: Spring, openThresh: number, vScale: number, vy: number) => {
-      const vel = vy / vScale;
-      const predicted = spring.v + vel * 0.22; // momentum court — sensation « doigt qui lâche »
-      spring.to(predicted > openThresh ? 1 : 0, vel);
+  constructor(phone: HTMLElement) {
+    this.phone = phone;
+    this.home = new Home((id, rect) => this.openApp(id, rect));
+    this.home.onSpot = () => {
+      if (sys.locked || sys.activeApp || sys.sheet) return;
+      if (!this.spot) { this.spot = new Spotlight((id, rect) => this.openApp(id, rect)); this.phone.append(this.spot.el); }
+      this.spot.open(this.home.searchEl);
     };
-    switch (kind) {
-      case "unlock": commit(this.unlockP, 0.42, TRAVEL.unlock, -g.vy); break;
-      case "cc": commit(this.ccP, 0.34, TRAVEL.sheet, g.vy); break;
-      case "nc": commit(this.ncP, 0.34, TRAVEL.sheet, g.vy); break;
-      case "sheetClose": {
-        const s = this.ccP.v > this.ncP.v ? this.ccP : this.ncP;
-        const vel = g.vy / TRAVEL.sheet;
-        s.to(s.v + vel * 0.22 > 0.6 ? 1 : 0, vel);
-        break;
+    this.lock = new Lock(() => {});
+    phone.append(this.wp.el, this.home.el, this.sb.el, this.di.el, this.lock.el);
+    this.lock.bar.style.pointerEvents = "auto";
+    attachGestures(phone);
+    registerAppCloser(() => this.closeActiveApp());
+    setZoneResolver((x, y, el) => this.resolveZone(x, y, el));
+    onChange(() => this.syncTargets());
+    this.syncTargets();
+    this.loop();
+  }
+
+  // ---------- transitions d'état ----------
+  private syncTargets() {
+    // voile wallpaper : lock|panneau = 2, app = 1, sinon 0
+    this.wp.level = sys.locked || sys.sheet ? 2 : sys.activeApp ? 1 : 0;
+    this.sb.hidden = sys.locked;
+    // maquette : le springboard n'existe pas sous le lock
+    this.home.el.style.visibility = sys.locked ? "hidden" : "visible";
+    this.home.setMode(sys.sheet ? "sheet" : sys.activeApp ? "app" : "full");
+    // panneaux
+    if (sys.sheet === "cc" && !this.cc) this.openCC();
+    if (sys.sheet === "nc" && !this.nc) this.openNC();
+  }
+
+  private openApp(id: import("../system/state").AppId, tileRect: DOMRect) {
+    if (sys.locked || sys.activeApp || this.appwin) return;
+    const pr = this.phone.getBoundingClientRect();
+    const sx = this.phone.clientWidth / pr.width, sy = this.phone.clientHeight / pr.height;
+    const from = {
+      x: (tileRect.left - pr.left) * sx,
+      y: (tileRect.top - pr.top) * sy,
+      w: tileRect.width * sx,
+      h: tileRect.height * sy,
+    };
+    set("activeApp", id);
+    this.appwin = new AppWindow(id, from, renderApp(id));
+    this.appwin.onClosed = () => {
+      this.appwin = null;
+      set("activeApp", null);
+      this.home.setIconHidden(id, false);
+    };
+    this.phone.append(this.appwin.el);
+    this.home.setIconHidden(id, true);
+  }
+
+  closeActiveApp() { this.appwin?.close(); }
+
+  private openCC() {
+    const cc = this.ensureCC();
+    cc.sy.set(-H);
+    cc.open();
+    if (this.nc) this.closeNC();
+  }
+  private openNC() {
+    const nc = this.ensureNC();
+    nc.sy.set(-H);
+    nc.open();
+  }
+  private closeCC() { this.cc?.close(); if (sys.sheet === "cc") set("sheet", null); }
+  private closeNC() { this.nc?.close(); if (sys.sheet === "nc") set("sheet", null); }
+
+  private unlock() {
+    // iOS-style : le lock dérive vers le haut en fondant + floutant,
+    // le springboard émerge en zoom-settle (petit → 1, léger rebond),
+    // le wallpaper dézoome 1.1 → 1 et se défloute (wp.level 2 → 0).
+    const o0 = parseFloat(this.lock.el.style.opacity || "1");
+    tween(500, (v) => {
+      this.lock.el.style.opacity = (o0 * (1 - v)).toFixed(3);
+      this.lock.el.style.filter = `blur(${(v * 12).toFixed(1)}px)`;
+      this.lock.el.style.transform = `translateY(${(-v * 90).toFixed(1)}px)`;
+    }, { done: () => {
+      this.lock.visible = false;
+      this.lock.el.style.transform = "";
+    } });
+    // entrée du home : part légèrement réduit + transparent, ressort vers 1
+    this.home.enter();
+    set("locked", false); // syncTargets → sc.to(1) op.to(1), wp 2→0, sb fondu
+  }
+
+  // ---------- zones de geste ----------
+  private resolveZone(x: number, y: number, interactive: HTMLElement | null): Drag | null {
+    // lock : drag de la barre « swipe up »
+    if (sys.locked) {
+      if (y > H - 100 && !interactive) return this.lockDrag();
+      return null;
+    }
+    // panneau ouvert : drag vers le haut pour fermer (maquette : onDragEnd sheet)
+    if (sys.sheet === "cc" && this.cc) {
+      if (interactive) return null; // contrôles internes prioritaires
+      return this.sheetDrag(this.cc, () => this.closeCC());
+    }
+    if (sys.sheet === "nc" && this.nc) {
+      if (interactive) return null;
+      return this.sheetDrag(this.nc, () => this.closeNC());
+    }
+    // app ouverte : barre du bas -> drag fenêtre
+    if (sys.activeApp && this.appwin) {
+      if (y > H - 48 && !interactive) {
+        const win = this.appwin;
+        return {
+          move: (_dx, dy) => win.drag(dy),
+          end: (_dx, dy, _vx, vy) => { win.release(dy, vy); },
+        };
       }
-      case "sw": commit(this.swP, 0.4, TRAVEL.sw, -g.vy); break;
-      case "swScroll": this.sw.commitScroll(g.vx); break;
-      case "swKill": if (this.killNode) this.sw.commitKill(this.killNode, g.vy); this.killNode = null;
-        this.running = this.sw.runningIds();
-        if (this.running.length === 0) this.swP.to(0); // plus de cartes : retour accueil
-        break;
-      case "appClose": commit(this.appP, 0.6, TRAVEL.app, g.vy); break;
-      case "back": commit(this.appP, 0.6, TRAVEL.back, -g.vx); break;
+      return null;
     }
+    // home : zones hautes (maquette : hover zones top-8, moitié gauche NC / droite CC)
+    if (!interactive && y <= 44) {
+      const which = x < 200 ? "nc" : "cc";
+      const sheet = which === "nc" ? this.ensureNC() : this.ensureCC();
+      return {
+        move: (_dx, dy) => { sheet.sy.set(Math.min(0, -H + Math.max(0, dy))); },
+        end: (_dx, dy, _vx, vy) => {
+          if (dy > 60 || vy > 300) { sheet.open(); set("sheet", which); }
+          else { sheet.close(); }
+        },
+      };
+    }
+    return null;
   }
 
-  // ---------- frame ----------
-  private frame(): void {
-    const cl = motion.clamp;
-
-    // transitions de mode au repos
-    if (this.mode === "lock" && !this.lock.pinOpen && this.unlockP.settled && this.unlockP.v > 0.99) {
-      if (sys.pinLock) { this.lock.showPin(); this.unlockP.to(0); }
-      else this.unlock();
-    }
-    if (this.mode === "app" && this.appP.settled && this.appP.v < 0.002) {
-      this.mode = "home"; this.appwin.node.style.visibility = "hidden"; 
-      a11y.announce("Accueil");
-    }
-    if (this.mode === "switcher" && this.swP.settled && this.swP.v < 0.002) this.mode = "home";
-    if (this.mode === "home" && this.swP.v > 0.9) this.mode = "switcher";
-
-    const up = cl(this.unlockP.v, 0, 1);
-    this.lock.render(up);
-    this.home.render(cl(this.homeP.v, 0, 1), this.appP.v);
-    this.appwin.render(this.appP.v);
-    this.cc.render(this.ccP.v);
-    this.nc.render(this.ncP.v);
-    this.sw.render(this.swP.v);
-    this.sb.setGone(this.ncP.v > 0.55);
-    this.lock.tick(); this.nc.tick();
-
-    // scrim adaptatif : mesuré sur la luminance réelle du fond sous la zone
-    const sheet = Math.max(this.ccP.v, this.ncP.v, this.swP.v);
-    const scrim = document.getElementById("scrim")!;
-    const depth = cl(0.10 + sheet * 0.42 + this.appP.v * 0.22 + (1 - up) * 0.10, 0, 0.72);
-    scrim.style.opacity = String(depth);
-    this.wallpaper.render(sheet * 0.5 + this.appP.v * 0.2);
+  private lockDrag(): Drag {
+    return {
+      move: (_dx, dy) => {
+        const v = Math.min(0, dy);
+        this.lock.bar.style.transform = `translateY(${v}px)`;
+        const p = Math.min(1, -v / 200);
+        this.lock.el.style.opacity = (1 - p).toFixed(3);
+        this.lock.el.style.filter = `blur(${(p * 10).toFixed(1)}px)`;
+      },
+      end: (_dx, dy, _vx, vy) => {
+        if (dy < -100 || vy < -400) { this.unlock(); }
+        else {
+          const o0 = parseFloat(this.lock.el.style.opacity || "1");
+          tween(250, (v) => {
+            this.lock.el.style.opacity = (o0 + (1 - o0) * v).toFixed(3);
+            this.lock.el.style.filter = `blur(${((1 - v) * 10 * (1 - o0)).toFixed(1)}px)`;
+          }, { done: () => { this.lock.el.style.opacity = "1"; this.lock.el.style.filter = "none"; } });
+        }
+        this.lock.bar.style.transform = "";
+      },
+    };
   }
+
+  private sheetDrag(sheet: { sy: Spring; open(): void; close(): void }, done: () => void): Drag {
+    return {
+      move: (_dx, dy) => { sheet.sy.set(Math.min(0, dy)); },
+      end: (_dx, dy, _vx, vy) => {
+        if (dy < -100 || vy < -500) { done(); }
+        else sheet.open();
+      },
+    };
+  }
+
+  private ensureCC() {
+    if (!this.cc) { this.cc = new ControlCenter(); this.phone.append(this.cc.el); }
+    return this.cc;
+  }
+  private ensureNC() {
+    if (!this.nc) { this.nc = new NotificationCenter(); this.phone.append(this.nc.el); }
+    return this.nc;
+  }
+
+  // ---------- boucle ----------
+  private last = performance.now();
+  private loop = () => {
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - this.last) / 1000);
+    this.last = now;
+    tick(dt);
+    tickTweens(dt * 1000);
+    if (sys.locked) this.lock.render();
+    this.wp.render();
+    this.home.render();
+    this.di.render();
+    if (this.appwin && this.appwin.render()) this.appwin = null;
+    if (this.spot && this.spot.render()) { this.spot.el.remove(); this.spot = null; }
+    if (this.cc && this.cc.render() && sys.sheet !== "cc") { this.cc.el.remove(); this.cc = null; }
+    if (this.nc) { this.nc.tick(); if (this.nc.render() && sys.sheet !== "nc") { this.nc.el.remove(); this.nc = null; } }
+    requestAnimationFrame(this.loop);
+  };
 }

@@ -14,7 +14,7 @@
 #define WC_MAX_SPRINGS 512
 #define WC_SCRATCH_N   4096
 
-typedef struct { float v, vel, target, k, d; } WCSpring;
+typedef struct { float v, vel, target, k, d, m; } WCSpring;
 static WCSpring g_sp[WC_MAX_SPRINGS];
 static unsigned char g_used[WC_MAX_SPRINGS];
 static float g_scratch[WC_SCRATCH_N];
@@ -23,12 +23,12 @@ static float g_scratch[WC_SCRATCH_N];
 
 // ---------------- ressorts ----------------
 EXP("wc_spring_new")
-int wc_spring_new(float v0, float k, float d) {
+int wc_spring_new(float v0, float k, float d, float m) {
   for (int i = 0; i < WC_MAX_SPRINGS; i++) {
     if (!g_used[i]) {
       g_used[i] = 1;
       g_sp[i].v = v0; g_sp[i].vel = 0.f; g_sp[i].target = v0;
-      g_sp[i].k = k; g_sp[i].d = d;
+      g_sp[i].k = k; g_sp[i].d = d; g_sp[i].m = m <= 0.f ? 1.f : m;
       return i;
     }
   }
@@ -37,7 +37,7 @@ int wc_spring_new(float v0, float k, float d) {
 EXP("wc_spring_free")  void  wc_spring_free(int id) { if (id >= 0 && id < WC_MAX_SPRINGS) g_used[id] = 0; }
 EXP("wc_spring_set")   void  wc_spring_set(int id, float v, float vel) { g_sp[id].v = v; g_sp[id].vel = vel; g_sp[id].target = v; }
 EXP("wc_spring_target")void  wc_spring_target(int id, float t) { g_sp[id].target = t; }
-EXP("wc_spring_params")void  wc_spring_params(int id, float k, float d) { g_sp[id].k = k; g_sp[id].d = d; }
+EXP("wc_spring_params")void  wc_spring_params(int id, float k, float d, float m) { g_sp[id].k = k; g_sp[id].d = d; if (m > 0.f) g_sp[id].m = m; }
 EXP("wc_spring_value") float wc_spring_value(int id) { return g_sp[id].v; }
 EXP("wc_spring_vel")   float wc_spring_vel(int id) { return g_sp[id].vel; }
 EXP("wc_spring_settled")
@@ -59,7 +59,7 @@ void wc_tick(float dt) {
     for (int i = 0; i < WC_MAX_SPRINGS; i++) {
       WCSpring *s = &g_sp[i];
       if (!g_used[i]) continue;
-      float a = -s->k * (s->v - s->target) - s->d * s->vel;
+      float a = (-s->k * (s->v - s->target) - s->d * s->vel) / s->m;
       s->vel += a * step;
       s->v   += s->vel * step;
     }

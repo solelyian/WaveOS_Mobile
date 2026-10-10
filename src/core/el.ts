@@ -1,44 +1,43 @@
-// el.ts — fabrique DOM minimale. Pas de framework : le shell EST le framework,
-// les animations sont pilotées par le moteur physique, pas par une réconciliation.
+// el.ts — helper DOM minimal : h(tag, props, ...children)
+type Props = {
+  class?: string;
+  style?: Partial<CSSStyleDeclaration> | string;
+  onClick?: (e: MouseEvent) => void;
+  onPointerDown?: (e: PointerEvent) => void;
+  onInput?: (e: Event) => void;
+  attrs?: Record<string, string>;
+  html?: string;
+};
 
-type Attrs = Record<string, string | number | boolean | EventListener | undefined>;
-
-export function el<K extends keyof HTMLElementTagNameMap>(
+export function h<K extends keyof HTMLElementTagNameMap>(
   tag: K,
-  attrs: Attrs = {},
-  ...children: (Node | string)[]
+  props: Props = {},
+  ...children: (Node | string | null | undefined)[]
 ): HTMLElementTagNameMap[K] {
-  const e = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v === undefined || v === false) continue;
-    if (k === "class") e.className = String(v);
-    else if (k === "style") e.setAttribute("style", String(v));
-    else if (k.startsWith("on") && typeof v === "function") {
-      e.addEventListener(k.slice(2), v as EventListener);
-    } else if (v === true) e.setAttribute(k, "");
-    else e.setAttribute(k, String(v));
+  const el = document.createElement(tag);
+  if (props.class) el.className = props.class;
+  if (props.style) {
+    if (typeof props.style === "string") el.style.cssText = props.style;
+    else Object.assign(el.style, props.style);
   }
-  for (const c of children) e.append(c);
-  return e;
+  if (props.onClick) el.addEventListener("click", props.onClick as EventListener);
+  if (props.onPointerDown) el.addEventListener("pointerdown", props.onPointerDown as EventListener);
+  if (props.onInput) el.addEventListener("input", props.onInput);
+  if (props.attrs) for (const [k, v] of Object.entries(props.attrs)) el.setAttribute(k, v);
+  if (props.html !== undefined) el.innerHTML = props.html;
+  for (const c of children) {
+    if (c == null) continue;
+    el.append(c as Node | string);
+  }
+  return el;
 }
 
-export function svgEl<K extends keyof SVGElementTagNameMap>(
-  tag: K,
-  attrs: Attrs = {},
-  ...children: SVGElement[]
-): SVGElementTagNameMap[K] {
-  const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v === undefined || v === false) continue;
-    e.setAttribute(k, String(v));
+export function svgIcon(svg: string, cls = "", px?: number): HTMLElement {
+  const w = h("span", { class: "icon " + cls, html: svg });
+  const s = w.querySelector("svg") as SVGElement | null;
+  if (s) {
+    s.setAttribute("width", "100%"); s.setAttribute("height", "100%");
+    if (px) { s.style.width = `${px}px`; s.style.height = `${px}px`; }
   }
-  for (const c of children) e.append(c);
-  return e;
-}
-
-/** Icône SVG 24×24 stroke (style glyphe encre — paths façon Lucide). */
-export function glyphIcon(paths: string[], cls = ""): SVGSVGElement {
-  const s = svgEl("svg", { viewBox: "0 0 24 24", class: `glyph ${cls}`, fill: "none" });
-  for (const d of paths) s.append(svgEl("path", { d }));
-  return s;
+  return w;
 }

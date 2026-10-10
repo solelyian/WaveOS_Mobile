@@ -1,135 +1,79 @@
-// gestures.ts — routage des gestes sur #phone.
-// Règle d'or : un toucher reste un tap tant qu'il n'a pas dépassé le seuil de
-// drag — le pointeur n'est capturé qu'à partir du moment où on vole le geste,
-// sinon les clicks DOM des icônes/boutons mourraient. Après un drag, on avale
-// le click fantôme une fois.
+// gestures.ts — routeur de pointeur : zones de bord + drag suivant le doigt.
+// Les drags commencent après 8px ; en-dessous, le clic remonte au DOM.
+import { tokens } from "../tokens.gen";
 
-export interface GestureSample { x: number; y: number; t: number }
-
-export interface GestureInfo {
-  startX: number; startY: number;
-  x: number; y: number;
-  dx: number; dy: number;
-  vx: number; vy: number;          // px/s — vélocité lissée (~80 ms)
-  edge: EdgeZone;
-  target: EventTarget | null;      // élément sous le toucher initial
+export interface Drag {
+  move(dx: number, dy: number): void;
+  end(dx: number, dy: number, vx: number, vy: number): void;
+  cancel?(): void;
 }
 
-export type EdgeZone =
-  | "top-left" | "top-mid" | "top-right"
-  | "bottom" | "left" | "right" | "none";
+export type ZoneResolver = (x: number, y: number, el: HTMLElement) => Drag | null;
 
-export interface GestureHandlers {
-  /** Appelé quand le toucher devient un drag. Retourner false = le router abandonne. */
-  onDragStart?(g: GestureInfo): boolean | void;
-  onDrag?(g: GestureInfo): void;
-  onDragEnd?(g: GestureInfo): void;
-  onLongPress?(g: GestureInfo): void;
-}
+const TH = tokens.motion.gestureThresholdPx;
+let resolver: ZoneResolver = () => null;
+export function setZoneResolver(r: ZoneResolver) { resolver = r; }
 
-const EDGE_TOP = 62;
-const EDGE_BOTTOM = 36;
-const EDGE_SIDE = 26;
-const DRAG_THRESHOLD = 8;
-const LONGPRESS_MS = 450;
-const LONGPRESS_MAX_DIST = 8;
+const interactiveSel = "button, a, input, .cc-slider, .nc-card, .di-capsule, .g-btn, .tabbar, .ghdr, .app-scroll, #spot";
 
-export function zoneOf(x: number, y: number, w: number, h: number): EdgeZone {
-  if (y < EDGE_TOP) {
-    if (x < w * 0.42) return "top-left";
-    if (x > w * 0.58) return "top-right";
-    return "top-mid";
-  }
-  if (y > h - EDGE_BOTTOM) return "bottom";
-  if (x < EDGE_SIDE) return "left";
-  if (x > w - EDGE_SIDE) return "right";
-  return "none";
-}
+export function attachGestures(phone: HTMLElement) {
+  let startX = 0, startY = 0, lastX = 0, lastY = 0, lastT = 0;
+  let vx = 0, vy = 0, active = false, drag: Drag | null = null, pid = -1;
+  let samples: { t: number; x: number; y: number }[] = [];
 
-export class GestureRouter {
-  private pending = false;
-  private dragging = false;
-  private start: GestureSample = { x: 0, y: 0, t: 0 };
-  private startTarget: EventTarget | null = null;
-  private trail: GestureSample[] = [];
-  private longTimer = 0;
-  private longFired = false;
+  phone.addEventListener("pointerdown", (e) => {
+    if (pid !== -1 && !e.isPrimary) return; // pointeur déjà suivi (multitouch ignoré)
+    if (!e.isPrimary) return;
+    const rect = phone.getBoundingClientRect();
+    // coordonnées dans l'espace 400×850 du téléphone
+    startX = lastX = (e.clientX - rect.left) * (rect.width ? phone.clientWidth / rect.width : 1);
+    startY = lastY = (e.clientY - rect.top) * (rect.height ? phone.clientHeight / rect.height : 1);
+    lastT = performance.now();
+    active = false; drag = null; pid = e.pointerId;
+    samples = [{ t: lastT, x: startX, y: startY }];
+    const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+    drag = resolver(startX, startY, el?.closest(interactiveSel) as HTMLElement);
+  });
 
-  constructor(private host: HTMLElement, private handlers: GestureHandlers) {
-    host.addEventListener("pointerdown", this.down);
-  }
-
-  private rect() { return this.host.getBoundingClientRect(); }
-  private rel(e: PointerEvent) {
-    const r = this.rect();
-    const s = Math.min(r.width / 393, r.height / 852); // coords logiques 393×852
-    return { x: (e.clientX - r.left) / s, y: (e.clientY - r.top) / s };
-  }
-
-  private info(e: PointerEvent): GestureInfo {
-    const p = this.rel(e);
-    const now = performance.now();
-    this.trail.push({ ...p, t: now });
-    while (this.trail.length > 8) this.trail.shift();
-    let vx = 0, vy = 0;
-    const older = this.trail.find((s) => now - s.t > 55) ?? this.trail[0];
-    const dtms = now - older.t;
-    if (dtms > 0) { vx = ((p.x - older.x) / dtms) * 1000; vy = ((p.y - older.y) / dtms) * 1000; }
-    return {
-      startX: this.start.x, startY: this.start.y, x: p.x, y: p.y,
-      dx: p.x - this.start.x, dy: p.y - this.start.y, vx, vy,
-      edge: zoneOf(this.start.x, this.start.y, 393, 852),
-      target: this.startTarget,
-    };
-  }
-
-  private down = (e: PointerEvent): void => {
-    this.startTarget = e.target;
-    const p = this.rel(e);
-    this.pending = true; this.dragging = false; this.longFired = false;
-    this.start = { ...p, t: performance.now() };
-    this.trail = [this.start];
-    document.addEventListener("pointermove", this.move);
-    document.addEventListener("pointerup", this.up, { once: true });
-    document.addEventListener("pointercancel", this.up, { once: true });
-    const g = this.info(e);
-    this.longTimer = window.setTimeout(() => {
-      if (this.pending && !this.dragging) { this.longFired = true; this.handlers.onLongPress?.(g); }
-    }, LONGPRESS_MS);
-  };
-
-  private move = (e: PointerEvent): void => {
-    if (!this.pending) return;
-    const g = this.info(e);
-    const dist = Math.hypot(g.dx, g.dy);
-    if (!this.dragging) {
-      if (dist > LONGPRESS_MAX_DIST) window.clearTimeout(this.longTimer);
-      if (dist < DRAG_THRESHOLD) return;
-      this.dragging = true;
-      if (this.handlers.onDragStart?.(g) === false) {
-        this.dragging = false; this.pending = false; this.cleanup();
-        return;
+  const onMove = (e: PointerEvent) => {
+    if (e.pointerId !== pid) return;
+    const rect = phone.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (phone.clientWidth / rect.width || 1);
+    const y = (e.clientY - rect.top) * (phone.clientHeight / rect.height || 1);
+    const dx = x - startX, dy = y - startY;
+    if (!active && drag) {
+      if (Math.hypot(dx, dy) >= TH) {
+        active = true;
+        phone.setPointerCapture(pid);
       }
-      this.host.setPointerCapture?.(e.pointerId);
     }
-    if (!this.longFired) this.handlers.onDrag?.(g);
+    if (active && drag) {
+      drag.move(dx, dy);
+      e.preventDefault();
+    }
+    const now = performance.now();
+    samples.push({ t: now, x, y });
+    if (samples.length > 6) samples.shift();
+    lastX = x; lastY = y; lastT = now;
   };
 
-  private up = (e: PointerEvent): void => {
-    const wasDrag = this.dragging;
-    this.cleanup();
-    if (wasDrag && !this.longFired) {
-      this.handlers.onDragEnd?.(this.info(e));
-      // le drag a consommé le geste : le click qui suit serait un fantôme
-      const kill = (ev: Event) => { ev.stopPropagation(); ev.preventDefault(); };
-      this.host.addEventListener("click", kill, { capture: true, once: true });
-      window.setTimeout(() => this.host.removeEventListener("click", kill, { capture: true }), 400);
-    }
+  const onUp = (e: PointerEvent) => {
+    if (e.pointerId !== pid) return;
+    // vitesse : fenêtre ~80ms
+    const now = performance.now();
+    const recent = samples.filter((s) => now - s.t < 90);
+    if (recent.length >= 2) {
+      const a = recent[0], b = recent[recent.length - 1];
+      const dt = Math.max(1, b.t - a.t) / 1000;
+      vx = (b.x - a.x) / dt; vy = (b.y - a.y) / dt;
+    } else { vx = 0; vy = 0; }
+    if (active && drag) drag.end(lastX - startX, lastY - startY, vx, vy);
+    active = false; drag = null;
+    if (pid !== -1 && phone.hasPointerCapture(pid)) phone.releasePointerCapture(pid);
+    pid = -1;
   };
 
-  private cleanup(): void {
-    this.pending = false; this.dragging = false;
-    window.clearTimeout(this.longTimer);
-    document.removeEventListener("pointermove", this.move);
-  }
+  phone.addEventListener("pointermove", onMove);
+  phone.addEventListener("pointerup", onUp);
+  phone.addEventListener("pointercancel", onUp);
 }

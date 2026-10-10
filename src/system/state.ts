@@ -1,54 +1,46 @@
-// state.ts — état système du prototype + pub/sub minimal.
-// Tout ce qui est « vrai » passe par ici : thème, wallpaper, radios, focus,
-// accessibilité. Les écrans s'abonnent aux clés qui les concernent.
+// state.ts — état OS central (pub-sub), équivalent du OSContext React.
+export type AppId =
+  | "weather" | "calendar" | "photos" | "calculator" | "settings"
+  | "maps" | "phone" | "mail" | "messages" | "music" | "safari";
+
+export type Sheet = "cc" | "nc" | null;
 
 export interface SysState {
-  theme: "dark" | "light";
-  wallpaper: 0 | 1;          // 0 = Rubans (sombre) · 1 = Aube (clair)
+  locked: boolean;
+  activeApp: AppId | null;
+  sheet: Sheet;
+  brightness: number; // 0..100
+  volume: number;     // 0..100
+  playing: boolean;
   wifi: boolean;
-  bt: boolean;
+  bluetooth: boolean;
   airplane: boolean;
-  focus: boolean;            // mode Focus (Ne pas déranger)
-  reduced: boolean;          // réduire les animations
-  textScale: number;         // 0.85 – 1.60
-  brightness: number;        // 0.25 – 1.0
-  volume: number;            // 0 – 1
-  rotation: boolean;         // verrou orientation
-  torch: boolean;
-  pinLock: boolean;          // exiger un code PIN au déverrouillage
+  cellular: boolean;
 }
 
 export const sys: SysState = {
-  theme: "dark",
-  wallpaper: 0,
+  locked: true,
+  activeApp: null,
+  sheet: null,
+  brightness: 80,
+  volume: 50,
+  playing: false,
   wifi: true,
-  bt: true,
+  bluetooth: true,
   airplane: false,
-  focus: false,
-  reduced: false,
-  textScale: 1,
-  brightness: 0.85,
-  volume: 0.55,
-  rotation: false,
-  torch: false,
-  pinLock: false,
+  cellular: true,
 };
 
-type Listener = (v: unknown) => void;
-const listeners = new Map<keyof SysState, Set<Listener>>();
-
-export function on<K extends keyof SysState>(key: K, fn: (v: SysState[K]) => void): void {
-  let set = listeners.get(key);
-  if (!set) listeners.set(key, (set = new Set()));
-  set.add(fn as Listener);
-}
-
-export function set<K extends keyof SysState>(key: K, v: SysState[K]): void {
+type Listener = (key: keyof SysState) => void;
+const subs = new Set<Listener>();
+export function onChange(fn: Listener) { subs.add(fn); return () => subs.delete(fn); }
+export function set<K extends keyof SysState>(key: K, v: SysState[K]) {
   if (sys[key] === v) return;
   sys[key] = v;
-  listeners.get(key)?.forEach((fn) => (fn as (x: SysState[K]) => void)(v));
+  subs.forEach((f) => f(key));
 }
 
-export function toggle(key: "wifi" | "bt" | "airplane" | "focus" | "reduced" | "rotation" | "torch" | "pinLock"): void {
-  set(key, !sys[key]);
-}
+export const fmtTime = (d = new Date()) =>
+  d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: false });
+export const fmtDate = (d = new Date()) =>
+  d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });

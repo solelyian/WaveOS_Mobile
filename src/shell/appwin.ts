@@ -1,75 +1,105 @@
-// appwin.ts — la fenêtre d'app : morph continu icône ↔ plein écran.
-// Un seul ressort (p 0→1) pilote position, échelle, rayon et opacité du
-// contenu ; pendant le geste retour, le doigt pilote le même ressort.
-import { el } from "../core/el";
-import { glyph } from "../core/icons";
-import { motion } from "../core/motion";
-import { iconFor, phHero, type AppDef } from "../apps/registry";
-import { unmountRN } from "../rn/host";
+// appwin.ts — morph icône→fenêtre (maquette : le conteneur coloré grandit de la tuile,
+// le contenu app crossfade par-dessus ; drag vertical -> fermeture dans les deux sens).
+import { h } from "../core/el";
+import { Spring, tween } from "../core/motion";
+import { lerp } from "../wasm/bridge";
+import { appMeta } from "../apps/registry";
+import type { AppId } from "../system/state";
+import { tokens } from "../tokens.gen";
 
-interface Rect { x: number; y: number; w: number; h: number }
+export interface Rect { x: number; y: number; w: number; h: number }
+
+const R_ICON = 22, R_SCREEN = 60;
 
 export class AppWindow {
-  node: HTMLElement;
-  private body: HTMLElement;
-  private appbar: HTMLElement;
-  private from: Rect = { x: 166, y: 400, w: 60, h: 60 };
-  private current: AppDef | null = null;
-  onBack?: () => void;
+  el = h("div", { class: "appwin" });
+  body = h("div", { class: "app-body" });
+  private morph = new Spring(0, "morph");
+  private oy = new Spring(0, "morph");   // offset drag vertical
+  private meta;
+  private closing = false;
+  onClosed?: () => void;
 
-  constructor() {
-    this.body = el("div", { class: "appbody" });
-    this.node = el("div", { id: "layer-app", class: "layer" });
-    this.appbar = el("div", { class: "appbar" });
-    this.node.style.visibility = "hidden";
+  constructor(public id: AppId, private from: Rect, content: HTMLElement) {
+    this.meta = appMeta(id);
+    this.el.style.background = this.meta.color;
+    this.body.classList.add(this.meta.theme);
+    this.body.style.opacity = "0";
+    this.body.append(content);
+    const grab = h("div", { class: "grabber" },
+      h("i", { class: this.meta.theme === "dark" ? "dark" : "light" }));
+    this.el.append(this.body, grab);
+    this.morph.to(1);
   }
 
-  /** Montre la fenêtre pour l'app, morphant depuis `from` (coords logiques). */
-  show(app: AppDef, from: Rect, onBack: () => void): void {
-    this.current = app;
-    this.from = from;
-    this.onBack = onBack;
-    const back = el("button", { class: "back g g-thin", "aria-label": "Retour" }, glyph("chevronL"));
-    back.addEventListener("click", () => this.onBack?.());
-    this.appbar.replaceChildren(back, iconFor(app, 34), el("h2", {}, app.name));
-    // Apps React Native : pleine surface (leur propre nav) + racine React.
-    // L'appbar système (icône + nom + retour) est masquée — iOS n'en a pas.
-    this.appbar.style.display = app.rn ? "none" : "";
-    this.body.classList.toggle("rn", !!app.rn);
-    unmountRN();
-    const content = app.content ? app.content() : phHero(app.name, "Prototype — cette app est une coque d'exploration.");
-    this.body.replaceChildren(content);
-    const win = el("div", { class: "appwin", role: "dialog", "aria-label": app.name }, this.appbar, this.body);
-    this.node.replaceChildren(win);
-    this.node.style.visibility = "visible";
+  private progress = 0; // progression du morph de fermeture pilotée par le doigt
+
+  /** Suivi du doigt : vers le haut, la fenêtre SE RÉSORBE vers son icône à
+   *  l'unisson du geste (progress 0→1 sur closeTravelPx) ; vers le bas, simple
+   *  résistance élastique. */
+  drag(dy: number) {
+    if (this.closing) return;
+    if (dy < 0) {
+      this.progress = Math.min(1, -dy / tokens.motion.closeTravelPx);
+      this.morph.set(1 - this.progress);
+      this.oy.set(0);
+    } else {
+      this.oy.set(dy * 0.35);
+    }
   }
+  /** Lâcher : morph entamé >~40% ou flick -> fermeture complète ; sinon
+   *  ressort de retour à plein écran. */
+  release(dy: number, vy: number): "close" | "stay" {
+    if (this.progress > 0.4 || vy < -tokens.motion.velocityCommit * 0.9 || Math.abs(vy) > tokens.motion.velocityCommit * 1.6) {
+      this.close();
+      return "close";
+    }
+    this.progress = 0;
+    this.morph.to(1);
+    this.oy.to(0);
+    return "stay";
+  }
+  close() {
+    if (this.closing) return;
+    this.closing = true;
+    this.morph.to(0);
+    this.oy.to(0); // retour à l'icône, pas de glissé (maquette : layoutId morph direct)
+    // contenu : fondu de sortie quasi instantané (maquette : exit durée .1, scale .98)
+    tween(110, (v) => {
+      this.body.style.opacity = ((1 - v) * this.bodyOp).toFixed(3);
+      this.body.style.transform = `scale(${lerp(1, 0.98, v).toFixed(4)})`;
+    }, { from: 0, to: 1 });
+  }
+  private bodyOp = 0;
 
-  get app(): AppDef | null { return this.current; }
-
-  /** p : 0 = tuile (rect source), 1 = plein écran. */
-  render(p: number): void {
-    const win = this.node.firstElementChild as HTMLElement | null;
-    if (!win) return;
-    const cl = motion.clamp;
-    const e = cl(p, 0, 1);
-    const f = this.from;
-    // centre cible : plein écran = centre 196.5,426 ; source = centre de la tuile
-    const cx = motion.lerp(f.x + f.w / 2, 196.5, e);
-    const cy = motion.lerp(f.y + f.h / 2, 426, e);
-    const sx = motion.lerp(f.w / 393, 1, e);
-    const sy = motion.lerp(f.h / 852, 1, e);
-    win.style.width = "393px";
-    win.style.height = "852px";
-    win.style.left = "0";
-    win.style.top = "0";
-    win.style.transform = `translate(${cx - 196.5}px, ${cy - 426}px) scale(${sx}, ${sy})`;
-    // rayon « écran » interpolé, compensé de l'échelle (radius cohérent visuellement)
-    const rScreen = motion.lerp(18, 40, e < 0.5 ? e * 2 : 1) * (1 - e) + 0 * e;
-    const sEff = Math.max(0.06, Math.min(sx, sy));
-    win.style.borderRadius = `${rScreen / sEff}px`;
-    win.style.opacity = String(cl(e * 2.2, 0, 1));
-    this.body.style.opacity = String(cl((p - 0.35) / 0.45, 0, 1));
-    this.appbar.style.opacity = String(cl((p - 0.5) / 0.4, 0, 1));
-    if (p <= 0.001) this.node.style.visibility = "hidden";
+  /** à appeler chaque frame ; renvoie true quand la fenêtre a disparu. */
+  render(): boolean {
+    const t = this.morph.v;
+    const { x, y, w, h: hh } = this.from;
+    const sx = lerp(w / tokens.screen.w, 1, t);
+    const sy = lerp(hh / tokens.screen.h, 1, t);
+    const tx = lerp(x, 0, t);
+    const ty = lerp(y, 0, t) + this.oy.v;
+    this.el.style.transform = `translate(${tx.toFixed(1)}px,${ty.toFixed(1)}px) scale(${sx.toFixed(4)},${sy.toFixed(4)})`;
+    // rayon compensé PAR AXE (maquette : Framer corrige H et V séparément) —
+    // à l'arrivée la fenêtre reprend les coins circulaires 22px de l'icône.
+    const r = lerp(R_ICON, R_SCREEN, t);
+    this.el.style.borderRadius = `${(r / sx).toFixed(1)}px / ${(r / sy).toFixed(1)}px`;
+    // contenu : fondu entrant retardé (maquette : delay .05, durée .25, blur 10 -> 0)
+    if (!this.closing) {
+      const c = Math.max(0, Math.min(1, (t - 0.15) / 0.45));
+      this.bodyOp = c;
+      this.body.style.opacity = c.toFixed(3);
+      this.body.style.filter = `blur(${((1 - c) * 10).toFixed(1)}px)`;
+      this.body.style.transform = `scale(${lerp(0.98, 1, c).toFixed(4)})`;
+    } else {
+      this.body.style.filter = "none";
+    }
+    if (this.closing && t <= 0.01 && this.morph.settled()) {
+      this.el.remove();
+      this.onClosed?.();
+      return true;
+    }
+    return false;
   }
 }
