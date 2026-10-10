@@ -305,6 +305,10 @@ input { font: inherit; }
 .rct-name .ic { width: 30px; height: 30px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.25), inset 0 1px 1px rgba(255,255,255,.35); flex-shrink: 0; }
 .rct-name .ic svg { width: 16px; height: 16px; }
 .rct-hint { text-align: center; color: rgba(255,255,255,.75); font-size: 13px; font-weight: 500; padding-bottom: 4px; text-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.rct-foot { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.rct-clear { display: flex; align-items: center; gap: 8px; padding: 11px 26px; border-radius: 999px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.30); backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%); color: #fff; font-size: 14px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 22px rgba(0,0,0,.25); }
+.rct-clear svg { width: 15px; height: 15px; }
+.rct-clear:active { transform: scale(.94); }
 .rct-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.7); font-size: 16px; font-weight: 600; }
 .rct-homebar { position: relative; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .rct-homebar i { width: 130px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.85); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
