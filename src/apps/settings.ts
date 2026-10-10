@@ -130,11 +130,11 @@ export function SettingsApp() {
   ];
 
   const scroll = h("div", { class: "app-scroll no-sb", style: { padding: "0 24px 40px", display: "flex", flexDirection: "column", gap: "24px" } });
-  const profile = h("div", { class: "card-white", style: { padding: "20px", display: "flex", alignItems: "center", gap: "16px" } },
-    h("div", { style: { width: "64px", height: "64px", borderRadius: "50%", background: "linear-gradient(135deg,#3b82f6,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "20px", fontWeight: "700", boxShadow: "inset 0 1px 1px rgba(255,255,255,.4),0 4px 10px rgba(0,0,0,.1)", flexShrink: "0" } }, "JD"),
+  const profile = h("div", { class: "pressable card-white", style: { padding: "18px 20px", display: "flex", alignItems: "center", gap: "16px", borderRadius: "24px", background: "#fff", boxShadow: "0 2px 10px rgba(0,0,0,.04)", cursor: "pointer" } },
+    h("div", { style: { width: "60px", height: "60px", borderRadius: "50%", background: "linear-gradient(135deg,#3b82f6,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "20px", fontWeight: "700", boxShadow: "inset 0 1px 1px rgba(255,255,255,.4),0 4px 10px rgba(0,0,0,.1)", flexShrink: "0" } }, "JD"),
     h("div", { style: { flex: "1" } },
       h("div", { style: { fontSize: "20px", fontWeight: "700", color: "rgba(0,0,0,.9)" } }, "John Doe"),
-      h("div", { style: { fontSize: "14px", color: "rgba(0,0,0,.5)", fontWeight: "500" } }, "Nyne ID, iCloud+, Media")),
+      h("div", { style: { fontSize: "13px", color: "rgba(0,0,0,.45)", fontWeight: "500", marginTop: "2px" } }, "Nyne ID")),
     h("span", { class: "chev" }, svgIcon(I.chevronLeft, "", 16)));
 
   const searchIn = h("input", { attrs: { type: "search", placeholder: "Search Settings" }, style: { flex: "1", border: "none", outline: "none", background: "transparent", fontSize: "14px", fontFamily: "inherit" } }) as HTMLInputElement;
@@ -154,7 +154,7 @@ export function SettingsApp() {
   root.append(
     GlassHeader("Settings", { large: true }),
     h("div", { style: { padding: "8px 24px 16px" } },
-      h("div", { class: "search-pill" }, svgIcon(I.search, "", 16), searchIn)),
+      h("div", { class: "search-pill", style: { borderRadius: "999px", height: "44px", padding: "0 18px" } }, svgIcon(I.search, "", 16), searchIn)),
     scroll);
   return root;
 }
