@@ -5,7 +5,7 @@ export type AppId =
   | "store"
   | "notes" | "files" | "clock" | "arcade";
 
-export type Sheet = "cc" | "nc" | null;
+export type Sheet = "cc" | "nc" | "sd" | null;
 
 export interface SysState {
   locked: boolean;

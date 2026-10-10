@@ -506,3 +506,61 @@ input { font: inherit; }
 #phone.dark .app-body.light .sw { --sw-track: rgba(255,255,255,.18); }
 #phone.dark .app-body.light .card-white :is(p,div,span,em,strong,small,td,li,blockquote) { color: #e8e8ed !important; }
 #phone.dark .app-body.light .card-white .set-ic { color: #fff !important; }
+
+/* ---------- Super Device (HarmonyOS) ---------- */
+#sd { background: linear-gradient(200deg, #0d1226, #131b3a 55%, #0a0f24); }
+.sd-head { padding: 64px 24px 0; }
+.sd-head h2 { font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+.sd-head p { font-size: 13px; opacity: .55; margin-top: 4px; }
+.sd-orbit { position: absolute; inset: 0; }
+.sd-orbit::before, .sd-orbit::after {
+  content: ""; position: absolute; left: 50%; top: 300px; translate: -50% -50%;
+  border-radius: 50%; border: 1px solid rgba(255,255,255,.08);
+}
+.sd-orbit::before { width: 130px; height: 130px; }
+.sd-orbit::after { width: 260px; height: 260px; }
+.sd-stage { position: absolute; inset: 0; }
+.sd-dev {
+  position: absolute; width: 62px; height: 62px; border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.18);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  color: #fff; cursor: grab; touch-action: none; z-index: 3;
+}
+.sd-dev svg { width: 24px; height: 24px; }
+.sd-dev .lbl { position: absolute; top: 66px; font-size: 10px; white-space: nowrap; opacity: .7; font-weight: 500; }
+.sd-dev.on { background: rgba(96,165,250,.32); border-color: rgba(147,197,253,.7); box-shadow: 0 0 18px rgba(96,165,250,.4); }
+.sd-phone { z-index: 4; background: rgba(96,165,250,.16); border-color: rgba(147,197,253,.5); transition: box-shadow .2s, border-color .2s; }
+.sd-phone.hot { border-color: #93c5fd; box-shadow: 0 0 26px rgba(96,165,250,.8); }
+.sd-phone.linked { box-shadow: 0 0 30px rgba(96,165,250,.55); border-color: rgba(147,197,253,.85); }
+.sd-phone.pulse { animation: sd-pulse .7s ease-out; }
+@keyframes sd-pulse { 0% { box-shadow: 0 0 0 0 rgba(96,165,250,.7); } 100% { box-shadow: 0 0 0 26px rgba(96,165,250,0); } }
+.sd-actions { position: absolute; left: 0; right: 0; bottom: 26px; padding: 0 20px; z-index: 5; }
+.sd-card { border-radius: 26px; padding: 16px 18px; }
+.sd-card .hd { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.sd-card .hd svg { width: 20px; height: 20px; }
+.sd-card .hd b { font-weight: 700; }
+.sd-card .hd .st { flex: 1; text-align: right; font-size: 12px; opacity: .6; }
+.sd-card .row { display: flex; gap: 10px; margin-top: 14px; }
+.sd-act { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; height: 42px; border-radius: 21px; background: rgba(96,165,250,.18); border: 1px solid rgba(147,197,253,.35); color: #dbeafe; font-size: 13px; font-weight: 600; }
+.sd-act svg { width: 18px; height: 18px; }
+.sd-act:active { transform: scale(.96); }
+.sd-card .st { font-size: 12px; margin-top: 10px; opacity: .7; }
+.sd-card .st.ok { color: #86efac; }
+.sd-mirror { margin-top: 14px; height: 0; overflow: hidden; border-radius: 16px; transition: height .3s; background: linear-gradient(135deg, rgba(96,165,250,.25), rgba(168,85,247,.18)); border: 1px solid rgba(147,197,253,.3); }
+.sd-mirror.on { height: 74px; }
+.sd-mirror .live { display: flex; align-items: center; gap: 6px; padding: 12px 14px 0; font-size: 10px; font-weight: 800; letter-spacing: .12em; color: #fca5a5; }
+.sd-mirror .live i { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; animation: pulse 1.2s ease-in-out infinite; }
+.sd-mirror .mn { padding: 4px 14px 12px; font-size: 12px; opacity: .75; }
+.sd-prog { height: 6px; border-radius: 3px; background: rgba(255,255,255,.1); margin-top: 14px; overflow: hidden; }
+.sd-prog i { display: block; height: 100%; width: 0; background: #60a5fa; border-radius: 3px; }
+.sd-prog-t { font-size: 11px; opacity: .6; margin-top: 6px; min-height: 14px; }
+.sd-disc { margin-top: 12px; width: 100%; height: 34px; border-radius: 17px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.75); font-size: 12px; font-weight: 600; }
+.cc-sd { display: flex; align-items: center; gap: 14px; width: 100%; margin-top: 14px; padding: 14px 18px; border-radius: 24px; }
+.cc-sd .ic { width: 40px; height: 40px; border-radius: 50%; background: rgba(96,165,250,.2); display: flex; align-items: center; justify-content: center; color: #93c5fd; }
+.cc-sd .ic svg { width: 20px; height: 20px; }
+.cc-sd .tx { flex: 1; display: flex; flex-direction: column; align-items: flex-start; }
+.cc-sd .nm { font-size: 15px; font-weight: 700; }
+.cc-sd .sub { font-size: 12px; opacity: .6; }
+.cc-sd .chev { opacity: .5; transform: rotate(180deg); width: 16px; height: 16px; }
+.sd-dev.on .lbl { display: none; }

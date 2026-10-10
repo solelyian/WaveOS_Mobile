@@ -97,6 +97,13 @@ import repeat from "lucide-static/icons/repeat.svg?raw";
 import repeat1 from "lucide-static/icons/repeat-1.svg?raw";
 import flag from "lucide-static/icons/flag.svg?raw";
 import deleteIcon from "lucide-static/icons/delete.svg?raw";
+import laptop from "lucide-static/icons/laptop.svg?raw";
+import tablet from "lucide-static/icons/tablet.svg?raw";
+import watch from "lucide-static/icons/watch.svg?raw";
+import headphones from "lucide-static/icons/headphones.svg?raw";
+import tv from "lucide-static/icons/tv.svg?raw";
+import fileUp from "lucide-static/icons/file-up.svg?raw";
+import airplay from "lucide-static/icons/airplay.svg?raw";
 
 export const I = {
   wifi, wifiOff, battery, signal, search, camera, flashlight, music,
@@ -113,6 +120,7 @@ export const I = {
   thermometer, umbrella, gauge, navigation2, chevronDown, check, archive,
   users, micOff, moonStar, link, shuffle, repeat, repeat1, flag,
   delete: deleteIcon,
+  laptop, tablet, watch, headphones, tv, fileUp, airplay,
 } as const;
 
 export type IconName = keyof typeof I;

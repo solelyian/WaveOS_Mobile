@@ -8,6 +8,7 @@ import { DynamicIsland } from "./di";
 import { ControlCenter } from "./cc";
 import { NotificationCenter } from "./nc";
 import { Spotlight } from "./spotlight";
+import { SuperDevice } from "./superdevice";
 import { RecentsSwitcher } from "./recents";
 import { renderApp } from "../apps";
 import { registerAppCloser, registerAppLauncher, registerAppInstaller } from "./api";
@@ -30,6 +31,7 @@ export class Shell {
   private appwin: AppWindow | null = null;
   private cc: ControlCenter | null = null;
   private nc: NotificationCenter | null = null;
+  private sd: SuperDevice | null = null;
   private spot: Spotlight | null = null;
   private switcher: RecentsSwitcher | null = null;
   private recents: import("../system/state").AppId[] = [];
@@ -70,6 +72,7 @@ export class Shell {
     // panneaux
     if (sys.sheet === "cc" && !this.cc) this.openCC();
     if (sys.sheet === "nc" && !this.nc) this.openNC();
+    if (sys.sheet === "sd" && !this.sd) this.openSD();
   }
 
   private openApp(id: import("../system/state").AppId, tileRect: DOMRect) {
@@ -107,7 +110,7 @@ export class Shell {
    *  swipe-up sur une card = tuer, drag vers le bas / tap dehors = fermer. */
   private openSwitcher() {
     if (sys.locked || this.switcher) return;
-    if (sys.sheet) { this.closeCC(); this.closeNC(); }
+    if (sys.sheet) { this.closeCC(); this.closeNC(); this.closeSD(); }
     if (this.appwin) this.appwin.close(); // morph vers l'icône ; l'app reste en tête de recents
     if (!this.recents.length) { this.syncTargets(); return; }
     this.switcher = new RecentsSwitcher(this.recents, {
@@ -168,8 +171,16 @@ export class Shell {
     nc.sy.set(-H);
     nc.open();
   }
+  private openSD() {
+    const sd = this.ensureSD();
+    sd.sy.set(-H);
+    sd.open();
+    if (this.cc) this.closeCC();
+    if (this.nc) this.closeNC();
+  }
   private closeCC() { this.cc?.close(); if (sys.sheet === "cc") set("sheet", null); }
   private closeNC() { this.nc?.close(); if (sys.sheet === "nc") set("sheet", null); }
+  private closeSD() { this.sd?.close(); if (sys.sheet === "sd") set("sheet", null); }
 
   private unlock() {
     // iOS-style : le lock dérive vers le haut en fondant + floutant,
@@ -204,6 +215,10 @@ export class Shell {
     if (sys.sheet === "nc" && this.nc) {
       if (interactive) return null;
       return this.sheetDrag(this.nc, () => this.closeNC());
+    }
+    if (sys.sheet === "sd" && this.sd) {
+      if (interactive) return null;
+      return this.sheetDrag(this.sd, () => this.closeSD());
     }
     // switcher ouvert : cards = interactives ; ailleurs, drag vers le bas ferme
     if (this.switcher) {
@@ -288,6 +303,10 @@ export class Shell {
     if (!this.nc) { this.nc = new NotificationCenter(); this.phone.append(this.nc.el); }
     return this.nc;
   }
+  private ensureSD() {
+    if (!this.sd) { this.sd = new SuperDevice(); this.phone.append(this.sd.el); }
+    return this.sd;
+  }
 
   // ---------- boucle ----------
   private last = performance.now();
@@ -304,6 +323,7 @@ export class Shell {
     if (this.appwin && this.appwin.render()) this.appwin = null;
     if (this.spot && this.spot.render()) { this.spot.el.remove(); this.spot = null; }
     if (this.cc && this.cc.render() && sys.sheet !== "cc") { this.cc.el.remove(); this.cc = null; }
+    if (this.sd && this.sd.render() && sys.sheet !== "sd") { this.sd.el.remove(); this.sd = null; }
     if (this.nc) { this.nc.tick(); if (this.nc.render() && sys.sheet !== "nc") { this.nc.el.remove(); this.nc = null; } }
     requestAnimationFrame(this.loop);
   };
