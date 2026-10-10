@@ -31,7 +31,7 @@ export class Spotlight {
       h("button", { class: "spot-x g-btn", onClick: () => this.close() }, svgIcon(I.x, "", 16)));
     this.input.addEventListener("input", () => this.filter());
     this.input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") { const first = this.list.querySelector(".spot-row .tile") as HTMLElement | null; first?.click(); }
+      if (e.key === "Enter") { (this.list.querySelector(".spot-row") as HTMLElement | null)?.click(); }
       if (e.key === "Escape") this.close();
     });
     this.scrim = h("div", { class: "spot-scrim", onClick: () => this.close() });
@@ -65,6 +65,9 @@ export class Spotlight {
     const kx = this.el.parentElement!.clientWidth / phone.width;
     const ky = this.el.parentElement!.clientHeight / phone.height;
     const c = capsule.getBoundingClientRect();
+    // mesurer la barre à sa place finale : neutraliser un transform résiduel
+    // (réouverture en pleine fermeture) avant de lire son rect.
+    this.bar.style.transform = "none";
     const b = this.bar.getBoundingClientRect();
     this.g = {
       dx: (c.left - b.left) * kx,
@@ -93,6 +96,9 @@ export class Spotlight {
     const sx = lerp(this.g.sx, 1, t), sy = lerp(this.g.sy, 1, t);
     this.bar.style.transformOrigin = "0 0";
     this.bar.style.transform = `translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px) scale(${sx.toFixed(4)},${sy.toFixed(4)})`;
+    // la barre apparaît au début du vol et s'efface en fin de fermeture
+    // (crossfade propre avec la capsule, plus de fantôme double)
+    this.bar.style.opacity = Math.min(1, Math.max(0, t / 0.25)).toFixed(3);
     // coins : capsule pilule (demi-hauteur) -> arrondi barre 28, compensé par axe
     const r = lerp(17, 28, t);
     this.bar.style.borderRadius = `${(r / sx).toFixed(1)}px / ${(r / sy).toFixed(1)}px`;
@@ -100,8 +106,10 @@ export class Spotlight {
     for (const kid of Array.from(this.bar.children)) (kid as HTMLElement).style.opacity = Math.min(1, Math.max(0, (t - 0.55) / 0.45)).toFixed(3);
     this.list.style.opacity = Math.min(1, Math.max(0, (t - 0.35) / 0.5)).toFixed(3);
     this.list.style.transform = `translateY(${(iv * 14).toFixed(1)}px)`;
-    // la capsule revient en fondu dans la 2e moitié du morph de fermeture
-    if (this.capsule) this.capsule.style.opacity = this.closing ? Math.min(1, Math.max(0, (0.5 - t) / 0.5)).toFixed(3) : "0";
+    // la capsule se dissout au départ de l'ouverture, revient en fin de fermeture
+    if (this.capsule) this.capsule.style.opacity = this.closing
+      ? Math.min(1, Math.max(0, (0.45 - t) / 0.45)).toFixed(3)
+      : Math.min(1, Math.max(0, 1 - t / 0.25)).toFixed(3);
     if (t <= 0.01 && this.ms.settled()) {
       this.el.remove();
       return true;
