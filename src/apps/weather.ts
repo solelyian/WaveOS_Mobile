@@ -21,6 +21,28 @@ export function WeatherApp() {
     h("div", { style: { position: "absolute", inset: "0", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700" } }, "NW"),
     h("div", { style: { position: "absolute", inset: "0", borderTop: "4px solid #fff", borderRadius: "50%", transform: "rotate(45deg)", boxShadow: "0 2px 10px rgba(255,255,255,.5)" } }));
 
+  const dailyRows = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) =>
+    h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0" } },
+      h("span", { style: { fontSize: "15px", fontWeight: "600", width: "48px" } }, d),
+      svgIcon(i < 3 ? I.sun : I.cloud, "", 20),
+      h("span", { style: { fontSize: "14px", opacity: ".6", width: "36px", textAlign: "right" } }, `${60 + i}°`),
+      h("div", { style: { flex: "1", height: "4px", margin: "0 12px", borderRadius: "2px", background: "rgba(255,255,255,.15)", overflow: "hidden" } },
+        h("div", { style: { height: "100%", width: `${55 + i * 5}%`, background: "linear-gradient(90deg,#60a5fa,#facc15)" } })),
+      h("span", { style: { fontSize: "14px", fontWeight: "700", width: "36px" } }, `${74 + i}°`)));
+
+  const hourlyStrip = h("div", { style: { display: "flex", gap: "32px", width: "max-content" } }, ...hourly);
+  const dailyList = h("div", { style: { display: "none", flexDirection: "column" } }, ...dailyRows);
+  const seg = (label: string, on: boolean, onClick: () => void) =>
+    h("button", { class: "pressable", style: { padding: "5px 14px", borderRadius: "999px", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: ".06em", background: on ? "rgba(255,255,255,.9)" : "transparent", color: on ? "#111" : "rgba(255,255,255,.6)", transition: "all .2s" }, onClick }, label);
+  const segHour = seg("Hourly", true, () => setMode("h"));
+  const segDay = seg("Daily", false, () => setMode("d"));
+  const setMode = (m: "h" | "d") => {
+    hourlyStrip.style.display = m === "h" ? "flex" : "none";
+    dailyList.style.display = m === "d" ? "flex" : "none";
+    segHour.style.background = m === "h" ? "rgba(255,255,255,.9)" : "transparent"; segHour.style.color = m === "h" ? "#111" : "rgba(255,255,255,.6)";
+    segDay.style.background = m === "d" ? "rgba(255,255,255,.9)" : "transparent"; segDay.style.color = m === "d" ? "#111" : "rgba(255,255,255,.6)";
+  };
+
   return h("div", { style: { height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" } },
     h("div", { class: "wx-glow" }),
     h("div", { class: "app-scroll no-sb", style: { padding: "80px 24px 96px", position: "relative", zIndex: "10" } },
@@ -32,8 +54,10 @@ export function WeatherApp() {
           h("div", { style: { display: "flex", gap: "16px", marginTop: "8px", fontSize: "14px", opacity: ".8", fontWeight: "500" } },
             h("span", {}, "H:76° L:62°"), h("span", {}, "AQI 32")))),
       h("div", { class: "g-dark", style: { borderRadius: "35px", padding: "24px", marginBottom: "16px", overflowX: "auto" } },
-        h("div", { style: { fontSize: "12px", fontWeight: "700", textTransform: "uppercase", opacity: ".6", marginBottom: "16px" } }, "Hourly Forecast"),
-        h("div", { style: { display: "flex", gap: "32px", width: "max-content" } }, ...hourly)),
+        h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" } },
+          h("div", { style: { fontSize: "12px", fontWeight: "700", textTransform: "uppercase", opacity: ".6" } }, "Forecast"),
+          h("div", { style: { display: "flex", gap: "4px", background: "rgba(255,255,255,.1)", borderRadius: "999px", padding: "3px" } }, segHour, segDay)),
+        hourlyStrip, dailyList),
       h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" } },
         tile(I.sun, "UV Index", "4", "Moderate",
           h("div", { style: { height: "4px", width: "100%", background: "rgba(255,255,255,.2)", borderRadius: "2px", overflow: "hidden" } },

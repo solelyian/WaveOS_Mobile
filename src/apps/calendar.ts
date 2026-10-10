@@ -16,7 +16,7 @@ export function CalendarApp() {
   for (let i = 1; i <= 31; i++) {
     const d = h("div", {
       style: { display: "flex", justifyContent: "center", cursor: "pointer" },
-      onClick: () => { selected = i; paint(); },
+      onClick: () => { selected = i; paint(); paintSched(); },
     });
     const c = h("div", { style: { width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", fontSize: "14px", fontWeight: "500", transition: "all .2s" } }, String(i));
     d.append(c); cells.push(c); dayGrid.append(d);
@@ -28,7 +28,9 @@ export function CalendarApp() {
     c.style.boxShadow = on ? "0 10px 15px -3px rgba(0,0,0,.2)" : "none";
     c.style.transform = on ? "scale(1.1)" : "none";
   });
-  paint();
+  const schedTitle = h("h3", { style: { fontWeight: "700", fontSize: "20px", padding: "0 8px", marginBottom: "16px" } });
+  const paintSched = () => { schedTitle.textContent = selected === new Date().getDate() ? "Today's Schedule" : `Schedule — Dec ${selected}`; };
+  paint(); paintSched();
 
   return h("div", { style: { height: "100%", display: "flex", flexDirection: "column", position: "relative" } },
     GlassHeader("December", { large: true, action: "plus" }),
@@ -38,7 +40,7 @@ export function CalendarApp() {
           ...["S", "M", "T", "W", "T", "F", "S"].map((d) =>
             h("div", { style: { textAlign: "center", fontSize: "12px", fontWeight: "700", color: "#9ca3af" } }, d))),
         dayGrid),
-      h("h3", { style: { fontWeight: "700", fontSize: "20px", padding: "0 8px", marginBottom: "16px" } }, "Schedule"),
+      schedTitle,
       h("div", { style: { display: "flex", flexDirection: "column", gap: "12px" } },
         ...EVENTS.map((e) =>
           h("div", { style: { display: "flex", gap: "16px" } },
@@ -47,5 +49,5 @@ export function CalendarApp() {
               h("div", { style: { fontWeight: "700" } }, e.title),
               h("div", { style: { fontSize: "12px", opacity: ".7" } }, "Google Meet")))))),
     h("div", { style: { position: "absolute", bottom: "112px", right: "24px" } },
-      h("button", { class: "pressable", style: { padding: "12px 24px", background: "#ef4444", color: "#fff", fontWeight: "700", borderRadius: "999px", boxShadow: "0 10px 15px -3px rgba(239,68,68,.3)" } }, "Today")));
+      h("button", { class: "pressable", style: { padding: "12px 24px", background: "#ef4444", color: "#fff", fontWeight: "700", borderRadius: "999px", boxShadow: "0 10px 15px -3px rgba(239,68,68,.3)" }, onClick: () => { selected = Math.min(31, new Date().getDate()); paint(); paintSched(); } }, "Today")));
 }

@@ -23,6 +23,33 @@ export function MailApp() {
     requestAnimationFrame(() => { d.style.opacity = "1"; d.style.transform = "none"; });
   };
 
+  const list = h("div", { class: "app-scroll no-sb", style: { padding: "0 16px 80px", display: "flex", flexDirection: "column", gap: "12px" } });
+
+  const compose = () => {
+    const to = h("input", { attrs: { type: "text", placeholder: "To:" }, style: { width: "100%", padding: "12px 0", borderBottom: "1px solid #e5e7eb", outline: "none", fontSize: "15px", background: "transparent" } }) as HTMLInputElement;
+    const subj = h("input", { attrs: { type: "text", placeholder: "Subject:" }, style: { width: "100%", padding: "12px 0", borderBottom: "1px solid #e5e7eb", outline: "none", fontSize: "15px", background: "transparent" } }) as HTMLInputElement;
+    const body = h("textarea", { attrs: { placeholder: "Message…", rows: "8" }, style: { flex: "1", padding: "16px 0", outline: "none", border: "none", resize: "none", fontSize: "16px", fontFamily: "inherit", background: "transparent" } }) as HTMLTextAreaElement;
+    const close = () => { ov.style.opacity = "0"; sheet.style.transform = "translateY(100%)"; setTimeout(() => ov.remove(), 250); };
+    const send = () => {
+      list.prepend(h("div", { class: "pressable card-white", style: { padding: "16px", display: "flex", flexDirection: "column", gap: "4px" }, onClick: openDetail },
+        h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
+          h("span", { style: { fontWeight: "700", fontSize: "14px", color: "rgba(0,0,0,.9)" } }, `To: ${to.value.trim() || "—"}`),
+          h("span", { style: { fontSize: "12px", color: "rgba(0,0,0,.4)" } }, "Now")),
+        h("span", { style: { fontWeight: "500", fontSize: "14px", color: "rgba(0,0,0,.8)" } }, subj.value.trim() || "(no subject)"),
+        h("span", { style: { fontSize: "12px", color: "rgba(0,0,0,.5)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, body.value.trim() || "…")));
+      close();
+    };
+    const sheet = h("div", { style: { position: "absolute", left: "0", right: "0", bottom: "0", height: "70%", background: "#fff", borderRadius: "28px 28px 0 0", padding: "0 20px 24px", display: "flex", flexDirection: "column", transform: "translateY(100%)", transition: "transform .28s cubic-bezier(.32,.72,.35,1)", boxShadow: "0 -10px 40px rgba(0,0,0,.18)" } },
+      h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 0", borderBottom: "1px solid #e5e7eb" } },
+        h("button", { class: "pressable", style: { color: "#3b82f6", fontWeight: "500" }, onClick: close }, "Cancel"),
+        h("span", { style: { fontWeight: "700" } }, "New Message"),
+        h("button", { class: "pressable", style: { color: "#3b82f6", fontWeight: "700", display: "flex" }, onClick: send }, svgIcon(I.send, "", 18))),
+      to, subj, body);
+    const ov = h("div", { style: { position: "absolute", inset: "0", zIndex: "30", background: "rgba(0,0,0,.12)", opacity: "0", transition: "opacity .25s" } }, sheet);
+    root.append(ov);
+    requestAnimationFrame(() => { ov.style.opacity = "1"; sheet.style.transform = "none"; });
+  };
+
   root.append(
     h("div", { style: { padding: "64px 24px 8px" } },
       h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
@@ -30,7 +57,7 @@ export function MailApp() {
         h("h1", { style: { fontSize: "24px", fontWeight: "700" } }, "Inbox"),
         h("button", { style: { color: "#3b82f6" } }, svgIcon(I.layoutGrid, "", 20))),
       h("div", { class: "search-pill", style: { marginTop: "16px" } }, svgIcon(I.search, "", 16), h("span", {}, "Search"))),
-    h("div", { class: "app-scroll no-sb", style: { padding: "0 16px 80px", display: "flex", flexDirection: "column", gap: "12px" } },
+    (() => { list.append(
       ...Array.from({ length: 6 }, (_, i) =>
         h("div", { class: "pressable card-white", style: { padding: "16px", display: "flex", flexDirection: "column", gap: "4px", position: "relative", overflow: "hidden" }, onClick: openDetail },
           h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
@@ -39,8 +66,9 @@ export function MailApp() {
               "Nyne Support"),
             h("span", { style: { fontSize: "12px", color: "rgba(0,0,0,.4)" } }, `10:4${i} AM`)),
           h("span", { style: { fontWeight: "500", fontSize: "14px", marginTop: "4px", color: "rgba(0,0,0,.8)" } }, "New Login Detected on MacBook Pro..."),
-          h("span", { style: { fontSize: "12px", color: "rgba(0,0,0,.5)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: "2px" } }, "We detected a new login from a device you don't usually use...")))),
+          h("span", { style: { fontSize: "12px", color: "rgba(0,0,0,.5)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: "2px" } }, "We detected a new login from a device you don't usually use..."))));
+      return list; })(),
     h("div", { style: { position: "absolute", bottom: "32px", right: "24px", zIndex: "10" } },
-      h("button", { class: "app-fab pressable", style: { position: "static", width: "56px", height: "56px", background: "#3b82f6", color: "#fff", border: "1px solid #60a5fa" } }, svgIcon(I.plus, "", 28))));
+      h("button", { class: "app-fab pressable", style: { position: "static", width: "56px", height: "56px", background: "#3b82f6", color: "#fff", border: "1px solid #60a5fa" }, onClick: compose }, svgIcon(I.plus, "", 28))));
   return root;
 }
