@@ -7,10 +7,10 @@ import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
 
 const T = {
-  nyneIn: 700, nyneOut: 2800,
-  dustIn: 3100, ringT0: 4300, ringT1: 5600,
-  lettersIn: 5600, morph0: 6400, morph1: 7200, sparkIn: 6800,
-  fadeOut: 7500, end: 8300,
+  nyneIn: 500, nyneOut: 2600,
+  dustIn: 2900, ringT0: 4600, ringT1: 5700,
+  lettersIn: 6100, morph0: 6800, morph1: 7500, sparkIn: 7100,
+  fadeOut: 7700, end: 8500,
 };
 
 const N = 620;
@@ -66,15 +66,15 @@ export function runBoot(phone: HTMLElement): Promise<void> {
       oR = o.width / 2;
     });
     let oCx = cx, oCy = cy, oR = 26;
-    const R_RING = 66;
+    const R_RING = 82;
 
     const ps: P[] = Array.from({ length: N }, (_, i) => ({
-      hx: Math.max(6, Math.min(W - 6, cx + gauss() * W * 0.36)),
-      hy: Math.max(6, Math.min(H - 6, cy + gauss() * H * 0.5)),
+      hx: Math.max(6, Math.min(W - 6, cx + gauss() * W * 0.5)),
+      hy: Math.max(6, Math.min(H - 6, cy + gauss() * H * 0.55)),
       vx: (Math.random() - 0.5) * 0.1,
       vy: (Math.random() - 0.5) * 0.1 - 0.04,
       ang: Math.random() * Math.PI * 2,
-      rj: gauss() * 11,
+      rj: gauss() * 13,
       s: 2 + Math.random() * 8 + (Math.random() < 0.12 ? 10 : 0),   // sprite px
       tw: Math.random() * Math.PI * 2,
       sp: 0.5 + Math.random() * 1.3,
@@ -89,7 +89,7 @@ export function runBoot(phone: HTMLElement): Promise<void> {
       const fin = skipped ? clamp01((now - t0) / 600) : 0;
 
       const aNyne = clamp01((t - T.nyneIn) / 550) * (1 - clamp01((t - T.nyneOut) / 350));
-      const aLetters = clamp01((t - T.lettersIn) / 700);
+      const aLetters = clamp01((t - T.lettersIn) / 1000);
       const morph = ease(clamp01((t - T.morph0) / (T.morph1 - T.morph0)));
       const aSpark = clamp01((t - T.sparkIn) / 400);
       const aDust = clamp01((t - T.dustIn) / 900);
@@ -116,7 +116,7 @@ export function runBoot(phone: HTMLElement): Promise<void> {
           const y = p.hy + (ty - p.hy) * conv;
           const tw = 0.55 + 0.45 * Math.sin(now / 600 * p.sp + p.tw);
           ctx.globalAlpha = ringA * tw;
-          const sz = p.s * (conv > 0.5 ? 0.9 : 1.1);
+          const sz = p.s * (0.9 + conv * 0.4);           // bande plus pleine une fois l'anneau formé
           ctx.drawImage(sprite, x - sz / 2, y - sz / 2, sz, sz);
         }
         ctx.globalAlpha = 1;
