@@ -458,11 +458,12 @@ input { font: inherit; }
 
 /* ---------- Boot splash (NYNE -> particules -> WaveOS) ---------- */
 .boot { position: absolute; inset: 0; z-index: 900; background: #000; overflow: hidden; }
-.boot-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.boot-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
 .boot-nyne { position: absolute; left: 50%; top: 46%; translate: -50% -50%; font-size: 30px; font-weight: 500; letter-spacing: .14em; text-indent: .14em; opacity: 0; color: #e8e8e8; white-space: nowrap; }
-.boot-logo { position: absolute; left: 50%; top: 46%; translate: -50% -50%; display: flex; align-items: baseline; opacity: 0; font-size: 52px; font-weight: 500; letter-spacing: -.01em; white-space: nowrap; }
-.boot-logo .w { color: #fff; }
-.boot-logo .o { color: #17c8f0; }
-.boot-logo .os { color: #17c8f0; }
+.boot-logo { position: absolute; inset: 0; font-weight: 500; letter-spacing: -.01em; white-space: nowrap; font-size: 56px; }
+.boot-logo span { position: absolute; bottom: 421px; opacity: 0; }
+.boot-logo .w { color: #fff; left: 96px; }
+.boot-logo .o { color: #17c8f0; left: 208px; }
+.boot-logo .os { color: #17c8f0; left: 250px; }
 .boot-spark { position: absolute; right: 24px; bottom: 26px; opacity: 0; color: rgba(255,255,255,.42); }
 .boot-spark svg { width: 26px; height: 26px; }
