@@ -169,18 +169,63 @@ export function PhoneApp() {
   }
 
   // ---- clavier -------------------------------------------------------------
+  const fmtNumber = (raw: string) => {
+    const plus = raw.startsWith("+");
+    let d = (plus ? raw.slice(1) : raw).replace(/\D/g, "");
+    // code pays : « +1 » séparé comme iOS (+1 (415) 555-0142), sinon « + » collé
+    let cc = plus ? "+" : "";
+    if (plus && d.startsWith("1") && d.length > 10) { cc = "+1 "; d = d.slice(1); }
+    let out = "";
+    if (d.length <= 3) out = d;
+    else if (d.length <= 6) out = `${d.slice(0, 3)}-${d.slice(3)}`;
+    else if (d.length <= 10) out = `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+    else out = `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 10)} ${d.slice(10)}`;
+    return cc + out;
+  };
+  const normalize = (s: string) => s.replace(/\D/g, "");
+  const matchContact = () => {
+    const d = normalize(digits);
+    if (d.length < 4) return null;
+    const c = CONTACTS.find(([, num]) => {
+      const n = normalize(num), local = n.slice(-10);
+      return local.startsWith(d) || d.endsWith(local) || (d.startsWith("1") && d.slice(1).endsWith(local));
+    });
+    return c ? c[0] : null;
+  };
+
   const keypad = () => {
-    const disp = h("div", { style: { textAlign: "center", fontSize: "36px", fontWeight: "300", letterSpacing: ".02em", minHeight: "46px", margin: "4px 0 12px", fontVariantNumeric: "tabular-nums" } }, " ");
-    const upd = () => disp.textContent = digits || " ";
-    const callRow = h("div", { style: { display: "flex", justifyContent: "center", alignItems: "center", gap: "20px", marginTop: "14px" } },
-      h("button", { class: "pressable", style: { width: "68px", height: "68px", borderRadius: "50%", background: "#22c55e", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" },
-        onClick: () => { if (!digits) { toast(root, "Enter a number"); return; } call(digits); digits = ""; upd(); } }, svgIcon(I.phone, "", 28)),
-      h("button", { style: { width: "68px", height: "68px", color: "#9ca3af", display: "flex", alignItems: "center", justifyContent: "center" },
-        onClick: () => { digits = digits.slice(0, -1); upd(); } }, svgIcon(I.chevronLeft, "", 26)));
-    scroll.append(disp,
+    const disp = h("div", { style: { textAlign: "center", fontSize: "38px", fontWeight: "300", letterSpacing: ".01em", minHeight: "48px", margin: "4px 0 0", fontVariantNumeric: "tabular-nums", transition: "font-size .15s" } }, " ");
+    const who = h("div", { style: { textAlign: "center", fontSize: "13px", fontWeight: "600", color: "#22c55e", minHeight: "18px", marginBottom: "10px" } }, " ");
+    let suppress0 = false;
+    const delBtn = h("button", { class: "pressable", style: { width: "68px", height: "68px", color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center", visibility: "hidden" } }, svgIcon(I.delete, "", 26));
+    const upd = () => {
+      disp.textContent = fmtNumber(digits) || " ";
+      disp.style.fontSize = digits.replace(/\D/g, "").length > 10 ? "30px" : "38px";
+      who.textContent = matchContact() ?? " ";
+      delBtn.style.visibility = digits ? "visible" : "hidden";
+    };
+    // effacement : tap = 1 chiffre, maintien = tout effacer
+    let hold = 0;
+    delBtn.addEventListener("pointerdown", () => { hold = window.setTimeout(() => { digits = ""; upd(); }, 550); });
+    for (const ev of ["pointerup", "pointerleave", "pointercancel"]) delBtn.addEventListener(ev, () => { clearTimeout(hold); });
+    delBtn.addEventListener("click", () => { digits = digits.slice(0, -1); upd(); });
+    const callRow = h("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,80px)", justifyContent: "center", alignItems: "center", marginTop: "14px" } },
+      h("span"),
+      h("button", { class: "pressable", style: { width: "68px", height: "68px", borderRadius: "50%", background: "#22c55e", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", justifySelf: "center" },
+        onClick: () => { if (!digits) { toast(root, "Enter a number"); return; } call(fmtNumber(digits)); digits = ""; upd(); } }, svgIcon(I.phone, "", 28)),
+      delBtn);
+    scroll.append(disp, who,
       h("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,80px)", gap: "12px", justifyContent: "center" } },
-        ...KEYS.map(([n, s]) => h("button", { class: "pk-key", onClick: () => { digits += n; upd(); } },
-          h("span", { class: "n" }, n), s ? h("span", { class: "s" }, s) : h("span", { class: "s" }, " ")))),
+        ...KEYS.map(([n, s]) => {
+          const b = h("button", { class: "pk-key", onClick: () => { if (n === "0" && suppress0) { suppress0 = false; return; } digits += n; upd(); } },
+            h("span", { class: "n" }, n), s ? h("span", { class: "s" }, s) : h("span", { class: "s" }, " "));
+          if (n === "0") { // maintien 0 -> « + » (préfixe international)
+            let t = 0;
+            b.addEventListener("pointerdown", () => { t = window.setTimeout(() => { suppress0 = true; if (!digits.startsWith("+")) { digits = "+" + digits; upd(); } }, 500); });
+            for (const ev of ["pointerup", "pointerleave", "pointercancel"]) b.addEventListener(ev, () => { clearTimeout(t); });
+          }
+          return b;
+        })),
       callRow);
   };
 

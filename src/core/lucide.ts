@@ -95,6 +95,7 @@ import shuffle from "lucide-static/icons/shuffle.svg?raw";
 import repeat from "lucide-static/icons/repeat.svg?raw";
 import repeat1 from "lucide-static/icons/repeat-1.svg?raw";
 import flag from "lucide-static/icons/flag.svg?raw";
+import deleteIcon from "lucide-static/icons/delete.svg?raw";
 
 export const I = {
   wifi, wifiOff, battery, signal, search, camera, flashlight, music,
@@ -110,6 +111,7 @@ export const I = {
   reply, sunrise, sunset, cloudRain, cloudSun, cloudMoon, cloudy,
   thermometer, umbrella, gauge, navigation2, chevronDown, check, archive,
   users, micOff, moonStar, link, shuffle, repeat, repeat1, flag,
+  delete: deleteIcon,
 } as const;
 
 export type IconName = keyof typeof I;
