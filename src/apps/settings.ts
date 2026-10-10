@@ -215,12 +215,14 @@ export function SettingsApp() {
     const slider = h("input", { attrs: { type: "range", min: "0", max: "100", value: String(sys.brightness) },
       style: { width: "100%", accentColor: "#2563eb" }, onInput: (e) => set("brightness", +(e.target as HTMLInputElement).value) }) as HTMLInputElement;
     onChange((k) => { if (k === "brightness") slider.value = String(sys.brightness); });
-    let mode = 0;
+    const night = () => { const h = new Date().getHours(); return h < 7 || h >= 19; };
+    let mode = sys.darkMode ? 1 : 0;
     const modes = ["Light", "Dark", "Automatic"];
     const modeGrp = h("div", { class: "set-group" });
     const drawModes = () => modeGrp.replaceChildren(...modes.map((m, i) =>
       setRow(i === 0 ? "sun" : i === 1 ? "moon" : "clock", i === mode ? "#2563eb" : "#9ca3af", m,
-        { end: i === mode ? svgIcon(I.check, "", 18) : undefined, onClick: () => { mode = i; drawModes(); } })));
+        { end: i === mode ? svgIcon(I.check, "", 18) : undefined,
+          onClick: () => { mode = i; set("darkMode", i === 1 || (i === 2 && night())); drawModes(); } })));
     s.append(
       cap("Brightness — mirrors Control Center"),
       grp(h("div", { class: "set-row" }, h("div", { class: "set-ic", style: { background: "#f59e0b" } }, svgIcon(I.sun)), h("div", { style: { flex: "1" } }, slider))),

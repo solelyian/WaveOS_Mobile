@@ -20,6 +20,7 @@ export interface SysState {
   bluetooth: boolean;
   airplane: boolean;
   cellular: boolean;
+  darkMode: boolean;
 }
 
 export const sys: SysState = {
@@ -35,6 +36,7 @@ export const sys: SysState = {
   bluetooth: true,
   airplane: false,
   cellular: true,
+  darkMode: false,
 };
 
 type Listener = (key: keyof SysState) => void;

@@ -46,6 +46,7 @@ export class Shell {
     phone.append(this.wp.el, this.home.el, this.sb.el, this.di.el, this.lock.el);
     this.lock.bar.style.pointerEvents = "auto";
     attachGestures(phone);
+    onChange((k) => { if (k === "darkMode") phone.classList.toggle("dark", sys.darkMode); });
     registerAppCloser(() => this.closeActiveApp());
     registerAppLauncher((id) => this.launchApp(id));
     registerAppInstaller((id) => {

@@ -472,3 +472,36 @@ input { font: inherit; }
 /* ---------- Boot splash (NYNE -> particules -> WaveOS) ---------- */
 .boot { position: absolute; inset: 0; z-index: 900; background: #000; overflow: hidden; }
 .boot-nyne { position: absolute; left: 50%; top: 50%; translate: -50% -50%; font-size: 34px; font-weight: 500; letter-spacing: .16em; text-indent: .16em; opacity: 0; color: #fff; white-space: nowrap; }
+
+/* ---------- Dark mode ---------- */
+#phone.dark .app-body.light { background: #0b0b0e; color: #f4f4f6; }
+#phone.dark .app-body.light .pg,
+#phone.dark .app-body.light .pane,
+#phone.dark .app-body.light .app-scroll { background: #0b0b0e !important; color: #f4f4f6; }
+#phone.dark .app-body.light :is(h1,h2,h3,.t1,.set-lbl,.pk-key .n,.ghdr h1) { color: #f4f4f6 !important; }
+#phone.dark .app-body.light :is(.t2,.set-val,.lrow .t2,.lrow .rt) { color: rgba(244,244,246,.55) !important; }
+#phone.dark .app-body.light .card-white { background: #1c1c1e; border-color: #2c2c2e; }
+#phone.dark .app-body.light .set-group { background: rgba(255,255,255,.08); }
+#phone.dark .app-body.light .set-row + .set-row { border-top-color: rgba(255,255,255,.12); }
+#phone.dark .app-body.light .set-row:active { background: rgba(255,255,255,.12); }
+#phone.dark .app-body.light .set-row .chev { color: #6b7280; }
+#phone.dark .app-body.light .search-pill { background: #1c1c1e; border-color: #2c2c2e; color: #9ca3af; }
+#phone.dark .app-body.light .ghdr .bk { color: rgba(255,255,255,.85); }
+#phone.dark .app-body.light .pk-key { background: #1c1c1e; border-color: #2c2c2e; }
+#phone.dark .app-body.light .pk-key:active { background: #2c2c2e; }
+#phone.dark .app-body.light .bub.them { background: #2c2c2e; color: #f4f4f6; }
+#phone.dark .app-body.light .msg-b.in { background: #2c2c2e; color: #f4f4f6; }
+#phone.dark .app-body.light .st-row + .st-row { border-top-color: #2c2c2e; }
+#phone.dark .app-body.light .st-close { background: rgba(255,255,255,.08); color: #d1d5db; }
+#phone.dark .app-body.light .st-get { background: rgba(255,255,255,.10); color: #60a5fa; }
+#phone.dark .app-body.light input,
+#phone.dark .app-body.light textarea { color: #f4f4f6; }
+#phone.dark .app-body.light input::placeholder,
+#phone.dark .app-body.light textarea::placeholder { color: rgba(244,244,246,.35); }
+#phone.dark .app-body.light .tabbar.light .pill { background: rgba(255,255,255,.10); box-shadow: inset 0 1px 0 rgba(255,255,255,.2); }
+#phone.dark .app-body.light .tabbar.light .dot { background: #fff; }
+#phone.dark .app-body.light .tabbar.light button .icon { color: rgba(255,255,255,.6); }
+#phone.dark .app-body.light .tabbar.light button.on .icon { color: #fff; }
+#phone.dark .app-body.light .sw { --sw-track: rgba(255,255,255,.18); }
+#phone.dark .app-body.light .card-white :is(p,div,span,em,strong,small,td,li,blockquote) { color: #e8e8ed !important; }
+#phone.dark .app-body.light .card-white .set-ic { color: #fff !important; }
