@@ -47,14 +47,19 @@ function createWindow() {
     });
   });
 
+  // fenêtre transparente sans cadre : on ne voit que le corps du téléphone.
+  // 428×878 = phone 400×850 + le ring bezel (box-shadow 14px de chaque côté).
   const win = new BrowserWindow({
-    width: 440,
-    height: 900,
+    width: 428,
+    height: 878,
     resizable: true,
-    maximizable: true,
-    fullscreenable: true,
-    minWidth: 380,
-    minHeight: 760,
+    maximizable: false,
+    fullscreenable: false,
+    frame: false,
+    transparent: true,
+    hasShadow: false,
+    minWidth: 320,
+    minHeight: 640,
     autoHideMenuBar: true,
     backgroundColor: "#000000",
     title: "WaveOS",

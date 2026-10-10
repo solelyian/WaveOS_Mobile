@@ -7,8 +7,9 @@ import { runBoot } from "./shell/boot";
 async function boot() {
   const phone = document.getElementById("phone")!;
   // le téléphone se met à l'échelle pour remplir la fenêtre (desktop redimensionnable)
+  // 428×878 = 400×850 du #phone + bezel 14px de chaque côté
   const fit = () => {
-    const s = Math.min(1.6, innerWidth / 420, innerHeight / 900);
+    const s = Math.min(1.6, innerWidth / 428, innerHeight / 878);
     phone.style.transform = `scale(${s.toFixed(4)})`;
   };
   addEventListener("resize", fit);
