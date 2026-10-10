@@ -62,8 +62,8 @@ input { font: inherit; }
 #sb.gone { opacity: 0; }
 #sb .sbi { display: flex; gap: 8px; align-items: center; height: 100%; }
 #sb .icon { display: flex; align-items: center; }
-#sb .icon svg { width: 18px; height: 18px; display: block; }
-#sb .icon.bat svg { width: 26px; height: 18px; }
+#sb .icon svg { width: 21px; height: 21px; display: block; }
+#sb .icon.bat svg { width: 30px; height: 21px; }
 
 /* ---------- Lock ---------- */
 #lock {
