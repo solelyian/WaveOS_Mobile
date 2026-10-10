@@ -212,23 +212,28 @@ input { font: inherit; }
 
 /* Notification Center */
 #nc { padding: 64px 24px 24px; display: flex; flex-direction: column; }
-.nc-head { display: flex; flex-direction: column; align-items: center; margin-bottom: 32px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.3)); }
-.nc-date { font-size: 20px; font-weight: 500; opacity: .9; }
-.nc-clock { font-size: 72px; font-weight: 700; letter-spacing: -.03em; line-height: 1.05; }
-.nc-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-.nc-title { display: flex; justify-content: space-between; align-items: center; padding: 0 8px; margin-bottom: 8px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.3)); }
-.nc-title span { font-size: 18px; font-weight: 700; }
-.nc-title button { padding: 8px; border-radius: 50%; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.1); display: flex; }
-.nc-title button:hover { background: rgba(255,255,255,.2); }
-.nc-title button svg { width: 16px; height: 16px; }
-.nc-card { border-radius: 24px; padding: 16px; display: flex; gap: 16px; }
-.nc-card .bd { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: inset 0 1px 1px rgba(255,255,255,.4); }
-.nc-card .bd svg { width: 20px; height: 20px; color: #fff; }
+#nc { backdrop-filter: blur(26px) saturate(130%) brightness(.88); -webkit-backdrop-filter: blur(26px) saturate(130%) brightness(.88); }
+.nc-head { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.35)); }
+.nc-date { font-size: 19px; font-weight: 500; opacity: .9; margin-top: 2px; }
+.nc-clock { font-size: 74px; font-weight: 700; letter-spacing: -.03em; line-height: 1.05; background: linear-gradient(180deg, #fff 30%, rgba(255,255,255,.62)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.nc-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 2px 4px; }
+.nc-card { border-radius: 30px; padding: 16px 18px; display: flex; gap: 14px; align-items: center;
+  background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.24);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 12px 34px rgba(0,0,0,.22);
+  backdrop-filter: blur(22px) saturate(150%); -webkit-backdrop-filter: blur(22px) saturate(150%); }
+.nc-card .bd { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: inset 0 1px 1px rgba(255,255,255,.45), 0 4px 12px rgba(0,0,0,.18); }
+.nc-card .bd svg { width: 22px; height: 22px; color: #fff; }
 .nc-card .tx { flex: 1; min-width: 0; }
-.nc-card .r1 { display: flex; justify-content: space-between; align-items: baseline; }
-.nc-card .app { font-size: 14px; font-weight: 700; } .nc-card .tm { font-size: 12px; opacity: .6; }
-.nc-card .usr { font-size: 14px; font-weight: 500; margin-top: 2px; opacity: .9; }
-.nc-card .txt { font-size: 12px; opacity: .7; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nc-card .r1 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.nc-card .app { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+.nc-card .tm { font-size: 11.5px; opacity: .55; flex-shrink: 0; }
+.nc-card .txt { font-size: 13px; line-height: 1.35; opacity: .78; margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.nc-clear { display: flex; justify-content: center; padding: 16px 0 2px; }
+.nc-clear button { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 8px 24px rgba(0,0,0,.25);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+.nc-clear button svg { width: 21px; height: 21px; }
 .nc-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; opacity: .5; }
 .nc-empty svg { width: 32px; height: 32px; }
 .nc-empty span { font-size: 14px; font-weight: 500; }
