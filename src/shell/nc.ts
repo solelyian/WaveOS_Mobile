@@ -3,6 +3,7 @@ import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
 import { Spring } from "../core/motion";
 import { fmtDate, fmtTime } from "../system/state";
+import { glassClock } from "./glassClock";
 
 const NOTIFS = [
   { user: "Sarah Connor", text: "The future is not set. There is no fate but what we make for ourselves.", time: "2m ago", icon: I.messageCircle, color: "#22c55e" },
@@ -53,8 +54,9 @@ export class NotificationCenter {
   close() { this.sy.to(-850); }
   tick() {
     const t = fmtTime();
-    this.clockEl.textContent = t;
-    this.clockEl.dataset.t = t;
+    const n = this.clockEl.firstChild;
+    if (n && n.nodeType === 3) n.nodeValue = t; else this.clockEl.prepend(t);
+    glassClock(this.clockEl, t);
     this.dateEl.textContent = fmtDate();
   }
   render(): boolean {
