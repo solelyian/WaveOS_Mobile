@@ -16,6 +16,8 @@ import calendar from "lucide-static/icons/calendar.svg?raw";
 import map from "lucide-static/icons/map.svg?raw";
 import phone from "lucide-static/icons/phone.svg?raw";
 import phoneIncoming from "lucide-static/icons/phone-incoming.svg?raw";
+import phoneOutgoing from "lucide-static/icons/phone-outgoing.svg?raw";
+import phoneMissed from "lucide-static/icons/phone-missed.svg?raw";
 import mail from "lucide-static/icons/mail.svg?raw";
 import chevronLeft from "lucide-static/icons/chevron-left.svg?raw";
 import play from "lucide-static/icons/play.svg?raw";
@@ -88,11 +90,17 @@ import archive from "lucide-static/icons/archive.svg?raw";
 import users from "lucide-static/icons/users.svg?raw";
 import micOff from "lucide-static/icons/mic-off.svg?raw";
 import moonStar from "lucide-static/icons/moon-star.svg?raw";
+import link from "lucide-static/icons/link.svg?raw";
+import shuffle from "lucide-static/icons/shuffle.svg?raw";
+import repeat from "lucide-static/icons/repeat.svg?raw";
+import repeat1 from "lucide-static/icons/repeat-1.svg?raw";
+import flag from "lucide-static/icons/flag.svg?raw";
 
 export const I = {
   wifi, wifiOff, battery, signal, search, camera, flashlight, music,
   messageCircle, image, settings, cloud, calculator, calendar, map,
   phone, phoneIncoming, mail, chevronLeft, play, pause, skipForward,
+  phoneOutgoing, phoneMissed,
   skipBack, sun, moon, volume2, bluetooth, bluetoothOff, x, lock,
   user, star, clock, voicemail, layoutGrid, heart, list, send, ellipsis,
   globe, compass, bell, shield, slidersHorizontal, mic, video, info,
@@ -101,7 +109,7 @@ export const I = {
   store, download, gamepad2, trash, folderOpen, file, pencil, squarePen,
   reply, sunrise, sunset, cloudRain, cloudSun, cloudMoon, cloudy,
   thermometer, umbrella, gauge, navigation2, chevronDown, check, archive,
-  users, micOff, moonStar,
+  users, micOff, moonStar, link, shuffle, repeat, repeat1, flag,
 } as const;
 
 export type IconName = keyof typeof I;
