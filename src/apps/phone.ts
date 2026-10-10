@@ -82,19 +82,32 @@ export function PhoneApp() {
                 img(a, "av rd"), h("div", { class: "tx" }, h("div", { class: "t1" }, n), h("div", { class: "t2" }, num)),
                 h("span", { style: { color: "#22c55e" } }, svgIcon(I.plus, "", 18))))))));
 
-      const wrap = h("div", { class: "pg", style: { position: "relative", background: "linear-gradient(180deg,#1f2937,#050505)", color: "#fff", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", padding: "70px 28px 60px" } },
-        avatar ? h("div", { style: { width: "90px", height: "90px", borderRadius: "50%", overflow: "hidden", marginBottom: "14px", border: "2px solid rgba(255,255,255,.2)" } }, img(avatar, "img-fill")) : h("div", { style: { width: "90px", height: "90px", borderRadius: "50%", background: "rgba(255,255,255,.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "14px" } }, svgIcon(I.user, "", 40)),
-        h("div", { style: { fontSize: "28px", fontWeight: "700" } }, name), st,
-        h("div", { style: { flex: "1" } }),
-        h("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "18px 26px", marginBottom: "34px" } },
-          btn("micOff", "mute"),
-          btn("layoutGrid", "keypad", () => inCallKeypad(wrap)),
-          btn("volume2", "speaker"),
-          btn("plus", "add call", () => toast(root, "Add call — pick a contact")),
-          btn("video", "FaceTime", () => toast(root, "Switching to FaceTime…")),
-          btn("user", "contacts", () => inCallContacts())),
-        h("button", { class: "pressable", style: { width: "72px", height: "72px", borderRadius: "50%", background: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center" }, onClick: end },
-          h("span", { style: { display: "flex", transform: "rotate(135deg)" } }, svgIcon(I.phone, "", 30))));
+      // iOS 26 : fond photo flouté plein écran, nom + « mobile » + chrono en
+      // haut, carte verre 3×2 en bas — speaker/FaceTime/mute · add call/END/keypad.
+      const endBtn = h("button", { class: "pressable", style: { width: "68px", height: "68px", borderRadius: "50%", background: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 20px rgba(239,68,68,.4)" }, onClick: end },
+        h("span", { style: { display: "flex", transform: "rotate(135deg)" } }, svgIcon(I.phone, "", 28)));
+      const endCell = h("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" } },
+        endBtn, h("span", { style: { fontSize: "11px", color: "rgba(255,255,255,.7)" } }, "end"));
+
+      const wrap = h("div", { class: "pg", style: { position: "relative", color: "#fff", height: "100%", overflow: "hidden" } },
+        avatar
+          ? h("div", { style: { position: "absolute", inset: "-24px", background: `url(${avatar}) center/cover`, filter: "blur(30px) brightness(.6) saturate(1.3)", transform: "scale(1.05)" } })
+          : h("div", { style: { position: "absolute", inset: "0", background: "linear-gradient(200deg,#232a38,#0b0d12)" } }),
+        h("div", { style: "position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),transparent 30%,transparent 60%,rgba(0,0,0,.5))" }),
+        h("div", { style: { position: "relative", zIndex: "2", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", padding: "76px 28px 44px" } },
+          !avatar ? h("div", { style: { width: "84px", height: "84px", borderRadius: "50%", background: "rgba(255,255,255,.14)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "12px" } }, svgIcon(I.user, "", 36)) : null,
+          h("div", { style: { fontSize: "30px", fontWeight: "700", letterSpacing: "-.01em" } }, name),
+          h("div", { style: { fontSize: "13px", color: "rgba(255,255,255,.6)", marginTop: "3px" } }, "mobile"),
+          h("div", { style: { marginTop: "2px" } }, st),
+          h("div", { style: { flex: "1" } }),
+          h("div", { style: { width: "100%", padding: "22px 18px 24px", borderRadius: "40px", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.14)", backdropFilter: "blur(24px) saturate(160%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.16), 0 18px 40px rgba(0,0,0,.35)" } },
+            h("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "20px 8px" } },
+              btn("volume2", "speaker"),
+              btn("video", "FaceTime", () => toast(root, "Switching to FaceTime…")),
+              btn("micOff", "mute"),
+              btn("plus", "add call", () => inCallContacts()),
+              endCell,
+              btn("layoutGrid", "keypad", () => inCallKeypad(wrap))))));
       return wrap;
     });
   }
