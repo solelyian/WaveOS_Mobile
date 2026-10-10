@@ -63,6 +63,15 @@ import home from "lucide-static/icons/home.svg?raw";
 import power from "lucide-static/icons/power.svg?raw";
 import disc from "lucide-static/icons/disc.svg?raw";
 import screenShare from "lucide-static/icons/screen-share.svg?raw";
+import store from "lucide-static/icons/store.svg?raw";
+import download from "lucide-static/icons/download.svg?raw";
+import gamepad2 from "lucide-static/icons/gamepad-2.svg?raw";
+import trash from "lucide-static/icons/trash.svg?raw";
+import folderOpen from "lucide-static/icons/folder-open.svg?raw";
+import file from "lucide-static/icons/file.svg?raw";
+import pencil from "lucide-static/icons/pencil.svg?raw";
+import squarePen from "lucide-static/icons/square-pen.svg?raw";
+import reply from "lucide-static/icons/reply.svg?raw";
 
 export const I = {
   wifi, wifiOff, battery, signal, search, camera, flashlight, music,
@@ -73,6 +82,8 @@ export const I = {
   globe, compass, bell, shield, slidersHorizontal, mic, video, info,
   droplets, wind, eye, mapPin, navigation, share, book, plus, arrowUp,
   plane, cast, rotateCcw, trash2, home, power, disc, screenShare,
+  store, download, gamepad2, trash, folderOpen, file, pencil, squarePen,
+  reply,
 } as const;
 
 export type IconName = keyof typeof I;

@@ -337,3 +337,49 @@ input { font: inherit; }
 #spot .spot-row:hover { background: rgba(255,255,255,.08); }
 #spot .spot-row .tile .icon svg { color: #fff; }
 #spot .spot-row .icon svg { transform: rotate(180deg); }
+
+/* ---------- App Store ---------- */
+.st-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; }
+.st-row + .st-row { border-top: 1px solid #f3f4f6; }
+.st-get {
+  min-width: 72px; height: 32px; padding: 0 18px; border-radius: 999px; position: relative; overflow: hidden;
+  background: rgba(59,130,246,.12); color: #3b82f6; font-size: 14px; font-weight: 800; letter-spacing: .02em;
+  transition: background .2s, color .2s, transform .12s;
+}
+.st-get.big { width: 100%; height: 44px; margin-top: 12px; font-size: 16px; }
+.st-get.open { background: #3b82f6; color: #fff; }
+.st-get.busy { background: rgba(0,0,0,.08); color: transparent; }
+.st-prog { position: absolute; inset: 0; display: block; }
+.st-prog em { position: absolute; inset: 0; display: block; background: #3b82f6; transform: scaleX(0); transform-origin: left; }
+.st-detail {
+  position: absolute; inset: 0; z-index: 60; background: #fff; display: flex; flex-direction: column;
+  transition: transform .22s ease-out, opacity .22s;
+}
+.st-close { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.05); color: #374151; }
+
+/* ---------- Arcade : anneaux Ripple ---------- */
+.rip {
+  position: absolute; border-radius: 50%; z-index: 6; cursor: pointer;
+  border: 4px solid #a5b4fc; background: radial-gradient(circle, rgba(129,140,248,.35), rgba(129,140,248,.05));
+  box-shadow: 0 0 24px rgba(129,140,248,.5), inset 0 0 12px rgba(165,180,252,.4);
+  transform: scale(0); transition: transform .18s cubic-bezier(.34,1.56,.64,1), opacity .18s;
+}
+.rip.on { transform: scale(1); }
+.rip.hit { transform: scale(1.35); opacity: 0; border-color: #4ade80; box-shadow: 0 0 30px rgba(74,222,128,.8); }
+
+/* ---------- Messages : conversation ---------- */
+.msg-thread { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 8px; }
+.msg-b { max-width: 76%; padding: 10px 14px; border-radius: 20px; font-size: 15px; line-height: 1.35; }
+.msg-b.in { align-self: flex-start; background: #e9e9eb; color: #111; border-bottom-left-radius: 4px; }
+.msg-b.out { align-self: flex-end; background: #3b82f6; color: #fff; border-bottom-right-radius: 4px; }
+.msg-inrow {
+  display: flex; align-items: center; gap: 8px; padding: 8px 16px 24px; flex-shrink: 0;
+}
+.msg-inrow input { flex: 1; height: 40px; border-radius: 20px; border: 1px solid #e5e7eb; background: #fff; padding: 0 14px; font-size: 15px; outline: none; color: #111; }
+.msg-send { width: 36px; height: 36px; border-radius: 50%; background: #3b82f6; color: #fff; display: flex; align-items: center; justify-content: center; flex: none; }
+
+/* ---------- Interrupteur (Settings ↔ CC) ---------- */
+.g-tog { width: 48px; height: 28px; border-radius: 999px; background: #d1d5db; position: relative; flex: none; transition: background .2s; }
+.g-tog em { position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: left .18s cubic-bezier(.34,1.3,.64,1); }
+.g-tog.on { background: #22c55e; }
+.g-tog.on em { left: 22px; }

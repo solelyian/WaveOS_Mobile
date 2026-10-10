@@ -23,7 +23,21 @@ export const APPS: AppMeta[] = [
   { id: "messages",   name: "Messages",   icon: "messageCircle", color: "#4ade80",                                 theme: "light" },
   { id: "music",      name: "Music",      icon: "music",         color: "#ef4444",                                 theme: "dark" },
   { id: "safari",     name: "Safari",     icon: "compass",       color: "#3b82f6",                                 theme: "light" },
+  { id: "store",      name: "App Store",  icon: "store",         color: "linear-gradient(135deg,#38bdf8,#2563eb)", theme: "light" },
 ];
 
-export const appMeta = (id: AppId) => APPS.find((a) => a.id === id)!;
+/** Apps installables via l'App Store — pas sur le springboard tant
+ *  qu'elles ne sont pas dans INSTALLED. */
+export const EXTRA_APPS: AppMeta[] = [
+  { id: "notes",   name: "Notes",   icon: "list",     color: "linear-gradient(135deg,#fde047,#eab308)", theme: "light" },
+  { id: "files",   name: "Files",   icon: "book",     color: "linear-gradient(135deg,#93c5fd,#3b82f6)", theme: "light" },
+  { id: "clock",   name: "Clock",   icon: "clock",    color: "#111827",                                 theme: "dark" },
+  { id: "arcade",  name: "Arcade",  icon: "gamepad2", color: "linear-gradient(135deg,#818cf8,#7c3aed)", theme: "dark" },
+];
+
+/** Apps tierces installées cette session (App Store → springboard + Spotlight). */
+export const INSTALLED = new Set<AppId>();
+
+export const appMeta = (id: AppId) =>
+  APPS.find((a) => a.id === id) ?? EXTRA_APPS.find((a) => a.id === id)!;
 export const DOCK: AppId[] = ["phone", "safari", "messages", "music"];
