@@ -63,7 +63,7 @@ export function MessagesApp() {
       }, 900 + Math.random() * 800);
     };
     input.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
-    const d = h("div", { style: { position: "absolute", inset: "0", zIndex: "40", background: "#f4f4f5", display: "flex", flexDirection: "column", transform: "translateX(60px)", opacity: "0", transition: "all .22s ease-out" } },
+    const d = h("div", { style: { position: "absolute", inset: "0", zIndex: "60", background: "#f4f4f5", display: "flex", flexDirection: "column", transform: "translateX(60px)", opacity: "0", transition: "all .22s ease-out" } },
       h("div", { class: "g-light", style: { padding: "60px 16px 12px", display: "flex", alignItems: "center", gap: "12px", background: "rgba(255,255,255,.7)", borderRadius: "0 0 24px 24px" } },
         h("button", { class: "pressable", style: { color: "#3b82f6", display: "flex" }, onClick: () => { d.style.opacity = "0"; d.style.transform = "translateX(60px)"; setTimeout(() => d.remove(), 220); } }, svgIcon(I.chevronLeft)),
         (() => { const im = img(`/img/avatar/a-${av}.jpg`); im.style.cssText = "width:36px;height:36px;border-radius:50%;object-fit:cover"; return im; })(),

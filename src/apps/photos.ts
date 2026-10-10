@@ -44,7 +44,7 @@ export function PhotosApp() {
     let cur = i;
     const pic = img(`/img/photos/ph-${cur}.jpg`);
     pic.style.cssText = "max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);transition:opacity .15s";
-    const counter = h("div", { style: { position: "absolute", top: "24px", left: "0", right: "0", textAlign: "center", color: "rgba(255,255,255,.8)", fontSize: "13px", fontWeight: "600" } });
+    const counter = h("div", { style: { position: "absolute", top: "72px", left: "0", right: "0", textAlign: "center", color: "rgba(255,255,255,.8)", fontSize: "13px", fontWeight: "600" } });
     const iconBtn = (icon: string, fn: (e: Event) => void) => h("button", { class: "pressable", style: { color: "#fff", display: "flex", padding: "8px" }, onClick: fn }, svgIcon(icon as never, "", 22));
     const heart = iconBtn(I.heart, (e) => { e.stopPropagation(); const s = heart.querySelector("svg") as SVGElement; s.setAttribute("fill", s.getAttribute("fill") === "#ef4444" ? "none" : "#ef4444"); s.style.color = "#ef4444"; });
     const paint = () => { counter.textContent = `${cur + 1} / ${COUNT}`; };
