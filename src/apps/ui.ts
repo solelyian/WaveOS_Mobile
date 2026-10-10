@@ -5,10 +5,10 @@ import { I } from "../core/lucide";
 import type { IconName } from "../core/lucide";
 import { shell } from "../shell/api";
 
-export function GlassHeader(title: string, opts: { large?: boolean; action?: IconName; onBack?: () => void } = {}) {
+export function GlassHeader(title: string, opts: { large?: boolean; action?: IconName; onAction?: () => void; onBack?: () => void } = {}) {
   const back = h("button", { class: "bk g-btn", onClick: () => (opts.onBack ?? shell.closeApp)() }, svgIcon(I.chevronLeft));
   const row = h("div", { class: "row" }, back,
-    opts.action ? h("button", { class: "act g-btn" }, svgIcon(I[opts.action])) : h("span"));
+    opts.action ? h("button", { class: "act g-btn", onClick: () => opts.onAction?.() }, svgIcon(I[opts.action])) : h("span"));
   const el = h("div", { class: "ghdr" }, row,
     opts.large ? h("h1", {}, title) : h("div", { class: "ttl-sm" }, title));
   return el;

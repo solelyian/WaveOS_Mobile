@@ -35,6 +35,12 @@ export function PhoneApp() {
       callBtn);
   };
 
+  const CONTACTS = [
+    { n: "Alex Morgan", k: "Mobile" }, { n: "Sam Rivera", k: "iPhone" },
+    { n: "Jordan Lee", k: "Mobile" }, { n: "Casey Kim", k: "Work" },
+    { n: "Robin Park", k: "Mobile" }, { n: "Ari Chen", k: "Home" },
+    { n: "Noa Blanc", k: "Mobile" }, { n: "Léo Martin", k: "iPhone" },
+  ];
   const recents = () =>
     h("div", { class: "app-scroll no-sb", style: { padding: "64px 16px 96px" } },
       h("h1", { style: { fontSize: "30px", fontWeight: "700", marginBottom: "16px" } }, "Recents"),
@@ -43,11 +49,57 @@ export function PhoneApp() {
           h("div", { style: { display: "flex", alignItems: "center", gap: "16px" } },
             h("div", { style: { width: "48px", height: "48px", borderRadius: "50%", background: "#e5e7eb", overflow: "hidden" } }, (() => { const im = img(`/img/avatar/a-${i}.jpg`); im.style.cssText = "width:100%;height:100%;object-fit:cover"; return im; })()),
             h("div", {},
-              h("div", { style: { fontWeight: "700", fontSize: "18px", color: i === 0 ? "#ef4444" : "rgba(0,0,0,.9)" } }, "John Doe"),
-              h("div", { style: { fontSize: "14px", color: "rgba(0,0,0,.5)" } }, "Mobile"))),
+              h("div", { style: { fontWeight: "700", fontSize: "18px", color: i === 0 ? "#ef4444" : "rgba(0,0,0,.9)" } }, CONTACTS[i % CONTACTS.length].n),
+              h("div", { style: { fontSize: "14px", color: "rgba(0,0,0,.5)" } }, CONTACTS[i % CONTACTS.length].k))),
           h("div", { style: { display: "flex", alignItems: "center", gap: "8px" } },
-            h("span", { style: { fontSize: "12px", color: "rgba(0,0,0,.4)" } }, "Yesterday"),
+            h("span", { style: { fontSize: "12px", color: "rgba(0,0,0,.4)" } }, i < 2 ? "Today" : "Yesterday"),
             h("span", { style: { color: "#3b82f6", display: "flex" } }, svgIcon(I.info, "", 20))))));
+
+  const favorites = () =>
+    h("div", { class: "app-scroll no-sb", style: { padding: "64px 20px 96px" } },
+      h("h1", { style: { fontSize: "30px", fontWeight: "700", marginBottom: "24px" } }, "Favorites"),
+      h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" } },
+        ...CONTACTS.slice(0, 4).map((c, i) =>
+          h("div", { class: "pressable card-white", style: { padding: "24px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", cursor: "pointer" }, onClick: () => { number = "555-0142"; showCall(); } },
+            h("div", { style: { width: "72px", height: "72px", borderRadius: "50%", background: "#e5e7eb", overflow: "hidden", border: "2px solid #fff", boxShadow: "0 4px 10px rgba(0,0,0,.1)" } }, (() => { const im = img(`/img/avatar/a-${i + 40}.jpg`); im.style.cssText = "width:100%;height:100%;object-fit:cover"; return im; })()),
+            h("div", { style: { fontWeight: "700", fontSize: "15px", color: "rgba(0,0,0,.9)", textAlign: "center" } }, c.n)))));
+
+  const contacts = () =>
+    h("div", { class: "app-scroll no-sb", style: { padding: "64px 16px 96px" } },
+      h("h1", { style: { fontSize: "30px", fontWeight: "700", marginBottom: "16px" } }, "Contacts"),
+      ...CONTACTS.map((c, i) =>
+        h("div", { class: "pressable", style: { display: "flex", alignItems: "center", gap: "16px", padding: "14px 0", borderBottom: "1px solid rgba(243,244,246,.5)", cursor: "pointer" }, onClick: () => { number = "555-0142"; showCall(); } },
+          h("div", { style: { width: "44px", height: "44px", borderRadius: "50%", background: "#e5e7eb", overflow: "hidden", flexShrink: "0" } }, (() => { const im = img(`/img/avatar/a-${i + 20}.jpg`); im.style.cssText = "width:100%;height:100%;object-fit:cover"; return im; })()),
+          h("div", { style: { flex: "1" } },
+            h("div", { style: { fontWeight: "600", fontSize: "17px", color: "rgba(0,0,0,.9)" } }, c.n),
+            h("div", { style: { fontSize: "13px", color: "rgba(0,0,0,.5)" } }, c.k)),
+          h("span", { style: { color: "#22c55e", display: "flex" } }, svgIcon(I.phone, "", 18)))));
+
+  const voicemail = () =>
+    h("div", { class: "app-scroll no-sb", style: { padding: "64px 20px 96px" } },
+      h("h1", { style: { fontSize: "30px", fontWeight: "700", marginBottom: "24px" } }, "Voicemail"),
+      ...([["Sam Rivera", "0:42", "Hey, call me back when you get this — it's about Friday."],
+           ["Mom", "1:18", "Hi honey, just checking in. Dinner this weekend?"]] as const).map(([n, d, t]) =>
+        h("div", { class: "card-white", style: { padding: "16px", marginBottom: "12px" } },
+          h("div", { style: { display: "flex", alignItems: "center", gap: "14px", marginBottom: "10px" } },
+            (() => {
+              let playing = false;
+              const play = h("button", {
+                class: "pressable",
+                style: { width: "44px", height: "44px", borderRadius: "50%", background: "#22c55e", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" },
+                onClick: (e) => {
+                  e.stopPropagation(); playing = !playing;
+                  play.replaceChildren(svgIcon(playing ? I.pause : I.play));
+                  (play.querySelector("svg") as SVGElement).style.fill = "#fff";
+                },
+              }, svgIcon(I.play));
+              (play.querySelector("svg") as SVGElement).style.fill = "#fff";
+              return play;
+            })(),
+            h("div", { style: { flex: "1" } },
+              h("div", { style: { fontWeight: "700", fontSize: "16px", color: "rgba(0,0,0,.9)" } }, n),
+              h("div", { style: { fontSize: "13px", color: "rgba(0,0,0,.5)" } }, `${d} · Today`))),
+          h("div", { style: { fontSize: "13px", color: "rgba(0,0,0,.6)", lineHeight: "1.45", padding: "10px 12px", background: "#f4f4f5", borderRadius: "12px" } }, t))));
 
   const showCall = () => {
     const ov = h("div", { style: { position: "absolute", inset: "0", zIndex: "50", background: "#111827", display: "flex", flexDirection: "column", alignItems: "center", padding: "96px 0 48px", opacity: "0", transform: "scale(.9)", transition: "all .25s" } });
@@ -77,8 +129,12 @@ export function PhoneApp() {
   const bar = FloatingTabBar(TABS, tab, (id) => { tab = id; refresh(); });
 
   const refresh = () => {
-    // maquette : seuls keypad/recents ont du contenu — les autres onglets vident l'écran
-    stage.replaceChildren(tab === "keypad" ? keypad() : tab === "recents" ? recents() : h("div", { style: { flex: "1" } }));
+    stage.replaceChildren(
+      tab === "keypad" ? keypad()
+      : tab === "recents" ? recents()
+      : tab === "favorites" ? favorites()
+      : tab === "contacts" ? contacts()
+      : voicemail());
   };
   refresh();
   root.append(bar.el);
