@@ -22,8 +22,8 @@ export const APPS: AppMeta[] = [
   { id: "mail",       name: "Mail",       icon: "mail",          color: "#3b82f6",                                 theme: "light" },
   { id: "messages",   name: "Messages",   icon: "messageCircle", color: "#4ade80",                                 theme: "light" },
   { id: "music",      name: "Music",      icon: "music",         color: "#ef4444",                                 theme: "dark" },
-  { id: "safari",     name: "Safari",     icon: "compass",       color: "#3b82f6",                                 theme: "light" },
-  { id: "store",      name: "App Store",  icon: "store",         color: "linear-gradient(135deg,#38bdf8,#2563eb)", theme: "light" },
+  { id: "safari",     name: "Surf",     icon: "compass",       color: "#3b82f6",                                 theme: "light" },
+  { id: "store",      name: "Nyne Store",  icon: "store",         color: "linear-gradient(135deg,#38bdf8,#2563eb)", theme: "light" },
 ];
 
 /** Apps installables via l'App Store — pas sur le springboard tant

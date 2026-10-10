@@ -171,7 +171,7 @@ export function StoreApp() {
   ];
   const bar = FloatingTabBar(TABS, tab, (id) => { tab = id; refresh(); });
   const refresh = () => stage.replaceChildren(views[tab]());
-  root.append(GlassHeader("App Store", { large: true }), stage, bar.el);
+  root.append(GlassHeader("Nyne Store", { large: true }), stage, bar.el);
   refresh();
   return root;
 }

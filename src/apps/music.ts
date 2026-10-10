@@ -63,11 +63,11 @@ export function MusicApp() {
       h("div", { class: "pg", style: { background: "#050505", height: "100%", display: "flex", flexDirection: "column" } },
         h("div", { style: { display: "flex", alignItems: "center", gap: "10px", padding: "60px 16px 10px" } },
           h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }, onClick: close }, svgIcon(I.chevronLeft, "", 18)),
-          h("span", { style: { fontWeight: "700", fontSize: "17px" } }, "AirPlay")),
+          h("span", { style: { fontWeight: "700", fontSize: "17px" } }, "Nyne Cast")),
         h("div", { class: "no-sb", style: { flex: "1", overflowY: "auto", padding: "6px 20px 40px" } },
           h("div", { style: { fontSize: "12px", fontWeight: "700", letterSpacing: ".08em", color: "rgba(255,255,255,.45)", textTransform: "uppercase", margin: "4px 2px 8px" } }, "Speakers & TVs"),
           h("div", { style: { background: "rgba(255,255,255,.05)", borderRadius: "24px", padding: "4px 14px", border: "1px solid rgba(255,255,255,.08)" } },
-            ...["This Phone", "Living Room HomePod", "Nyne TV", "MacBook Pro"].map((n, i) =>
+            ...["This Phone", "Living Room Speaker", "Nyne TV", "MacBook Pro"].map((n, i) =>
               h("div", { class: "lrow pressable", onClick: () => { close(); toast(root, i === 0 ? "Playing on this phone" : `Playing on ${n}`); } },
                 h("div", { style: { width: "40px", height: "40px", borderRadius: "12px", background: "rgba(255,255,255,.08)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } },
                   svgIcon(i === 0 ? I.music : I.cast, "", 18)),

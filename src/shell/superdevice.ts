@@ -54,7 +54,7 @@ export class SuperDevice {
     this.orbit.append(this.stage);
     this.el.append(
       h("div", { class: "sd-head" },
-        h("h2", {}, "Super Device"),
+        h("h2", {}, "Nyne Link"),
         h("p", {}, "Drag a device to the center to connect")),
       this.orbit, this.actions,
       h("div", { class: "handle" }, h("i")));

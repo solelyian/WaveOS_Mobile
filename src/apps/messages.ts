@@ -53,7 +53,7 @@ export function MessagesApp() {
         h("div", { style: { display: "flex", gap: "16px", marginTop: "24px" } },
           ...([["messageCircle", "Message", "#22c55e", () => { close(); openConvo(convoFor(name, avatar)); }],
                ["phone", "Call", "#2563eb", () => toast(root, `Calling ${name.split(" ")[0]}…`)],
-               ["video", "FaceTime", "#0ea5e9", () => toast(root, "Starting FaceTime…")]] as [keyof typeof I, string, string, () => void][]).map(([ic, l, bg, fn]) =>
+               ["video", "Nyne Vision", "#0ea5e9", () => toast(root, "Starting Nyne Vision…")]] as [keyof typeof I, string, string, () => void][]).map(([ic, l, bg, fn]) =>
             h("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" } },
               h("button", { class: "pressable", style: { width: "54px", height: "54px", borderRadius: "50%", background: bg, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }, onClick: fn }, svgIcon(I[ic], "", 20)),
               h("span", { style: { fontSize: "11px", color: "#6b7280", fontWeight: "600" } }, l)))))));
@@ -78,7 +78,7 @@ export function MessagesApp() {
           draw();
         }, 1100 + Math.random() * 800);
       };
-      const input = h("input", { attrs: { type: "text", placeholder: "iMessage" }, style: { flex: "1", border: "none", outline: "none", background: "none", fontSize: "15px" } }) as HTMLInputElement;
+      const input = h("input", { attrs: { type: "text", placeholder: "Nyne Message" }, style: { flex: "1", border: "none", outline: "none", background: "none", fontSize: "15px" } }) as HTMLInputElement;
       const send = () => {
         const t = input.value.trim(); if (!t) return;
         c.msgs.push({ me: true, text: t }); input.value = ""; draw(); reply();
@@ -105,7 +105,7 @@ export function MessagesApp() {
           h("button", { style: { flex: "1", textAlign: "left" }, onClick: () => contactCard(c.name, c.avatar) },
             h("div", { style: { fontWeight: "700", fontSize: "16px" } }, c.name),
             h("div", { style: { fontSize: "11px", color: "#22c55e", fontWeight: "600" } }, "Online")),
-          h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb" }, onClick: () => toast(root, "Starting FaceTime…") }, svgIcon(I.video, "", 16)),
+          h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb" }, onClick: () => toast(root, "Starting Nyne Vision…") }, svgIcon(I.video, "", 16)),
           h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb" }, onClick: () => toast(root, `Calling ${c.name.split(" ")[0]}…`) }, svgIcon(I.phone, "", 16))),
         list,
         h("div", { style: { display: "flex", alignItems: "center", gap: "8px", padding: "10px 12px 96px" } },

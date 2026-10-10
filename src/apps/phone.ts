@@ -105,7 +105,7 @@ export function PhoneApp() {
           h("div", { style: { width: "100%", padding: "22px 18px 24px", borderRadius: "40px", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.14)", backdropFilter: "blur(24px) saturate(160%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.16), 0 18px 40px rgba(0,0,0,.35)" } },
             h("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "20px 8px" } },
               btn("volume2", "speaker"),
-              btn("video", "FaceTime", () => toast(root, "Switching to FaceTime…")),
+              btn("video", "Nyne Vision", () => toast(root, "Switching to Nyne Vision…")),
               btn("micOff", "mute"),
               btn("plus", "add call", () => inCallContacts()),
               endCell,

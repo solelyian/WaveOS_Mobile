@@ -40,7 +40,7 @@ export class ControlCenter {
       h("div", { class: "cc-mini" },
         h("div", { class: "cc-focus g-dark" },
           h("div", { class: "mic-ic" }, svgIcon(I.moon)),
-          h("span", {}, "Focus")),
+          h("span", {}, "Zen Mode")),
         h("button", { class: "cc-sq g-dark" }, svgIcon(I.rotateCcw)),
         h("button", { class: "cc-sq g-dark" }, svgIcon(I.screenShare))));
 
@@ -51,7 +51,7 @@ export class ControlCenter {
     const sdBtn = h("button", { class: "cc-sd g-dark", onClick: () => { this.close(); set("sheet", "sd"); } },
       h("div", { class: "ic" }, svgIcon(I.link)),
       h("div", { class: "tx" },
-        h("span", { class: "nm" }, "Super Device"),
+        h("span", { class: "nm" }, "Nyne Link"),
         h("span", { class: "sub" }, "5 devices nearby")),
       svgIcon(I.chevronLeft, "chev", 16));
 

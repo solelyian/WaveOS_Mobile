@@ -115,8 +115,8 @@ export function SettingsApp() {
 
   const notifSub = () => page(root, "Notifications", (s) => {
     s.append(cap("Notification style"),
-      grp(...[["Messages", "#22c55e", "messageCircle"], ["Mail", "#3b82f6", "mail"], ["Calendar", "#ef4444", "calendar"], ["App Store", "#0ea5e9", "store"]].map(([n, bg, ic]) =>
-        setRow(ic as IconName, bg as string, n as string, { end: switchEl(n !== "App Store", () => {}) }))),
+      grp(...[["Messages", "#22c55e", "messageCircle"], ["Mail", "#3b82f6", "mail"], ["Calendar", "#ef4444", "calendar"], ["Nyne Store", "#0ea5e9", "store"]].map(([n, bg, ic]) =>
+        setRow(ic as IconName, bg as string, n as string, { end: switchEl(n !== "Nyne Store", () => {}) }))),
       grp(setRow("bell", "#f59e0b", "Scheduled summary", { end: switchEl(false, () => {}) }),
           setRow("moonStar", "#6366f1", "Show on lock screen", { end: switchEl(true, () => {}) })));
   });
@@ -140,7 +140,7 @@ export function SettingsApp() {
           setRow("messageCircle", "#f59e0b", "Keyboard haptics", { end: switchEl(true, () => {}) })));
   });
 
-  const focusSub = () => page(root, "Focus", (s) => {
+  const focusSub = () => page(root, "Zen Mode", (s) => {
     s.append(
       grp(h("div", { class: "set-row" }, h("div", { class: "set-ic", style: { background: "#6366f1" } }, svgIcon(I.moon)),
         h("span", { class: "set-lbl" }, "Do Not Disturb"), switchEl(false, () => {}))),
@@ -185,7 +185,7 @@ export function SettingsApp() {
   const generalSub = () => page(root, "General", (s) => {
     let airdrop = 1;
     const ads = ["Receiving Off", "Contacts Only", "Everyone"];
-    const airSub = () => page(root, "AirDrop", (ss) => {
+    const airSub = () => page(root, "Nyne Share", (ss) => {
       const g = h("div", { class: "set-group" });
       const draw = () => g.replaceChildren(...ads.map((n, i) =>
         setRow("share", i === airdrop ? "#2563eb" : "#9ca3af", n, { end: i === airdrop ? svgIcon(I.check, "", 18) : undefined, onClick: () => { airdrop = i; draw(); } })));
@@ -205,7 +205,7 @@ export function SettingsApp() {
     s.append(grp(
       setRow("info", "#0ea5e9", "About", { onClick: aboutSub }),
       setRow("download", "#2563eb", "Software Update", { value: "2.1 available", onClick: updateSub }),
-      setRow("share", "#22c55e", "AirDrop", { value: "Contacts Only", onClick: airSub }),
+      setRow("share", "#22c55e", "Nyne Share", { value: "Contacts Only", onClick: airSub }),
       setRow("disc", "#f59e0b", "Storage", { value: "57.6 GB used", onClick: storageSub }),
       setRow("globe", "#6b7280", "Language & Region", { value: "English (US)" }),
       setRow("calendar", "#ef4444", "Date & Time", { value: "Automatic" })));
@@ -258,15 +258,15 @@ export function SettingsApp() {
       grp(setRow("battery", "#f59e0b", "Low Power Mode", { end: switchEl(false, () => {}) }),
           setRow("battery", "#22c55e", "Battery Health", { value: "98%" })),
       cap("Usage by app — last 24 h"),
-      grp(...[["App Store", .34], ["Music", .22], ["Safari", .18], ["Messages", .12], ["Photos", .08]].map(([n, f]) =>
+      grp(...[["Nyne Store", .34], ["Music", .22], ["Surf", .18], ["Messages", .12], ["Photos", .08]].map(([n, f]) =>
         h("div", { class: "set-row", style: { display: "block" } },
           h("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "6px" } },
             h("span", { class: "set-lbl" }, n as string), h("span", { class: "set-val" }, `${Math.round((f as number) * 100)}%`)),
           bar(f as number, "#22c55e", "6px")))));
   });
 
-  const screenTimeSub = () => page(root, "Screen Time", (s) => {
-    const hrs: [string, number, string][] = [["Instagram", 1.7, "#e1306c"], ["Safari", .97, "#2563eb"], ["Messages", .68, "#22c55e"], ["Music", .55, "#f43f5e"], ["Maps", .3, "#f59e0b"]];
+  const screenTimeSub = () => page(root, "Nyne Time", (s) => {
+    const hrs: [string, number, string][] = [["Instagram", 1.7, "#e1306c"], ["Surf", .97, "#2563eb"], ["Messages", .68, "#22c55e"], ["Music", .55, "#f43f5e"], ["Maps", .3, "#f59e0b"]];
     s.append(
       grp(h("div", { class: "set-row", style: { display: "block" } },
           h("div", { style: { fontSize: "12px", color: "#9ca3af", fontWeight: "600", marginBottom: "4px" } }, "Daily average"),
@@ -296,7 +296,7 @@ export function SettingsApp() {
       grp(setRow("lock", "#2563eb", "Lockdown Mode", { end: switchEl(false, () => {}) })));
   });
 
-  const storeSub = () => page(root, "App Store", (s) => {
+  const storeSub = () => page(root, "Nyne Store", (s) => {
     s.append(
       cap("Automatic downloads"),
       grp(setRow("download", "#0ea5e9", "App Updates", { end: switchEl(true, () => {}) }),
@@ -315,7 +315,7 @@ export function SettingsApp() {
       img("/img/contact-john.jpg", "av rd"),
       h("div", { style: { flex: "1" } },
         h("div", { style: { fontSize: "18px", fontWeight: "700" } }, "John Doe"),
-        h("div", { style: { fontSize: "12px", color: "#9ca3af" } }, "Wave Account, iCloud+, Media & Purchases")),
+        h("div", { style: { fontSize: "12px", color: "#9ca3af" } }, "Wave Account, Nyne Cloud+, Media & Purchases")),
       h("span", { class: "chev" }, svgIcon(I.chevronLeft))));
 
     add("airplane wifi cellular bluetooth hotspot", grp(
@@ -327,11 +327,11 @@ export function SettingsApp() {
       setRow("bluetooth", "#2563eb", "Bluetooth", { value: "On", onClick: btSub }),
       setRow("link", "#22c55e", "Personal Hotspot", { onClick: hotspotSub })));
 
-    add("notifications sounds focus screen time", grp(
+    add("notifications sounds zen mode nyne time", grp(
       setRow("bell", "#ef4444", "Notifications", { onClick: notifSub }),
       setRow("volume2", "#f43f5e", "Sounds & Haptics", { onClick: soundSub }),
-      setRow("moon", "#6366f1", "Focus", { onClick: focusSub }),
-      setRow("clock", "#22c55e", "Screen Time", { value: "4h 12m", onClick: screenTimeSub })));
+      setRow("moon", "#6366f1", "Zen Mode", { onClick: focusSub }),
+      setRow("clock", "#22c55e", "Nyne Time", { value: "4h 12m", onClick: screenTimeSub })));
 
     add("general display wallpaper battery privacy", grp(
       setRow("settings", "#6b7280", "General", { onClick: generalSub }),
@@ -340,7 +340,7 @@ export function SettingsApp() {
       setRow("battery", "#22c55e", "Battery", { value: "84%", onClick: batterySub }),
       setRow("shield", "#2563eb", "Privacy & Security", { onClick: privacySub })));
 
-    add("app store updates", grp(setRow("store", "#0ea5e9", "App Store", { value: "Automatic updates", onClick: storeSub })));
+    add("nyne store updates", grp(setRow("store", "#0ea5e9", "Nyne Store", { value: "Automatic updates", onClick: storeSub })));
 
     const needle = q.toLowerCase();
     for (const g of groups) if (!needle || g.label.includes(needle)) scroll.append(g.el);

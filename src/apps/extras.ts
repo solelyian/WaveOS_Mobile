@@ -75,7 +75,7 @@ export function NotesApp() {
 /* ============================== FILES ============================== */
 interface FNode { name: string; dir?: boolean; size?: string; kids?: FNode[] }
 const FS: FNode = {
-  name: "iCloud Drive", dir: true, kids: [
+  name: "Nyne Drive", dir: true, kids: [
     { name: "Design", dir: true, kids: [{ name: "sillage-tokens.json", size: "12 KB" }, { name: "icons.sketch", size: "8.4 MB" }, { name: "wallpapers", dir: true, kids: [{ name: "rubans.psd", size: "44 MB" }, { name: "yosemite.heic", size: "6.1 MB" }] }] },
     { name: "Documents", dir: true, kids: [{ name: "roadmap-2027.pdf", size: "1.2 MB" }, { name: "pitch.key", size: "18 MB" }] },
     { name: "Photos", dir: true, kids: [{ name: "yosemite-trip", dir: true, kids: [{ name: "IMG_0041.heic", size: "3.2 MB" }, { name: "IMG_0042.heic", size: "2.9 MB" }] }] },
