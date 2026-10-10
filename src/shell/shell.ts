@@ -8,6 +8,7 @@ import { DynamicIsland } from "./di";
 import { ControlCenter } from "./cc";
 import { NotificationCenter } from "./nc";
 import { Spotlight } from "./spotlight";
+import { RecentsSwitcher } from "./recents";
 import { renderApp } from "../apps";
 import { registerAppCloser, registerAppLauncher, registerAppInstaller } from "./api";
 import { appMeta, INSTALLED } from "../apps/registry";
@@ -30,6 +31,8 @@ export class Shell {
   private cc: ControlCenter | null = null;
   private nc: NotificationCenter | null = null;
   private spot: Spotlight | null = null;
+  private switcher: RecentsSwitcher | null = null;
+  private recents: import("../system/state").AppId[] = [];
 
   constructor(phone: HTMLElement) {
     this.phone = phone;
@@ -62,7 +65,7 @@ export class Shell {
     this.sb.hidden = sys.locked;
     // maquette : le springboard n'existe pas sous le lock
     this.home.el.style.visibility = sys.locked ? "hidden" : "visible";
-    this.home.setMode(sys.sheet ? "sheet" : sys.activeApp ? "app" : "full");
+    this.home.setMode(this.switcher || sys.sheet ? "sheet" : sys.activeApp ? "app" : "full");
     // panneaux
     if (sys.sheet === "cc" && !this.cc) this.openCC();
     if (sys.sheet === "nc" && !this.nc) this.openNC();
@@ -79,6 +82,7 @@ export class Shell {
       h: tileRect.height * sy,
     };
     set("activeApp", id);
+    this.pushRecent(id);
     this.appwin = new AppWindow(id, from, renderApp(id));
     this.appwin.onClosed = () => {
       this.appwin = null;
@@ -90,6 +94,50 @@ export class Shell {
   }
 
   closeActiveApp() { this.appwin?.close(); }
+
+  private pushRecent(id: import("../system/state").AppId) {
+    const i = this.recents.indexOf(id);
+    if (i >= 0) this.recents.splice(i, 1);
+    this.recents.unshift(id);
+    if (this.recents.length > 6) this.recents.length = 6;
+  }
+
+  /** Sélecteur d'apps récentes : cards live (vrai DOM réduit), tap = rouvrir,
+   *  swipe-up sur une card = tuer, drag vers le bas / tap dehors = fermer. */
+  private openSwitcher() {
+    if (sys.locked || this.switcher) return;
+    if (sys.sheet) { this.closeCC(); this.closeNC(); }
+    if (this.appwin) this.appwin.close(); // morph vers l'icône ; l'app reste en tête de recents
+    if (!this.recents.length) { this.syncTargets(); return; }
+    this.switcher = new RecentsSwitcher(this.recents, {
+      onOpen: (id, rect) => {
+        this.forceFinishClose(); // si le morph de sortie tourne encore, on le boucle
+        const s = this.switcher; this.switcher = null; s?.el.remove();
+        this.openApp(id, rect);
+      },
+      onClose: () => this.closeSwitcher(),
+      onKill: (id) => {
+        const i = this.recents.indexOf(id);
+        if (i >= 0) this.recents.splice(i, 1);
+        if (!this.recents.length) this.closeSwitcher();
+      },
+    });
+    this.phone.append(this.switcher.el);
+    this.syncTargets(); // home -> mode sheet (scale .9) derrière le voile
+  }
+  private closeSwitcher() {
+    if (!this.switcher) return;
+    this.switcher.el.remove();
+    this.switcher = null;
+    this.syncTargets();
+  }
+  private forceFinishClose() {
+    const w = this.appwin;
+    if (!w) return;
+    w.el.remove();
+    this.appwin = null;
+    w.onClosed?.();
+  }
 
   /** « Open » depuis une app (App Store) : referme l'app courante puis
    *  morph depuis la tuile du springboard une fois la fermeture jouée. */
@@ -156,16 +204,32 @@ export class Shell {
       if (interactive) return null;
       return this.sheetDrag(this.nc, () => this.closeNC());
     }
-    // app ouverte : barre du bas -> drag fenêtre
+    // switcher ouvert : cards = interactives ; ailleurs, drag vers le bas ferme
+    if (this.switcher) {
+      if (interactive) return null;
+      return { move: () => {}, end: (_dx, dy) => { if (dy > 60) this.closeSwitcher(); } };
+    }
+    // app ouverte : barre du bas -> drag fenêtre ; drag monté relâché lentement
+    // (pas de flick) -> sélecteur d'apps récentes façon swipe-up-and-hold
     if (sys.activeApp && this.appwin) {
       if (y > H - 48 && !interactive) {
         const win = this.appwin;
         return {
           move: (_dx, dy) => win.drag(dy),
-          end: (_dx, dy, _vx, vy) => { win.release(dy, vy); },
+          end: (_dx, dy, _vx, vy) => {
+            if (dy < -80 && vy > -320) this.openSwitcher();
+            else win.release(dy, vy);
+          },
         };
       }
       return null;
+    }
+    // home : bord bas -> sélecteur d'apps récentes (si l'historique est non vide)
+    if (!interactive && y > H - 48 && this.recents.length) {
+      return {
+        move: () => {},
+        end: (_dx, dy, _vx, vy) => { if (dy < -40 || vy < -250) this.openSwitcher(); },
+      };
     }
     // home : zones hautes (maquette : hover zones top-8, moitié gauche NC / droite CC)
     if (!interactive && y <= 44) {

@@ -14,7 +14,7 @@ const TH = tokens.motion.gestureThresholdPx;
 let resolver: ZoneResolver = () => null;
 export function setZoneResolver(r: ZoneResolver) { resolver = r; }
 
-const interactiveSel = "button, a, input, .cc-slider, .nc-card, .di-capsule, .g-btn, .tabbar, .ghdr, .app-scroll, #spot";
+const interactiveSel = "button, a, input, .cc-slider, .nc-card, .di-capsule, .g-btn, .tabbar, .ghdr, .app-scroll, #spot, .wx-sheet, .wx-sheet-bg, .rct-card";
 
 export function attachGestures(phone: HTMLElement) {
   let startX = 0, startY = 0, lastX = 0, lastY = 0, lastT = 0;

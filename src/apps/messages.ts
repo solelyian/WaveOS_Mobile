@@ -10,6 +10,7 @@ const REPLIES = ["Sounds good!", "On my way", "Haha yes", "Can't wait", "Let's d
 export function MessagesApp() {
   const root = h("div", { style: { height: "100%", display: "flex", flexDirection: "column", position: "relative", zIndex: "10" } });
   const stage = h("div", { style: { flex: "1", display: "flex", flexDirection: "column", minHeight: "0" } });
+  let tab = "chats";
 
   const header = h("div", { class: "g-light", style: { padding: "64px 24px 16px", background: "rgba(255,255,255,.6)", borderRadius: "0 0 32px 32px", marginBottom: "8px", zIndex: "20" } },
     h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" } },
@@ -77,11 +78,60 @@ export function MessagesApp() {
     feed.scrollTop = feed.scrollHeight;
   };
 
-  stage.append(header,
-    h("div", { class: "app-scroll no-sb", style: { padding: "8px 16px 96px" } }, stories, convos));
+  const calls = () =>
+    h("div", { class: "app-scroll no-sb", style: { padding: "70px 16px 96px" } },
+      h("h1", { style: { fontSize: "30px", fontWeight: "700", color: "rgba(0,0,0,.9)", marginBottom: "20px" } }, "Calls"),
+      ...NAMES.slice(0, 6).map((n, i) =>
+        h("div", { class: "pressable card-white", style: { padding: "14px 16px", display: "flex", alignItems: "center", gap: "14px", marginBottom: "10px", cursor: "pointer" }, onClick: () => thread(n, i + 20) },
+          (() => { const im = img(`/img/avatar/a-${i + 20}.jpg`); im.style.cssText = "width:44px;height:44px;border-radius:50%;object-fit:cover;background:#e5e7eb"; return im; })(),
+          h("div", { style: { flex: "1" } },
+            h("div", { style: { fontWeight: "700", fontSize: "16px", color: i === 1 ? "#ef4444" : "rgba(0,0,0,.9)" } }, n),
+            h("div", { style: { fontSize: "13px", color: "rgba(0,0,0,.5)" } }, i === 1 ? "Missed · 9:41 AM" : i % 2 ? "Outgoing · Yesterday" : "Incoming · Today")),
+          h("span", { style: { color: "#22c55e", display: "flex" } }, svgIcon(I.phone, "", 18)))));
+
+  const people = () =>
+    h("div", { class: "app-scroll no-sb", style: { padding: "70px 20px 96px" } },
+      h("h1", { style: { fontSize: "30px", fontWeight: "700", color: "rgba(0,0,0,.9)", marginBottom: "20px" } }, "People"),
+      h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" } },
+        ...NAMES.map((n, i) =>
+          h("div", { class: "pressable card-white", style: { padding: "20px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", cursor: "pointer" }, onClick: () => thread(n, i + 20) },
+            (() => { const im = img(`/img/avatar/a-${i + 20}.jpg`); im.style.cssText = "width:64px;height:64px;border-radius:50%;object-fit:cover;background:#e5e7eb"; return im; })(),
+            h("div", { style: { fontWeight: "700", fontSize: "14px", color: "rgba(0,0,0,.9)", textAlign: "center" } }, n)))));
+
+  const toggleRow = (label: string, on: boolean) => {
+    const knob = h("div", { style: { position: "absolute", top: "2px", left: on ? "22px" : "2px", width: "28px", height: "28px", borderRadius: "50%", background: "#fff", boxShadow: "0 2px 6px rgba(0,0,0,.25)", transition: "left .18s" } });
+    const t = h("button", { class: "pressable", style: { position: "relative", width: "52px", height: "32px", borderRadius: "16px", background: on ? "#22c55e" : "#d1d5db", transition: "background .2s", flexShrink: "0" } },
+      knob);
+    t.onmousedown = () => {
+      const next = t.style.background.includes("34,197,94") || t.style.background.includes("rgb(34, 197, 94)") ? false : true;
+      t.style.background = next ? "#22c55e" : "#d1d5db";
+      knob.style.left = next ? "22px" : "2px";
+    };
+    return h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 18px", background: "#fff", borderRadius: "18px", marginBottom: "10px", boxShadow: "0 2px 8px rgba(0,0,0,.04)" } },
+      h("span", { style: { fontWeight: "600", fontSize: "16px", color: "rgba(0,0,0,.85)" } }, label), t);
+  };
+
+  const settings = () =>
+    h("div", { class: "app-scroll no-sb", style: { padding: "70px 20px 96px" } },
+      h("h1", { style: { fontSize: "30px", fontWeight: "700", color: "rgba(0,0,0,.9)", marginBottom: "20px" } }, "Messages Settings"),
+      toggleRow("iMessage", true),
+      toggleRow("Send Read Receipts", true),
+      toggleRow("Notifications", true),
+      toggleRow("Low Quality Image Mode", false),
+      toggleRow("Filter Unknown Senders", false));
+
+  const render = () => {
+    stage.replaceChildren(...(
+      tab === "chats"
+        ? [header, h("div", { class: "app-scroll no-sb", style: { padding: "8px 16px 96px" } }, stories, convos)]
+        : tab === "calls" ? [calls()]
+        : tab === "people" ? [people()]
+        : [settings()]));
+  };
+  render();
   root.append(stage);
 
-  const bar = FloatingTabBar(TABS, "chats", () => {});
+  const bar = FloatingTabBar(TABS, "chats", (id) => { tab = id; render(); });
   root.append(bar.el);
   return root;
 }

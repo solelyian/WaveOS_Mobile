@@ -183,7 +183,7 @@ export function ClockApp() {
     { id: "timer", icon: "list" as const, label: "Timer" },
   ];
   const alarms = () => h("div", { style: { display: "flex", flexDirection: "column", gap: "10px" } },
-    ...(["7:00 AM", "Wake up", true] as const, [["7:00 AM", "Wake up", true], ["8:30 AM", "Standup", true], ["10:00 PM", "Wind down", false]] as [string, string, boolean][]).map(([t, l, on]) =>
+    ...([["7:00 AM", "Wake up", true], ["8:30 AM", "Standup", true], ["10:00 PM", "Wind down", false]] as [string, string, boolean][]).map(([t, l, on]) =>
       h("div", { class: "card-white", style: { padding: "18px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)" } },
         h("div", {}, h("div", { style: { fontSize: "34px", fontWeight: "200" } }, t), h("div", { style: { fontSize: "13px", color: "rgba(255,255,255,.5)" } }, l)),
         (() => {
