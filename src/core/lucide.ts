@@ -33,6 +33,7 @@ import x from "lucide-static/icons/x.svg?raw";
 import lock from "lucide-static/icons/lock.svg?raw";
 import user from "lucide-static/icons/user.svg?raw";
 import star from "lucide-static/icons/star.svg?raw";
+import sparkle from "lucide-static/icons/sparkle.svg?raw";
 import clock from "lucide-static/icons/clock.svg?raw";
 import voicemail from "lucide-static/icons/voicemail.svg?raw";
 import layoutGrid from "lucide-static/icons/layout-grid.svg?raw";
@@ -103,7 +104,7 @@ export const I = {
   phone, phoneIncoming, mail, chevronLeft, play, pause, skipForward,
   phoneOutgoing, phoneMissed,
   skipBack, sun, moon, volume2, bluetooth, bluetoothOff, x, lock,
-  user, star, clock, voicemail, layoutGrid, heart, list, send, ellipsis,
+  user, star, sparkle, clock, voicemail, layoutGrid, heart, list, send, ellipsis,
   globe, compass, bell, shield, slidersHorizontal, mic, video, info,
   droplets, wind, eye, mapPin, navigation, share, book, plus, arrowUp,
   plane, cast, rotateCcw, trash2, home, power, disc, screenShare,
