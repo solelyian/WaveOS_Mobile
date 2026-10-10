@@ -75,9 +75,10 @@ input { font: inherit; }
 #lock .lk-date { font-size: 20px; font-weight: 700; opacity: .9; margin-bottom: 4px; }
 #lock .lk-clock {
   font-size: 96px; font-weight: 800; letter-spacing: -.05em; line-height: 1;
-  background: linear-gradient(to bottom, #fff, rgba(255,255,255,.6));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,.3));
+  color: rgba(255,255,255,.34);
+  -webkit-text-stroke: 1.5px rgba(255,255,255,.52);
+  text-shadow: 0 1px 1px rgba(255,255,255,.35), 0 -1px 2px rgba(0,0,0,.18), 0 4px 18px rgba(0,0,0,.22);
+  backdrop-filter: blur(2px) brightness(1.25) saturate(150%); -webkit-backdrop-filter: blur(2px) brightness(1.25) saturate(150%);
 }
 #lock .lk-bottom { width: 100%; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 40px; margin-bottom: 16px; }
 #lock .lk-util {
@@ -215,7 +216,10 @@ input { font: inherit; }
 #nc { backdrop-filter: blur(38px) saturate(160%) brightness(1.02); -webkit-backdrop-filter: blur(38px) saturate(160%) brightness(1.02); }
 .nc-head { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.35)); }
 .nc-date { font-size: 19px; font-weight: 500; opacity: .9; margin-top: 2px; }
-.nc-clock { font-size: 74px; font-weight: 700; letter-spacing: -.03em; line-height: 1.05; background: linear-gradient(180deg, #fff 30%, rgba(255,255,255,.62)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.nc-clock { font-size: 74px; font-weight: 700; letter-spacing: -.03em; line-height: 1.05;
+  color: rgba(255,255,255,.34); -webkit-text-stroke: 1.3px rgba(255,255,255,.52);
+  text-shadow: 0 1px 1px rgba(255,255,255,.35), 0 -1px 2px rgba(0,0,0,.18), 0 4px 16px rgba(0,0,0,.2);
+  backdrop-filter: blur(2px) brightness(1.25) saturate(150%); -webkit-backdrop-filter: blur(2px) brightness(1.25) saturate(150%); }
 .nc-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 2px 4px; }
 .nc-card { border-radius: 30px; padding: 16px 18px; display: flex; gap: 14px; align-items: center;
   background: linear-gradient(135deg, rgba(255,255,255,.22), rgba(255,255,255,.09) 55%, rgba(255,255,255,.14));
