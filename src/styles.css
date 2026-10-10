@@ -282,9 +282,33 @@ input { font: inherit; }
 .app-fab { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px -5px rgba(0,0,0,.3); transition: transform .12s; z-index: 10; }
 .app-fab:active { transform: scale(.9); }
 
-/* Météo (dark sur wallpaper) */
-.wx-glow { position: absolute; top: -80px; right: -80px; width: 384px; height: 384px; background: rgba(253,224,71,.3); border-radius: 50%; filter: blur(120px); mix-blend-mode: screen; pointer-events: none; animation: drift 20s linear infinite alternate; }
-@keyframes drift { from { transform: translate(0,0); } to { transform: translate(30px,-20px); } }
+/* ---------- Weather (style HarmonyOS) ---------- */
+.wx-sky { position: absolute; inset: 0; opacity: 0; transition: opacity .9s ease; pointer-events: none; }
+.wx-sky.on { opacity: 1; }
+.wx-day { background: linear-gradient(180deg,#3385d3 0%,#5ea7e2 42%,#a3cdf0 100%); }
+.wx-heat { background: linear-gradient(180deg,#b96a24 0%,#de9648 45%,#efc88d 100%); }
+.wx-cloudy { background: linear-gradient(180deg,#46586e 0%,#70849e 55%,#98abc0 100%); }
+.wx-rainsky { background: linear-gradient(180deg,#2c3949 0%,#48596f 55%,#61738a 100%); }
+.wx-night { background: linear-gradient(180deg,#050918 0%,#0e1733 55%,#1a2a52 100%); }
+.wx-orb { position: absolute; top: -80px; right: -80px; width: 300px; height: 300px; border-radius: 50%; pointer-events: none; }
+.wx-orb.sun { background: radial-gradient(circle,rgba(255,240,190,.95),rgba(255,205,90,.4) 55%,transparent 72%); filter: blur(28px); animation: wxpulse 9s ease-in-out infinite alternate; }
+.wx-orb.sun.hot { background: radial-gradient(circle,rgba(255,220,150,1),rgba(255,160,60,.45) 55%,transparent 72%); }
+.wx-orb.moon { width: 150px; height: 150px; top: 44px; right: 44px; background: radial-gradient(circle,rgba(235,243,255,.95),rgba(170,200,255,.3) 55%,transparent 72%); filter: blur(16px); }
+@keyframes wxpulse { to { transform: scale(1.14); } }
+.wx-cl { position: absolute; left: 0; background: rgba(255,255,255,.55); border-radius: 999px; filter: blur(26px); animation: wxdrift linear infinite; }
+.wx-cl.dk { background: rgba(20,28,44,.55); }
+@keyframes wxdrift { from { transform: translateX(-280px); } to { transform: translateX(560px); } }
+.wx-star { position: absolute; border-radius: 50%; background: #fff; animation: wxtwinkle ease-in-out infinite alternate; }
+@keyframes wxtwinkle { from { opacity: .12; } to { opacity: .9; } }
+.wx-rainfall { position: absolute; inset: -60px 0 0; background-image: repeating-linear-gradient(100deg, transparent 0 8px, rgba(255,255,255,.12) 8px 9px, transparent 9px 20px); background-size: 200% 140px; animation: wxfall .9s linear infinite; }
+@keyframes wxfall { to { background-position: -60px 140px; } }
+.wx-card { background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.2); border-radius: 24px; padding: 14px 18px 16px; backdrop-filter: blur(18px) saturate(130%); -webkit-backdrop-filter: blur(18px) saturate(130%); box-shadow: 0 8px 28px rgba(0,0,0,.1); }
+.wx-tile { min-height: 148px; display: flex; flex-direction: column; }
+.wx-strip { overflow-x: auto; margin: 0 -18px; padding: 0 18px; }
+.wx-sheet-bg { position: absolute; inset: 0; z-index: 80; background: rgba(4,6,12,.4); opacity: 0; pointer-events: none; transition: opacity .3s; }
+.wx-sheet-bg.on { opacity: 1; pointer-events: auto; }
+.wx-sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 90; transform: translateY(103%); transition: transform .45s cubic-bezier(.3,.75,.3,1); background: rgba(16,22,34,.86); backdrop-filter: blur(28px) saturate(140%); -webkit-backdrop-filter: blur(28px) saturate(140%); border-radius: 26px 26px 0 0; border-top: 1px solid rgba(255,255,255,.16); padding: 10px 16px 44px; max-height: 66%; overflow-y: auto; }
+.wx-sheet.on { transform: translateY(0); }
 
 /* Calculette */
 .calc-key { height: 64px; border-radius: 24px; font-size: 24px; font-weight: 500; display: flex; align-items: center; justify-content: center; transition: transform .1s, filter .1s; border: 1px solid rgba(255,255,255,.1); box-shadow: inset 0 1px 1px rgba(255,255,255,.2), 0 4px 10px rgba(0,0,0,.3); }

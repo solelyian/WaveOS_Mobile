@@ -72,6 +72,18 @@ import file from "lucide-static/icons/file.svg?raw";
 import pencil from "lucide-static/icons/pencil.svg?raw";
 import squarePen from "lucide-static/icons/square-pen.svg?raw";
 import reply from "lucide-static/icons/reply.svg?raw";
+import sunrise from "lucide-static/icons/sunrise.svg?raw";
+import sunset from "lucide-static/icons/sunset.svg?raw";
+import cloudRain from "lucide-static/icons/cloud-rain.svg?raw";
+import cloudSun from "lucide-static/icons/cloud-sun.svg?raw";
+import cloudMoon from "lucide-static/icons/cloud-moon.svg?raw";
+import cloudy from "lucide-static/icons/cloudy.svg?raw";
+import thermometer from "lucide-static/icons/thermometer.svg?raw";
+import umbrella from "lucide-static/icons/umbrella.svg?raw";
+import gauge from "lucide-static/icons/gauge.svg?raw";
+import navigation2 from "lucide-static/icons/navigation-2.svg?raw";
+import chevronDown from "lucide-static/icons/chevron-down.svg?raw";
+import check from "lucide-static/icons/check.svg?raw";
 
 export const I = {
   wifi, wifiOff, battery, signal, search, camera, flashlight, music,
@@ -83,7 +95,8 @@ export const I = {
   droplets, wind, eye, mapPin, navigation, share, book, plus, arrowUp,
   plane, cast, rotateCcw, trash2, home, power, disc, screenShare,
   store, download, gamepad2, trash, folderOpen, file, pencil, squarePen,
-  reply,
+  reply, sunrise, sunset, cloudRain, cloudSun, cloudMoon, cloudy,
+  thermometer, umbrella, gauge, navigation2, chevronDown, check,
 } as const;
 
 export type IconName = keyof typeof I;
