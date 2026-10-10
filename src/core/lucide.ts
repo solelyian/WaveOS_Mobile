@@ -85,6 +85,9 @@ import navigation2 from "lucide-static/icons/navigation-2.svg?raw";
 import chevronDown from "lucide-static/icons/chevron-down.svg?raw";
 import check from "lucide-static/icons/check.svg?raw";
 import archive from "lucide-static/icons/archive.svg?raw";
+import users from "lucide-static/icons/users.svg?raw";
+import micOff from "lucide-static/icons/mic-off.svg?raw";
+import moonStar from "lucide-static/icons/moon-star.svg?raw";
 
 export const I = {
   wifi, wifiOff, battery, signal, search, camera, flashlight, music,
@@ -98,6 +101,7 @@ export const I = {
   store, download, gamepad2, trash, folderOpen, file, pencil, squarePen,
   reply, sunrise, sunset, cloudRain, cloudSun, cloudMoon, cloudy,
   thermometer, umbrella, gauge, navigation2, chevronDown, check, archive,
+  users, micOff, moonStar,
 } as const;
 
 export type IconName = keyof typeof I;
