@@ -51,7 +51,12 @@ export class NotificationCenter {
 
   open() { this.sy.to(0); }
   close() { this.sy.to(-850); }
-  tick() { this.clockEl.textContent = fmtTime(); this.dateEl.textContent = fmtDate(); }
+  tick() {
+    const t = fmtTime();
+    this.clockEl.textContent = t;
+    this.clockEl.dataset.t = t;
+    this.dateEl.textContent = fmtDate();
+  }
   render(): boolean {
     this.el.style.transform = `translateY(${this.sy.v.toFixed(1)}px)`;
     return this.sy.v <= -849 && this.sy.settled();

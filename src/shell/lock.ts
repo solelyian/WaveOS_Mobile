@@ -28,7 +28,9 @@ export class Lock {
   }
 
   render() {
-    this.clockEl.textContent = fmtTime();
+    const t = fmtTime();
+    this.clockEl.textContent = t;
+    this.clockEl.dataset.t = t;
     this.dateEl.textContent = fmtDate();
   }
 
