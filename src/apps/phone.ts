@@ -89,10 +89,12 @@ export function PhoneApp() {
       const endCell = h("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" } },
         endBtn, h("span", { style: { fontSize: "11px", color: "rgba(255,255,255,.7)" } }, "end"));
 
+      // fond verre : photo du contact, sinon le wallpaper du homescreen (flouté)
+      const wpBg = document.getElementById("wp")?.style.backgroundImage || "url(/img/wallpaper.jpg)";
       const wrap = h("div", { class: "pg", style: { position: "relative", color: "#fff", height: "100%", overflow: "hidden" } },
         avatar
-          ? h("div", { style: { position: "absolute", inset: "-24px", background: `url(${avatar}) center/cover`, filter: "blur(30px) brightness(.6) saturate(1.3)", transform: "scale(1.05)" } })
-          : h("div", { style: { position: "absolute", inset: "0", background: "linear-gradient(200deg,#232a38,#0b0d12)" } }),
+          ? h("div", { style: { position: "absolute", inset: "-24px", background: `url(${avatar}) center/cover`, filter: "blur(30px) brightness(.62) saturate(1.35)", transform: "scale(1.05)" } })
+          : h("div", { style: { position: "absolute", inset: "-24px", backgroundImage: wpBg, backgroundSize: "cover", backgroundPosition: "center", filter: "blur(26px) brightness(.58) saturate(1.4)", transform: "scale(1.08)" } }),
         h("div", { style: "position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),transparent 30%,transparent 60%,rgba(0,0,0,.5))" }),
         h("div", { style: { position: "relative", zIndex: "2", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", padding: "76px 28px 44px" } },
           !avatar ? h("div", { style: { width: "84px", height: "84px", borderRadius: "50%", background: "rgba(255,255,255,.14)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "12px" } }, svgIcon(I.user, "", 36)) : null,
