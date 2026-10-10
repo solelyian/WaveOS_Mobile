@@ -6,9 +6,7 @@ import type { TabBarCtl } from "./ui";
 import { sys, set, onChange } from "../system/state";
 
 export function MusicApp() {
-  type View = "library" | "browse" | "radio" | "search" | "player";
-  let view: View = "library";
-  let tab = "library";
+  let view: "library" | "player" = "library";
   let track = { name: "Midnight City", artist: "M83", art: "/img/album.jpg" };
   const root = h("div", { style: { height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" } });
 
@@ -71,64 +69,6 @@ export function MusicApp() {
         svgIcon(I.skipBack, "", 32), pp, svgIcon(I.skipForward, "", 32)));
   };
 
-  const POOL = [
-    { name: "Midnight City", artist: "M83", art: "/img/album.jpg" },
-    { name: "Daily Mix 1", artist: "Nyne Radio", art: "/img/mix-1.jpg" },
-    { name: "Daily Mix 2", artist: "Nyne Radio", art: "/img/mix-2.jpg" },
-    { name: "Daily Mix 3", artist: "Nyne Radio", art: "/img/mix-3.jpg" },
-    { name: "Daily Mix 4", artist: "Nyne Radio", art: "/img/mix-4.jpg" },
-  ];
-  const playTrack = (t: typeof track) => {
-    track = t; set("playing", true); view = "player"; refresh();
-  };
-
-  const GENRES = [
-    ["Pop", "#ec4899"], ["Rock", "#ef4444"], ["Jazz", "#f59e0b"],
-    ["Electronic", "#8b5cf6"], ["Classical", "#10b981"], ["Hip-Hop", "#3b82f6"],
-  ] as const;
-  const browse = () =>
-    h("div", { class: "app-scroll no-sb", style: { padding: "64px 24px 96px" } },
-      h("h1", { style: { fontSize: "36px", fontWeight: "700", marginBottom: "24px" } }, "Browse"),
-      h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" } },
-        ...GENRES.map(([g, c], i) =>
-          h("div", { class: "pressable", style: { height: "96px", borderRadius: "20px", background: c, padding: "16px", display: "flex", alignItems: "flex-end", cursor: "pointer", boxShadow: "0 8px 20px -6px " + c + "88", position: "relative", overflow: "hidden" }, onClick: () => playTrack({ name: `${g} Essentials`, artist: "Nyne Curated", art: `/img/mix-${(i % 4) + 1}.jpg` }) },
-            h("div", { style: { fontWeight: "800", fontSize: "17px", color: "#fff", textShadow: "0 1px 4px rgba(0,0,0,.3)" } }, g)))));
-
-  const radio = () =>
-    h("div", { class: "app-scroll no-sb", style: { padding: "64px 24px 96px" } },
-      h("h1", { style: { fontSize: "36px", fontWeight: "700", marginBottom: "24px" } }, "Radio"),
-      ...([["Nyne Radio 1", "Live · Top 40", "#ef4444"], ["Chill Station", "Ambient & Lo-Fi", "#8b5cf6"], ["Jazz FM", "Smooth Jazz 24/7", "#f59e0b"], ["Deep Focus", "Instrumental Study", "#10b981"]] as const).map(([n, s, c], i) =>
-        h("div", { class: "pressable", style: { display: "flex", alignItems: "center", gap: "14px", padding: "14px", background: "rgba(0,0,0,.35)", border: "1px solid rgba(255,255,255,.1)", borderRadius: "18px", marginBottom: "12px", cursor: "pointer" }, onClick: () => playTrack({ name: n, artist: s, art: `/img/mix-${(i % 4) + 1}.jpg` }) },
-          h("div", { style: { width: "52px", height: "52px", borderRadius: "12px", background: c, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", flexShrink: "0" } }, svgIcon(I.signal, "", 22)),
-          h("div", { style: { flex: "1" } },
-            h("div", { style: { fontWeight: "700", fontSize: "16px" } }, n),
-            h("div", { style: { fontSize: "13px", color: "rgba(255,255,255,.6)" } }, s)),
-          h("span", { style: { display: "flex", color: "rgba(255,255,255,.5)" } }, svgIcon(I.play, "", 18)))));
-
-  const search = () => {
-    const results = h("div", { style: { display: "flex", flexDirection: "column", gap: "10px", marginTop: "16px" } });
-    const paint = (q: string) => {
-      const qq = q.trim().toLowerCase();
-      const hits = qq ? POOL.filter((t) => (t.name + " " + t.artist).toLowerCase().includes(qq)) : POOL;
-      results.replaceChildren(...(hits.length ? hits : []).map((t) =>
-        h("div", { class: "pressable", style: { display: "flex", alignItems: "center", gap: "12px", padding: "10px", background: "rgba(0,0,0,.35)", border: "1px solid rgba(255,255,255,.1)", borderRadius: "16px", cursor: "pointer" }, onClick: () => playTrack(t) },
-          h("div", { style: { width: "48px", height: "48px", borderRadius: "10px", overflow: "hidden", background: "#333", flexShrink: "0" } }, (() => { const im = img(t.art); im.style.cssText = "width:100%;height:100%;object-fit:cover"; return im; })()),
-          h("div", { style: { flex: "1" } },
-            h("div", { style: { fontWeight: "700", fontSize: "15px" } }, t.name),
-            h("div", { style: { fontSize: "12px", color: "rgba(255,255,255,.6)" } }, t.artist)),
-          h("span", { style: { display: "flex", color: "rgba(255,255,255,.5)" } }, svgIcon(I.play, "", 16)))));
-      if (!hits.length && qq) results.append(h("div", { style: { textAlign: "center", color: "rgba(255,255,255,.5)", padding: "32px 0" } }, `No results for \u201c${q}\u201d`));
-    };
-    const input = h("input", {
-      attrs: { type: "search", placeholder: "Songs, artists, mixes" },
-      style: { width: "100%", padding: "14px 18px", borderRadius: "16px", border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.35)", color: "#fff", fontSize: "16px", outline: "none" },
-    }) as HTMLInputElement;
-    input.addEventListener("input", () => paint(input.value));
-    paint("");
-    return h("div", { class: "app-scroll no-sb", style: { padding: "64px 24px 96px" } },
-      h("h1", { style: { fontSize: "36px", fontWeight: "700", marginBottom: "20px" } }, "Search"), input, results);
-  };
-
   const TABS = [
     { id: "library", icon: "play" as const, label: "Listen" },
     { id: "browse", icon: "layoutGrid" as const, label: "Browse" },
@@ -136,16 +76,11 @@ export function MusicApp() {
     { id: "search", icon: "search" as const, label: "Search" },
   ];
 
+  // maquette : onglets inertes — le pill glisse seul via setActive interne
   const refresh = () => {
-    stage.replaceChildren(
-      view === "player" ? player()
-      : tab === "browse" ? browse()
-      : tab === "radio" ? radio()
-      : tab === "search" ? search()
-      : library());
-    if (view !== "player" && !bar) { bar = FloatingTabBar(TABS, tab, (id) => { tab = id; view = id as View; refresh(); }, true); root.append(bar.el); }
+    stage.replaceChildren(view === "library" ? library() : player());
+    if (view === "library" && !bar) { bar = FloatingTabBar(TABS, "library", () => {}, true); root.append(bar.el); }
     if (view === "player" && bar) { bar.el.remove(); bar = null; }
-    if (view !== "player" && bar) bar.setActive(tab);
   };
   root.append(glow, stage);
   refresh();
