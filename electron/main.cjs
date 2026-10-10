@@ -1,8 +1,52 @@
-// electron/main.cjs — hôte Windows du prototype WaveOS (rend la dist Vite).
-const { app, BrowserWindow } = require("electron");
+// electron/main.cjs — hôte Windows du prototype WaveOS.
+// Sert la dist Vite via un schéma "app://waveos/" : les chemins absolus
+// (/img/…, /assets/…, /waveos.wasm) fonctionnent comme en HTTP, contrairement
+// à file:// où les modules ES et les chemins racine échouent.
+const { app, BrowserWindow, protocol, net } = require("electron");
 const path = require("node:path");
+const { pathToFileURL } = require("node:url");
+
+protocol.registerSchemesAsPrivileged([
+  { scheme: "app", privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } },
+]);
+
+const MIME = {
+  ".html": "text/html",
+  ".js": "text/javascript",
+  ".mjs": "text/javascript",
+  ".css": "text/css",
+  ".wasm": "application/wasm",
+  ".json": "application/json",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+  ".mp4": "video/mp4",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+};
 
 function createWindow() {
+  const dist = path.join(__dirname, "..", "dist");
+
+  protocol.handle("app", (req) => {
+    const { pathname } = new URL(req.url);
+    let rel = decodeURIComponent(pathname);
+    if (rel === "/" || rel.endsWith("/")) rel += "index.html";
+    const file = path.join(dist, rel);
+    const res = net
+      .fetch(pathToFileURL(file).toString())
+      .catch(() => new Response("Not found", { status: 404 }));
+    const mime = MIME[path.extname(file).toLowerCase()];
+    if (!mime) return res;
+    return res.then((r) => {
+      const h = new Headers(r.headers);
+      h.set("content-type", mime);
+      return new Response(r.body, { status: r.status, headers: h });
+    });
+  });
+
   const win = new BrowserWindow({
     width: 440,
     height: 900,
@@ -14,7 +58,7 @@ function createWindow() {
     title: "WaveOS",
     webPreferences: { contextIsolation: true, nodeIntegration: false },
   });
-  win.loadFile(path.join(__dirname, "..", "dist", "index.html"));
+  win.loadURL("app://waveos/index.html");
 }
 
 app.whenReady().then(() => {
