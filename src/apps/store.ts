@@ -50,6 +50,7 @@ export function StoreApp() {
       onClick: (ev) => { ev.stopPropagation(); install(b, e); },
     });
     const paint = () => {
+      b.classList.remove("busy");
       b.classList.toggle("open", !!e.id && INSTALLED.has(e.id));
       b.replaceChildren(!e.id ? "SOON" : INSTALLED.has(e.id) ? "OPEN" : "GET");
       (b as HTMLButtonElement).disabled = !e.id;
@@ -124,25 +125,25 @@ export function StoreApp() {
       h("div", { style: { fontSize: "26px", fontWeight: "800", margin: "4px 0 2px" } }, f.title),
       h("div", { style: { fontSize: "14px", fontWeight: "500", opacity: ".9" } }, f.sub));
 
-  const sectionTitle = (t: string) =>
+  const sectionTitle = (t: string, to?: string) =>
     h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "20px 4px 12px" } },
       h("span", { style: { fontSize: "20px", fontWeight: "800", color: "#111" } }, t),
-      h("span", { style: { fontSize: "13px", fontWeight: "600", color: "#3b82f6" } }, "See All"));
+      h("span", { class: "pressable", style: { fontSize: "13px", fontWeight: "600", color: "#3b82f6", cursor: "pointer" }, onClick: (ev) => { ev.stopPropagation(); if (to) { tab = to; refresh(); } } }, "See All"));
 
   // ---------- vues ----------
   const views: Record<string, () => HTMLElement> = {
     today: () => h("div", {},
       ...FEATURED.map(featuredCard),
-      sectionTitle("Must-Have Apps"),
+      sectionTitle("Must-Have Apps", "apps"),
       h("div", { class: "card-white", style: { borderRadius: "24px", padding: "4px 16px" } },
         ...CATALOG.filter((c) => c.id && c.id !== "arcade").map(row))),
     apps: () => h("div", {},
-      sectionTitle("Top Free Apps"),
+      sectionTitle("Top Free Apps", "apps"),
       h("div", { class: "card-white", style: { borderRadius: "24px", padding: "4px 16px" } },
         ...CATALOG.filter((c) => c.cat !== "Games").map(row))),
     games: () => h("div", {},
       featuredCard(FEATURED[1]),
-      sectionTitle("New Games"),
+      sectionTitle("New Games", "games"),
       h("div", { class: "card-white", style: { borderRadius: "24px", padding: "4px 16px" } },
         ...CATALOG.filter((c) => c.cat === "Games").map(row))),
     search: () => {
