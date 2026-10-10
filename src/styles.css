@@ -279,6 +279,7 @@ input { font: inherit; }
 .card-white { background: #fff; border-radius: 28px; box-shadow: 0 1px 3px rgba(0,0,0,.04); border: 1px solid #f3f4f6; }
 .search-pill { height: 40px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.05); border: 1px solid #f3f4f6; border-radius: 12px; display: flex; align-items: center; padding: 0 12px; gap: 8px; color: #9ca3af; font-size: 14px; }
 .search-pill svg { width: 16px; height: 16px; }
+.harm-set input[type=range] { accent-color: #007dff; }
 .app-fab { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px -5px rgba(0,0,0,.3); transition: transform .12s; z-index: 10; }
 .app-fab:active { transform: scale(.9); }
 
@@ -328,6 +329,7 @@ input { font: inherit; }
 .set-lbl { font-weight: 500; color: rgba(0,0,0,.88); flex: 1; font-size: 16px; letter-spacing: -.01em; }
 .set-val { color: rgba(0,0,0,.42); font-weight: 500; font-size: 14px; margin-right: 6px; }
 .set-row .chev { color: #c8cad0; } .set-row .chev svg { width: 16px; height: 16px; transform: rotate(180deg); }
+.harm-set .g-tog.on { background: #007dff; }
 .set-hdr { padding: 14px 18px 10px; font-size: 13px; font-weight: 600; color: rgba(0,0,0,.45); text-transform: uppercase; letter-spacing: .06em; }
 
 /* Téléphone */
