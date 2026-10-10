@@ -290,8 +290,8 @@ function arcGauge(frac: number, color: string | { grad: [string, string][] }, bi
   return h("div", { style: { display: "flex", flexDirection: "column", flex: "1" } },
     h("div", { html: `<svg width="120" height="74" viewBox="0 0 120 74" style="display:block;margin:0 auto">
       ${defs}
-      <path d="${arc}" stroke="rgba(255,255,255,.18)" stroke-width="7" stroke-linecap="round"/>
-      <path d="${arc}" stroke="${stroke}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${Math.PI * r}" stroke-dashoffset="${full ? 0 : Math.PI * r * (1 - Math.min(1, Math.max(0, frac)))}"/>
+      <path d="${arc}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="7" stroke-linecap="round"/>
+      <path d="${arc}" fill="none" stroke="${stroke}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${Math.PI * r}" stroke-dashoffset="${full ? 0 : Math.PI * r * (1 - Math.min(1, Math.max(0, frac)))}"/>
       <circle cx="${dx}" cy="${dy}" r="5" fill="#fff" stroke="rgba(0,0,0,.15)" stroke-width="1.5"/>
     </svg>` }),
     h("div", { style: { textAlign: "center", marginTop: "-6px" } },
@@ -320,19 +320,20 @@ function sunTile(c: City): HTMLElement {
 }
 
 function windTile(c: City): HTMLElement {
-  const cx = 55, cy = 55, r = 40;
-  const ticks = [["N", cx, 13], ["E", cx + r - 6, cy + 4], ["S", cx, cy + r + 3], ["W", cx - r + 6, cy + 4]]
-    .map(([t, x, y]) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="10" font-weight="700" fill="rgba(255,255,255,.6)">${t}</text>`).join("");
+  const cx = 55, cy = 46, r = 30;
+  const ticks = [["N", cx, cy - r - 6], ["E", cx + r + 8, cy + 4], ["S", cx, cy + r + 14], ["W", cx - r - 8, cy + 4]]
+    .map(([t, x, y]) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="9" font-weight="700" fill="rgba(255,255,255,.6)">${t}</text>`).join("");
   return h("div", { class: "wx-card wx-tile" },
     lab("wind", "Wind"),
-    h("div", { html: `<svg width="110" height="110" viewBox="0 0 110 110" style="display:block;margin:0 auto">
+    h("div", { html: `<svg width="110" height="92" viewBox="0 0 110 92" style="display:block;margin:0 auto">
       <circle cx="${cx}" cy="${cy}" r="${r}" stroke="rgba(255,255,255,.2)" stroke-width="1.5" fill="rgba(255,255,255,.05)"/>
       ${ticks}
-      <path d="M55 21 L61 60 L55 55 L49 60 Z" fill="#fff" transform="rotate(${c.wind.deg} ${cx} ${cy})"/>
+      <path d="M${cx} ${cy - r + 4} L${cx + 5} ${cy + 5} L${cx} ${cy} L${cx - 5} ${cy + 5} Z" fill="#fff" transform="rotate(${c.wind.deg} ${cx} ${cy})"/>
       <circle cx="${cx}" cy="${cy}" r="3" fill="#fff"/>
-      <text x="${cx}" y="${cy + 26}" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">${c.wind.speed}</text>
-      <text x="${cx}" y="${cy + 38}" text-anchor="middle" font-size="9" font-weight="600" fill="rgba(255,255,255,.6)">mph ${c.wind.dir}</text>
-    </svg>` }));
+    </svg>` }),
+    h("div", { style: { textAlign: "center", marginTop: "-4px" } },
+      h("div", { style: { fontSize: "22px", fontWeight: "600", lineHeight: "1.05" } }, `${c.wind.speed} mph`),
+      h("div", { style: { fontSize: "12px", opacity: ".65", fontWeight: "500", marginTop: "2px" } }, `${c.wind.dir} wind`)));
 }
 
 function miniTile(icon: IconName, label: string, big: string, sub: string): HTMLElement {

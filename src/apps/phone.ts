@@ -61,7 +61,7 @@ export function PhoneApp() {
       h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" } },
         ...CONTACTS.slice(0, 4).map((c, i) =>
           h("div", { class: "pressable card-white", style: { padding: "24px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", cursor: "pointer" }, onClick: () => { number = "555-0142"; showCall(); } },
-            h("div", { style: { width: "72px", height: "72px", borderRadius: "50%", background: "#e5e7eb", overflow: "hidden", border: "2px solid #fff", boxShadow: "0 4px 10px rgba(0,0,0,.1)" } }, (() => { const im = img(`/img/avatar/a-${i + 40}.jpg`); im.style.cssText = "width:100%;height:100%;object-fit:cover"; return im; })()),
+            h("div", { style: { width: "72px", height: "72px", borderRadius: "50%", background: "#e5e7eb", overflow: "hidden", border: "2px solid #fff", boxShadow: "0 4px 10px rgba(0,0,0,.1)" } }, (() => { const im = img(`/img/avatar/a-${i + 12}.jpg`); im.style.cssText = "width:100%;height:100%;object-fit:cover"; return im; })()),
             h("div", { style: { fontWeight: "700", fontSize: "15px", color: "rgba(0,0,0,.9)", textAlign: "center" } }, c.n)))));
 
   const contacts = () =>

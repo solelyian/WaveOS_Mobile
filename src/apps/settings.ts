@@ -30,9 +30,9 @@ export function SettingsApp() {
   const root = h("div", { style: { height: "100%", display: "flex", flexDirection: "column", position: "relative" } });
 
   const sub = (title: string, ...content: HTMLElement[]) => {
-    const d = h("div", { style: { position: "absolute", inset: "0", zIndex: "30", background: "#f2f2f7", display: "flex", flexDirection: "column", transform: "translateX(60px)", opacity: "0", transition: "all .22s ease-out" } },
-      h("div", { style: { padding: "60px 20px 12px", display: "flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,.7)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(0,0,0,.06)" } },
-        h("button", { class: "pressable", style: { color: "#3b82f6", display: "flex", alignItems: "center", fontSize: "16px", fontWeight: "600" }, onClick: () => { d.style.opacity = "0"; d.style.transform = "translateX(60px)"; setTimeout(() => d.remove(), 220); } }, svgIcon(I.chevronLeft, "", 20), "Settings"),
+    const d = h("div", { style: { position: "absolute", inset: "0", zIndex: "100", background: "#f2f2f7", display: "flex", flexDirection: "column", transform: "translateX(60px)", opacity: "0", transition: "all .22s ease-out" } },
+      h("div", { style: { position: "relative", padding: "60px 20px 12px", display: "flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,.7)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(0,0,0,.06)" } },
+        h("button", { class: "pressable", style: { position: "relative", zIndex: "2", color: "#3b82f6", display: "flex", alignItems: "center", fontSize: "16px", fontWeight: "600" }, onClick: () => { d.style.opacity = "0"; d.style.transform = "translateX(60px)"; setTimeout(() => d.remove(), 220); } }, svgIcon(I.chevronLeft, "", 20), "Settings"),
         h("span", { style: { position: "absolute", left: "0", right: "0", textAlign: "center", fontWeight: "700", fontSize: "16px", pointerEvents: "none" } }, title)),
       h("div", { class: "app-scroll no-sb", style: { padding: "24px 20px 40px", display: "flex", flexDirection: "column", gap: "20px" } }, ...content));
     root.append(d);
