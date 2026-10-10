@@ -23,7 +23,7 @@ input { font: inherit; }
   box-shadow: 0 0 0 12px #111, 0 0 0 14px #222, 0 50px 100px -20px rgba(0,0,0,.8), 0 0 0 4px rgba(255,255,255,.1);
   touch-action: none;
 }
-@media (max-height: 870px) { #phone { transform: scale(.92); } }
+#phone { transform-origin: center center; }
 
 /* ---------- Verre (Liquid Glass tokens) ---------- */
 .g-light {
