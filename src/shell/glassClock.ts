@@ -8,7 +8,7 @@ const mask = (t: string, w: number, h: number, fs: number, ls: number, stroke: b
   cv.width = w * dpr; cv.height = h * dpr;
   const c = cv.getContext("2d")!;
   c.scale(dpr, dpr);
-  c.font = `500 ${fs}px 'Avenir Next', 'Helvetica Neue', Arial, sans-serif`;
+  c.font = `600 ${fs}px 'Avenir Next', 'Helvetica Neue', Arial, sans-serif`;
   (c as any).letterSpacing = `${ls.toFixed(1)}px`;
   c.textAlign = "center";
   c.textBaseline = "middle";

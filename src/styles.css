@@ -74,7 +74,7 @@ input { font: inherit; }
 #lock .lk-lock { opacity: .8; margin-bottom: 16px; } #lock .lk-lock svg { width: 20px; height: 20px; }
 #lock .lk-date { font-size: 20px; font-weight: 700; opacity: .9; margin-bottom: 4px; }
 #lock .lk-clock {
-  font-size: 96px; font-weight: 500; letter-spacing: -.04em; line-height: 1;
+  font-size: 96px; font-weight: 600; letter-spacing: -.04em; line-height: 1;
   position: relative; color: transparent;
   font-family: 'Avenir Next', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
 }
@@ -223,7 +223,7 @@ input { font: inherit; }
 #nc { backdrop-filter: blur(38px) saturate(160%) brightness(1.02); -webkit-backdrop-filter: blur(38px) saturate(160%) brightness(1.02); }
 .nc-head { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.35)); }
 .nc-date { font-size: 19px; font-weight: 500; opacity: .9; margin-top: 2px; }
-.nc-clock { font-size: 74px; font-weight: 500; letter-spacing: -.03em; line-height: 1.05;
+.nc-clock { font-size: 74px; font-weight: 600; letter-spacing: -.03em; line-height: 1.05;
   position: relative; color: transparent;
   font-family: 'Avenir Next', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif; }
 .nc-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 2px 4px; }
