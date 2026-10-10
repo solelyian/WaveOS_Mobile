@@ -7,6 +7,7 @@ import { sys, set, onChange } from "../system/state";
 
 export function MusicApp() {
   let view: "library" | "player" = "library";
+  let track = { name: "Midnight City", artist: "M83", art: "/img/album.jpg" };
   const root = h("div", { style: { height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" } });
 
   const glow = h("div", { style: { position: "absolute", inset: "0", zIndex: "0", opacity: ".4", mixBlendMode: "screen", pointerEvents: "none" } },
@@ -28,7 +29,7 @@ export function MusicApp() {
       h("div", { style: { fontSize: "18px", fontWeight: "700", marginBottom: "16px" } }, "Top Picks"),
       h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" } },
         ...[1, 2, 3, 4].map((i) =>
-          h("div", { style: { display: "flex", flexDirection: "column", gap: "8px" } },
+          h("div", { class: "pressable", style: { display: "flex", flexDirection: "column", gap: "8px", cursor: "pointer" }, onClick: () => { track = { name: `Daily Mix ${i}`, artist: "Nyne Radio", art: `/img/mix-${i}.jpg` }; set("playing", true); view = "player"; refresh(); } },
             h("div", { style: { aspectRatio: "1", background: "rgba(0,0,0,.4)", border: "1px solid rgba(255,255,255,.1)", borderRadius: "16px", overflow: "hidden", boxShadow: "0 10px 15px -3px rgba(0,0,0,.3)" } },
               (() => { const im = img(`/img/mix-${i}.jpg`); im.style.cssText = "width:100%;height:100%;object-fit:cover"; return im; })()),
             h("div", { style: { fontSize: "12px", fontWeight: "500", opacity: ".8", paddingLeft: "4px" } }, `Daily Mix ${i}`)))));
@@ -52,11 +53,11 @@ export function MusicApp() {
         h("span", { style: { fontSize: "12px", fontWeight: "700", letterSpacing: ".15em", textTransform: "uppercase", opacity: ".6" } }, "Playing from Library"),
         h("div", { class: "pressable", style: { padding: "8px", background: "rgba(255,255,255,.1)", borderRadius: "50%", border: "1px solid rgba(255,255,255,.2)", display: "flex" } }, svgIcon(I.ellipsis))),
       h("div", { style: { width: "100%", aspectRatio: "1", borderRadius: "40px", boxShadow: "0 20px 60px -10px rgba(255,0,50,.4),inset 0 1px 1px rgba(255,255,255,.4)", overflow: "hidden", marginBottom: "48px", border: "1px solid rgba(255,255,255,.2)" } },
-        (() => { const im = img("/img/album.jpg"); im.style.cssText = "width:100%;height:100%;object-fit:cover"; return im; })()),
+        (() => { const im = img(track.art); im.style.cssText = "width:100%;height:100%;object-fit:cover"; return im; })()),
       h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" } },
         h("div", {},
-          h("h2", { style: { fontSize: "30px", fontWeight: "700" } }, "Midnight City"),
-          h("p", { style: { fontSize: "18px", color: "rgba(255,255,255,.7)", fontWeight: "500" } }, "M83")),
+          h("h2", { style: { fontSize: "30px", fontWeight: "700" } }, track.name),
+          h("p", { style: { fontSize: "18px", color: "rgba(255,255,255,.7)", fontWeight: "500" } }, track.artist)),
         h("div", { class: "pressable", style: { padding: "12px", background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.2)", borderRadius: "50%", boxShadow: "inset 0 1px 1px rgba(255,255,255,.3)", display: "flex" } },
           h("span", { style: { color: "#ef4444", display: "flex" } }, svgIcon(I.heart, "fill", 20)))),
       h("div", { style: { marginBottom: "40px" } },

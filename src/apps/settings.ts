@@ -4,13 +4,22 @@ import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
 import type { IconName } from "../core/lucide";
 import { GlassHeader } from "./ui";
+import { sys, set } from "../system/state";
 
-function row(icon: IconName, color: string, label: string, val = "") {
+function toggle(key: "wifi" | "bluetooth" | "airplane") {
+  const t = h("button", {
+    class: "g-tog pressable" + (sys[key] ? " on" : ""),
+    onClick: (e) => { e.stopPropagation(); set(key, !sys[key]); t.classList.toggle("on", sys[key]); },
+  }, h("em"));
+  return t;
+}
+
+function row(icon: IconName, color: string, label: string, val = "", extra?: HTMLElement) {
   return h("div", { class: "set-row" },
     h("div", { class: "set-ic", style: { background: color } }, svgIcon(I[icon])),
     h("span", { class: "set-lbl" }, label),
     val ? h("span", { class: "set-val" }, val) : null,
-    h("span", { class: "chev" }, svgIcon(I.chevronLeft, "", 16)));
+    extra ?? h("span", { class: "chev" }, svgIcon(I.chevronLeft, "", 16)));
 }
 
 export function SettingsApp() {
@@ -26,8 +35,9 @@ export function SettingsApp() {
           h("div", { style: { fontSize: "14px", color: "rgba(0,0,0,.5)", fontWeight: "500" } }, "Nyne ID, iCloud+, Media")),
         h("span", { class: "chev" }, svgIcon(I.chevronLeft, "", 16))),
       h("div", { class: "set-group g-light" },
-        row("wifi", "#3b82f6", "Wi-Fi", "Home_5G"),
-        row("bluetooth", "#3b82f6", "Bluetooth", "On"),
+        row("wifi", "#3b82f6", "Wi-Fi", "Home_5G", toggle("wifi")),
+        row("bluetooth", "#3b82f6", "Bluetooth", "On", toggle("bluetooth")),
+        row("plane", "#f97316", "Airplane Mode", "", toggle("airplane")),
         row("signal", "#22c55e", "Cellular"),
         row("globe", "#3b82f6", "Personal Hotspot", "Off")),
       h("div", { class: "set-group g-light" },

@@ -39,7 +39,7 @@ export function PhoneApp() {
     h("div", { class: "app-scroll no-sb", style: { padding: "64px 16px 96px" } },
       h("h1", { style: { fontSize: "30px", fontWeight: "700", marginBottom: "16px" } }, "Recents"),
       ...Array.from({ length: 10 }, (_, i) =>
-        h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0", borderBottom: "1px solid rgba(243,244,246,.5)" } },
+        h("div", { class: "pressable", style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0", borderBottom: "1px solid rgba(243,244,246,.5)", cursor: "pointer" }, onClick: () => { number = "555-0142"; showCall(); } },
           h("div", { style: { display: "flex", alignItems: "center", gap: "16px" } },
             h("div", { style: { width: "48px", height: "48px", borderRadius: "50%", background: "#e5e7eb", overflow: "hidden" } }, (() => { const im = img(`/img/avatar/a-${i}.jpg`); im.style.cssText = "width:100%;height:100%;object-fit:cover"; return im; })()),
             h("div", {},
