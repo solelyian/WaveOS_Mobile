@@ -6,11 +6,6 @@ import { sys, set, onChange } from "../system/state";
 import { Spring } from "../core/motion";
 import { liquidGlass } from "./glass";
 
-function toggle(icon: HTMLElement, on: boolean, cls: string, el: HTMLElement) {
-  el.className = `cc-tg ${cls} ${on ? "on" : "off"}`;
-  el.replaceChildren(icon);
-}
-
 export class ControlCenter {
   el = h("div", { class: "sheet", attrs: { id: "cc" } });
   /** y : -H fermé → 0 ouvert (ressort shade). */
@@ -22,73 +17,84 @@ export class ControlCenter {
 
 
   constructor() {
-    const cluster = h("div", { class: "cc-cluster g-dark" });
-    const mk = (key: "wifi" | "cellular" | "bluetooth" | "airplane", onIcon: string, cls: string) => {
-      const b = h("button", { class: `cc-tg ${cls}`, onClick: () => set(key, !sys[key]) });
-      this.tgs[key] = b; (b as any)._ic = onIcon;
-      cluster.append(b);
+    // --- rangée du haut : compose (g) + réglages (d) ---
+    const top = h("div", { class: "cc-top" },
+      h("button", { class: "cc-corner g-dark" }, svgIcon(I.squarePen, "", 16)),
+      h("button", { class: "cc-corner g-dark" }, svgIcon(I.settings, "", 16)));
+
+    // --- ligne 1 : carte média | tuiles WiFi + Bluetooth empilées ---
+    const conn = (key: "wifi" | "bluetooth", ic: string, name: string, sub: string, cls: string) => {
+      const b = h("button", { class: `cc-pill g-dark`, onClick: () => set(key, !sys[key]) },
+        h("div", { class: `pi ${cls}` }, svgIcon(ic, "", 18)),
+        h("div", { class: "tx" }, h("span", { class: "nm" }, name), h("span", { class: "sub" }, sub)));
+      this.tgs[key] = b; (b as any)._ic = ic; (b as any)._pill = true;
       return b;
     };
-    mk("wifi", I.wifi, "blue");
-    mk("cellular", I.signal, "green");
-    mk("bluetooth", I.bluetooth, "blue");
-    mk("airplane", I.plane, "orange");
+    const r1 = h("div", { class: "cc-r1" },
+      this.mediaSlot,
+      h("div", { class: "cc-conn" },
+        conn("wifi", I.wifi, "WiFi", "WAVE-5G", "blue"),
+        conn("bluetooth", I.bluetooth, "Bluetooth", "Nyne Watch", "blue")));
 
-    const r1 = h("div", { class: "cc-r1" }, cluster, this.mediaSlot);
-
+    // --- ligne 2 : pilule Nyne Link | slider luminosité ---
     const r2 = h("div", { class: "cc-r2" },
-      this.slider(this.brightFill, I.sun, "brightness"),
-      this.slider(this.volFill, I.volume2, "volume"),
-      h("div", { class: "cc-mini" },
-        h("div", { class: "cc-focus g-dark" },
-          h("div", { class: "mic-ic" }, svgIcon(I.moon)),
-          h("span", {}, "Zen Mode")),
-        h("button", { class: "cc-sq g-dark" }, svgIcon(I.rotateCcw)),
-        h("button", { class: "cc-sq g-dark" }, svgIcon(I.screenShare))));
+      h("button", { class: "cc-pill g-dark", onClick: () => { this.close(); set("sheet", "sd"); } },
+        h("div", { class: "pi link" }, svgIcon(I.link, "", 18)),
+        h("div", { class: "tx" }, h("span", { class: "nm" }, "Nyne Link"), h("span", { class: "sub" }, "5 devices nearby"))),
+      this.slider(this.brightFill, I.sun, "brightness", "green"));
 
-    const r3 = h("div", { class: "cc-r3" },
-      ...[I.flashlight, I.clock, I.calculator, I.camera].map((ic) =>
-        h("button", { class: "cc-util g-dark" }, svgIcon(ic))));
+    // --- ligne 3 : pilule Ne pas déranger | slider volume ---
+    const r3 = h("div", { class: "cc-r2" },
+      h("button", { class: "cc-pill g-dark", onClick: () => set("focus", !sys.focus) },
+        h("div", { class: "pi indigo" }, svgIcon(I.moon, "", 16)),
+        h("div", { class: "tx" }, h("span", { class: "nm" }, "Zen Mode"))),
+      this.slider(this.volFill, I.volume2, "volume", "orange"));
 
-    const sdBtn = h("button", { class: "cc-sd g-dark", onClick: () => { this.close(); set("sheet", "sd"); } },
-      h("div", { class: "ic" }, svgIcon(I.link)),
-      h("div", { class: "tx" },
-        h("span", { class: "nm" }, "Nyne Link"),
-        h("span", { class: "sub" }, "5 devices nearby")),
-      svgIcon(I.chevronLeft, "chev", 16));
-
-    const home = h("div", { class: "cc-home g-dark" },
-      h("div", { class: "l" },
-        h("div", { class: "ic" }, svgIcon(I.home)),
-        h("span", { class: "nm" }, "Home")),
-      h("div", { class: "sub" }, "3 Scenes Active"));
+    // --- grille 4×N de toggles ronds + labels ---
+    const TGS: [string, string, string][] = [
+      ["cellular", I.signal, "Mobile data"], ["orientationLock", I.rotateCcw, "Orientation lock"],
+      ["recorder", I.video, "Screen recorder"], ["flashlight", I.flashlight, "Flashlight"],
+      ["nfc", I.nfc, "NFC"], ["share", I.share, "Nyne Share"],
+      ["hotspot", I.globe, "Personal hotspot"], ["nearlink", I.zap, "NearLink"],
+      ["screencast", I.screenShare, "ScreenCast"], ["sound", I.bell, "Sound"],
+      ["location", I.mapPin, "Location"], ["darkMode", I.moonStar, "Dark mode"],
+      ["airplane", I.plane, "Airplane mode"], ["screenshot", I.scissors, "Screenshot"],
+      ["scan", I.scanLine, "Scan"], ["remote", I.tv, "Smart Remote"],
+    ];
+    const TINT: Record<string, string> = { cellular: "blue", flashlight: "green", share: "blue", hotspot: "blue", cast: "green", sound: "blue", location: "blue", dark: "blue", airplane: "blue", nearlink: "red" };
+    const grid = h("div", { class: "cc-grid" },
+      ...TGS.map(([key, ic, label]) => {
+        const b = h("button", { class: "cc-cell", onClick: () => set(key as never, !sys[key as never] as never) },
+          h("div", { class: `cc-dot ${TINT[key] ?? "dim"}` }, svgIcon(ic, "", 20)),
+          h("span", { class: "lb" }, label));
+        this.tgs[key] = b; (b as any)._ic = ic;
+        return b;
+      }));
 
     const handle = h("div", { class: "handle" }, h("i"));
-    this.el.append(r1, r2, r3, sdBtn, home, handle);
-    // chaque tuile .g-dark devient une plaque de verre liquide (réfraction)
+    this.el.append(top, r1, r2, r3, grid, handle);
+    // chaque surface verre → moteur (réfraction + filet + caustique)
     requestAnimationFrame(() => {
       for (const t of this.el.querySelectorAll<HTMLElement>(".g-dark")) {
-        t.classList.add("glx-on");
-        liquidGlass(t, { radius: 30, blur: 5, scale: 14 });
+        liquidGlass(t);
       }
     });
     onChange(() => this.sync());
     this.sync();
   }
 
-  private slider(fill: HTMLElement, icon: string, key: "brightness" | "volume") {
-    const el = h("div", { class: "cc-slider g-dark" });
-    el.append(fill, h("div", { class: "ic" }, svgIcon(icon)));
-    const setFromY = (clientY: number) => {
+  private slider(fill: HTMLElement, icon: string, key: "brightness" | "volume", tint: string) {
+    const el = h("div", { class: `cc-hslider g-dark ${tint}` });
+    el.append(fill, h("div", { class: "ic" }, svgIcon(icon, "", 18)));
+    const setFromX = (clientX: number) => {
       const r = el.getBoundingClientRect();
-      const v = Math.round(100 - ((clientY - r.top) / r.height) * 100);
-      set(key, Math.max(0, Math.min(100, v)));
+      set(key, Math.max(0, Math.min(100, Math.round(((clientX - r.left) / r.width) * 100))));
     };
     el.addEventListener("pointerdown", (e) => {
       e.stopPropagation();
       el.setPointerCapture(e.pointerId);
-      setFromY(e.clientY);
-      const mv = (ev: PointerEvent) => setFromY(ev.clientY);
+      setFromX(e.clientX);
+      const mv = (ev: PointerEvent) => setFromX(ev.clientX);
       const up = () => { el.removeEventListener("pointermove", mv); el.removeEventListener("pointerup", up); };
       el.addEventListener("pointermove", mv);
       el.addEventListener("pointerup", up);
@@ -97,12 +103,18 @@ export class ControlCenter {
   }
 
   private sync() {
-    this.brightFill.style.height = `${sys.brightness}%`;
-    this.volFill.style.height = `${sys.volume}%`;
+    this.brightFill.style.width = `${sys.brightness}%`;
+    this.volFill.style.width = `${sys.volume}%`;
     for (const [key, el] of Object.entries(this.tgs)) {
-      const on = sys[key as "wifi"];
+      const on = (sys as unknown as Record<string, boolean>)[key];
       const ic = key === "wifi" && !on ? I.wifiOff : key === "bluetooth" && !on ? I.bluetoothOff : (el as any)._ic;
-      toggle(svgIcon(ic), on, (key === "cellular" ? "green" : key === "airplane" ? "orange" : "blue"), el);
+      if ((el as any)._pill) {
+        const pi = el.querySelector(".pi");
+        if (pi) { pi.replaceChildren(svgIcon(ic, "", 18)); pi.classList.toggle("off", !on); }
+      } else {
+        const dot = el.querySelector(".cc-dot");
+        if (dot) { dot.replaceChildren(svgIcon(ic, "", 20)); dot.classList.toggle("on", !!on); }
+      }
     }
     // carte média
     this.mediaSlot.replaceChildren();
@@ -117,7 +129,11 @@ export class ControlCenter {
             h("button", { class: "pp", onClick: () => set("playing", false) }, svgIcon(I.pause)),
             svgIcon(I.skipForward))));
     } else {
-      this.mediaSlot.append(h("div", { class: "none" }, svgIcon(I.music), h("span", {}, "Not Playing")));
+      this.mediaSlot.append(h("div", { class: "none" },
+        h("div", { class: "mrow" },
+          h("div", { style: "width:56px;height:56px;border-radius:14px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex:none" }, svgIcon(I.music, "", 22)),
+          h("span", {}, "Not playing")),
+        h("div", { class: "tr" }, svgIcon(I.skipBack), svgIcon(I.play), svgIcon(I.skipForward))));
     }
   }
 
