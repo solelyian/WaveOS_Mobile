@@ -4,6 +4,8 @@ import { View, Text, StyleSheet } from "react-native";
 import { useSys, set } from "./sys";
 import { LockScreen } from "./LockScreen";
 import { StatusBar } from "./StatusBar";
+import { DynamicIsland } from "./DynamicIsland";
+import { HomeGrid } from "./HomeGrid";
 
 function Boot({ onDone }: { onDone: () => void }) {
   const [t, setT] = React.useState(0);
@@ -47,9 +49,10 @@ export default function App() {
       }}
     >
       <View style={st.wall} pointerEvents="none" />
-      {!s.locked && <View style={st.homeStub}><Text style={{ color: "#fff" }}>Home — next step</Text></View>}
+      {!s.locked && <HomeGrid onOpen={() => {}} onSpot={() => {}} />}
       {s.locked && <LockScreen />}
-      {s.locked && <StatusBar />}
+      <StatusBar />
+      <DynamicIsland />
       {!booted && <Boot onDone={done} />}
     </View>
   );
