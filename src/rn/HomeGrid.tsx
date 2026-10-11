@@ -9,7 +9,7 @@ import { appMeta } from "./apps";
 
 export const DOCK: AppId[] = ["phone", "safari", "messages", "music"];
 
-function Tile({ id, inDock, onOpen }: { id: AppId; inDock?: boolean; onOpen: (id: AppId) => void }) {
+function Tile({ id, inDock, onOpen }: { id: AppId; inDock?: boolean; onOpen: (id: AppId, el: HTMLElement | null) => void }) {
   const a = appMeta(id);
   const tileRef = React.useRef<View>(null);
   React.useEffect(() => {
@@ -17,16 +17,16 @@ function Tile({ id, inDock, onOpen }: { id: AppId; inDock?: boolean; onOpen: (id
     if (el) el.style.background = a.color; // dégradés via DOM (RN ne sait pas)
   }, [a.color]);
   return (
-    <Pressable onPress={() => onOpen(id)} style={s.icon}>
+    <Pressable onPress={() => onOpen(id, domOf(tileRef))} style={s.icon}>
       <View ref={tileRef} nativeID={inDock ? `dock-${id}` : `icon-${id}`} style={s.tile}>
         <Icon name={a.icon} size={30} color="#fff" />
       </View>
-      <Text style={[s.nm, inDock && s.nmDock]} numberOfLines={1}>{a.name}</Text>
+      {!inDock && <Text style={s.nm} numberOfLines={1}>{a.name}</Text>}
     </Pressable>
   );
 }
 
-export function HomeGrid({ onOpen, onSpot }: { onOpen: (id: AppId) => void; onSpot: () => void }) {
+export function HomeGrid({ onOpen, onSpot }: { onOpen: (id: AppId, el: HTMLElement | null) => void; onSpot: () => void }) {
   return (
     <View style={s.home}>
       <View style={s.wdgRow}>
@@ -84,7 +84,6 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,.2)",
     boxShadow: "inset 0 1px 1px rgba(255,255,255,.5), 0 8px 16px rgba(0,0,0,.2)",
   } as object,
-  nmDock: { fontSize: 10, marginTop: 4 },
   nm: { fontSize: 12, fontWeight: "600", color: "#fff", letterSpacing: 0.24 },
   search: {
     alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 6,
@@ -92,7 +91,7 @@ const s = StyleSheet.create({
   },
   searchTx: { color: "#fff", fontSize: 13, fontWeight: "600" },
   dock: {
-    flexDirection: "row", justifyContent: "space-around", padding: 16,
+    flexDirection: "row", justifyContent: "space-around", alignItems: "center", padding: 16,
     borderRadius: 40, marginBottom: 32,
   },
   homebar: {

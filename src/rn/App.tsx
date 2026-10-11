@@ -40,6 +40,16 @@ function Boot({ onDone }: { onDone: () => void }) {
   );
 }
 
+/** Rect écran → espace téléphone 400×850 (origine du morph). */
+function elRect(el: HTMLElement): AppRect | null {
+  const phone = document.getElementById("phone");
+  if (!phone) return null;
+  const pr = phone.getBoundingClientRect();
+  const r = el.getBoundingClientRect();
+  const sx = 400 / pr.width, sy = 850 / pr.height;
+  return { x: (r.left - pr.left) * sx, y: (r.top - pr.top) * sy, w: r.width * sx, h: r.height * sy };
+}
+
 export default function App() {
   const s = useSys();
   const [booted, setBooted] = React.useState(false);
@@ -48,18 +58,25 @@ export default function App() {
   const [spot, setSpot] = React.useState(false);
   const root = React.useRef<View>(null);
 
+  const srcEl = React.useRef<HTMLElement | null>(null);
+
   const iconRect = React.useCallback((id: AppId): AppRect | null => {
-    const phone = root.current as unknown as HTMLElement | null;
     const tile = document.getElementById(`icon-${id}`) ?? document.getElementById(`dock-${id}`);
-    if (!phone || !tile) return null;
-    const pr = phone.getBoundingClientRect();
-    const r = tile.getBoundingClientRect();
-    const sx = 400 / pr.width, sy = 850 / pr.height;
-    return { x: (r.left - pr.left) * sx, y: (r.top - pr.top) * sy, w: r.width * sx, h: r.height * sy };
+    return tile ? elRect(tile) : null;
   }, []);
 
-  const openApp = React.useCallback((id: AppId, rect?: AppRect | null) => {
-    const r = rect ?? iconRect(id) ?? { x: 170, y: 380, w: 60, h: 60 };
+  const openApp = React.useCallback((id: AppId, elOrRect?: HTMLElement | AppRect | null) => {
+    if (sys.activeApp === id) return;
+    if (sys.activeApp) { // « Open » depuis une app : fermer puis morph depuis la tuile
+      appwinCtl.current?.close();
+      setTimeout(() => openApp(id), 420);
+      return;
+    }
+    const r = (elOrRect instanceof HTMLElement ? elRect(elOrRect) : elOrRect)
+      ?? iconRect(id) ?? { x: 170, y: 380, w: 60, h: 60 };
+    srcEl.current = elOrRect instanceof HTMLElement ? elOrRect
+      : document.getElementById(`icon-${id}`) ?? document.getElementById(`dock-${id}`);
+    if (srcEl.current) srcEl.current.style.opacity = "0"; // icône source masquée pendant le morph (maquette : setIconHidden)
     pushRecent(id);
     setFrom(r);
     set("activeApp", id);
@@ -88,7 +105,11 @@ export default function App() {
       hasSwitcher: () => sys.switcherOpen,
       openSheet: (x) => set("sheet", x as never),
       closeSheet: () => set("sheet", null),
-      openSwitcher: () => { if (sys.recents.length) set("switcherOpen", true); },
+      openSwitcher: () => {
+        if (!sys.recents.length) return;
+        appwinCtl.current?.close(); // l'app remonte vers son icône derrière le switcher
+        set("switcherOpen", true);
+      },
       appDrag: (dy) => appwinCtl.current?.drag(dy),
       appRelease: (dy, vy) => { appwinCtl.current?.release(dy, vy); },
       isLocked: () => sys.locked,
@@ -101,10 +122,11 @@ export default function App() {
   return (
     <View ref={rootEl} style={st.phone}>
       <View style={st.wall} nativeID="wp" pointerEvents="none" />
-      {!s.locked && <HomeGrid onOpen={(id) => openApp(id)} onSpot={() => setSpot(true)} />}
+      {!s.locked && <HomeGrid onOpen={(id, el) => openApp(id, el)} onSpot={() => setSpot(true)} />}
       {s.locked && <LockScreen />}
       {s.activeApp && from && (
-        <AppWindow id={s.activeApp} from={from} onClosed={() => { set("activeApp", null); setFrom(null); }} />
+        <AppWindow key={s.activeApp} id={s.activeApp} from={from}
+          onClosed={() => { if (srcEl.current) srcEl.current.style.opacity = "1"; srcEl.current = null; set("activeApp", null); setFrom(null); }} />
       )}
       <SheetHost />
       {s.switcherOpen && <Recents onOpen={(id, r) => { set("switcherOpen", false); openApp(id, r); }} />}
