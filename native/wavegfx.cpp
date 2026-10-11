@@ -234,11 +234,9 @@ void wg_glass_render(float ox, float oy, int w, int h, float r,
       float glow = wv_pow(wv_clampf(1.f - inside / 16.f, 0.f, 1.f), 2.2f)
                  * (0.10f + 0.16f * lit);
 
-      // reflet spéculaire concentré au coin haut-gauche
-      float corner = wv_clampf(1.f - vert * 2.6f, 0.f, 1.f)
-                   * wv_clampf(1.f - px / w * 1.15f, 0.f, 1.f);
-      float dl = (px * 0.82f + py * 0.57f) / wv_sqrt(hw * hw + hh * hh);
-      float spec = wv_exp(-wv_fabs(dl - 0.30f) * 10.f) * corner * 0.34f;
+      // reflet doux au coin haut-gauche (pas de bande → pas de ligne)
+      float cd = wv_sqrt((px / w) * (px / w) + (py / h) * (py / h)); // 0 au coin haut-gauche
+      float spec = wv_exp(-cd * cd * 7.f) * 0.16f;
 
       // ombre interne bas (masse de verre) — accentuée côté opposé
       float ish = wv_clampf((vert - 0.68f) / 0.32f, 0.f, 1.f)
