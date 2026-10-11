@@ -67,3 +67,7 @@ export function tween(ms: number, fn: (v: number) => void, done?: () => void) {
     if (v >= 1) { off(); done?.(); }
   });
 }
+
+/** Spread sur un View → attribut data-lg (RNW mappe dataSet vers data-*).
+ *  Type forçé : les defs RNW 0.21 omettent dataSet. */
+export const lg: Record<string, unknown> = { dataSet: { lg: "" } };

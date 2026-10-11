@@ -8,6 +8,7 @@ import type { IconName } from "../../core/lucide";
 import { toast, host } from "../host";
 import { GlassHeader, FloatingTabBar, GBtn, PageBlank } from "./ui";
 import { useAccent } from "../theme";
+import { liquidGlass } from "../glass";
 import { domOf } from "../fx";
 
 const CONTACTS = [
@@ -207,9 +208,7 @@ function CallBtn({ ic, l, active, onPress }: { ic: IconName; l: string; active: 
   React.useEffect(() => {
     const el = domOf(ref);
     if (el) {
-      el.style.backdropFilter = "blur(12px) saturate(150%)";
-      (el.style as CSSStyleDeclaration & { webkitBackdropFilter?: string }).webkitBackdropFilter = "blur(12px) saturate(150%)";
-      el.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,.60)";
+      liquidGlass(el, { radius: 30, scale: 18, blur: 8 });
     }
   }, []);
   return (

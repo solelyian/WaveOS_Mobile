@@ -14,6 +14,7 @@ import { SheetHost, sheetCtl } from "./SheetHost";
 import { AppWindow, appwinCtl } from "./AppWindow";
 import { Recents } from "./Recents";
 import { Spotlight } from "./Spotlight";
+import { liquidGlassAll } from "./glass";
 import { host, pushRecent, type AppRect } from "./host";
 
 function Boot({ onDone }: { onDone: () => void }) {
@@ -80,6 +81,7 @@ export default function App() {
     pushRecent(id);
     setFrom(r);
     set("activeApp", id);
+    requestAnimationFrame(() => requestAnimationFrame(() => liquidGlassAll(document.getElementById("phone") ?? document)));
   }, [iconRect]);
 
   React.useEffect(() => {
@@ -119,6 +121,11 @@ export default function App() {
     });
   }, []);
 
+  React.useEffect(() => {
+    const id = requestAnimationFrame(() => requestAnimationFrame(() =>
+      liquidGlassAll(document.getElementById("phone") ?? document)));
+    return () => cancelAnimationFrame(id);
+  }, [s.locked, spot]);
   return (
     <View ref={rootEl} style={st.phone}>
       <View style={st.wall} nativeID="wp" pointerEvents="none" />

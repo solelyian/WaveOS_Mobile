@@ -5,6 +5,7 @@ import { View, Text, Pressable, TextInput, ScrollView, StyleSheet } from "react-
 import { Icon } from "../Icon";
 import type { IconName } from "../../core/lucide";
 import { Spring, SPRINGS, domOf, onFrame } from "../fx";
+import { liquidGlass } from "../glass";
 import { host, onToasts, toasts } from "../host";
 import { useTheme, useAccent } from "../theme";
 
@@ -174,8 +175,7 @@ export function FloatingTabBar({ tabs, active, onTab, dark }: {
     const el = domOf(inRef);
     if (el) {
       w.current = el.getBoundingClientRect().width;
-      el.style.backdropFilter = "blur(3px) saturate(140%) contrast(110%)";
-      (el.style as unknown as Record<string, string>).WebkitBackdropFilter = "blur(3px) saturate(140%) contrast(110%)";
+      liquidGlass(el, { radius: 26, scale: 10, blur: 4 });
     }
     const c = (idx + 0.5) * (w.current / tabs.length);
     sx.to(c);

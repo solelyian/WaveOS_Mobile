@@ -1,5 +1,6 @@
 // SheetHost.tsx — hôte des sheets : monte translateY -850→0 (spring shade), fond frosted.
 import * as React from "react";
+import { liquidGlassAll } from "./glass";
 import { View, StyleSheet } from "react-native";
 import { useSys } from "./sys";
 import { Spring, SPRINGS, onFrame, domOf } from "./fx";
@@ -26,6 +27,11 @@ export function SheetHost() {
   const [preview, setPreview] = React.useState<"nc" | "cc" | null>(null);
   const active = s.sheet === "sd" ? "sd" : s.sheet === "nc" || s.sheet === "cc" ? s.sheet : preview ?? last.current;
   React.useEffect(() => { if (!preview) sp.to(s.sheet ? 0 : -H); }, [s.sheet, sp, preview]);
+  React.useEffect(() => {
+    const id = requestAnimationFrame(() => requestAnimationFrame(() =>
+      liquidGlassAll(document.getElementById("phone") ?? document)));
+    return () => cancelAnimationFrame(id);
+  }, [s.sheet]);
   React.useEffect(() => {
     sheetCtl.preview = (which, dy) => { setPreview(which); sp.set(Math.min(0, -H + Math.max(0, dy))); };
     sheetCtl.previewEnd = (commit) => { setPreview(null); if (!commit) sp.to(-H); };

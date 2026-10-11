@@ -4,7 +4,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { fmtDate } from "../system/state";
 import { GlassClock } from "./LockScreen";
 import { Icon } from "./Icon";
-import { glassStyle } from "./fx";
+import { glassStyle, lg } from "./fx";
 
 const NOTIFS: { app: string; icon: string; color: string; title: string; body: string; time: string }[] = [
   { app: "Sarah Connor", icon: "messageCircle", color: "#22c55e", title: "Sarah Connor", body: "The future is not set. There is no fate but what we make for ourselves.", time: "2m ago" },
@@ -24,7 +24,7 @@ export function NotificationCenter({ onClear }: { onClear?: () => void }) {
       </View>
       <View style={st.list} nativeID="app-scroll">
         {items.map((n, i) => (
-          <View key={i} style={[st.card, glassStyle(0.16) as object]} nativeID="nc-card">
+          <View key={i} {...lg} style={[st.card, glassStyle(0.16) as object]} nativeID="nc-card">
             <View style={[st.ic, { backgroundColor: n.color }]}>
               <Icon name={n.icon} size={16} color="#fff" />
             </View>
@@ -40,7 +40,7 @@ export function NotificationCenter({ onClear }: { onClear?: () => void }) {
         ))}
       </View>
       {items.length > 0 && (
-        <Pressable onPress={() => { setItems([]); onClear?.(); }} style={[st.clear, glassStyle(0.18) as object]}>
+        <Pressable onPress={() => { setItems([]); onClear?.(); }} {...lg} style={[st.clear, glassStyle(0.18) as object]}>
           <Text style={st.clearTx}>Clear All</Text>
         </Pressable>
       )}

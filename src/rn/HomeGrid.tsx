@@ -2,7 +2,7 @@
 import * as React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Icon } from "./Icon";
-import { glassStyle, domOf } from "./fx";
+import { glassStyle, domOf, lg } from "./fx";
 import type { AppId } from "../system/state";
 import { APPS, INSTALLED, EXTRA_APPS } from "../apps/registry";
 import { appMeta } from "./apps";
@@ -30,7 +30,7 @@ export function HomeGrid({ onOpen, onSpot }: { onOpen: (id: AppId, el: HTMLEleme
   return (
     <View style={s.home}>
       <View style={s.wdgRow}>
-        <View style={[s.wdg, glassStyle(0.14) as object]}>
+        <View {...lg} style={[s.wdg, glassStyle(0.14) as object]}>
           <View style={s.wt}>
             <Text style={s.wtTx}>SAN FRANCISCO</Text>
             <Icon name="sun" size={14} color="rgba(255,255,255,.85)" />
@@ -40,7 +40,7 @@ export function HomeGrid({ onOpen, onSpot }: { onOpen: (id: AppId, el: HTMLEleme
             <Text style={s.wdgSub}>Mostly Clear</Text>
           </View>
         </View>
-        <View style={[s.wdg, glassStyle(0.14) as object]}>
+        <View {...lg} style={[s.wdg, glassStyle(0.14) as object]}>
           <Text style={s.wtTx}>CALENDAR SAT 6</Text>
           <View>
             <Text style={s.wdgEvtT1}>Design{"\n"}Review</Text>
@@ -53,12 +53,12 @@ export function HomeGrid({ onOpen, onSpot }: { onOpen: (id: AppId, el: HTMLEleme
         {APPS.concat(EXTRA_APPS.filter((a) => INSTALLED.has(a.id))).map((a) => <Tile key={a.id} id={a.id} onOpen={onOpen} />)}
       </View>
 
-      <Pressable onPress={onSpot} nativeID="search-capsule" style={[s.search, glassStyle(0.18) as object]}>
+      <Pressable onPress={onSpot} nativeID="search-capsule" {...lg} style={[s.search, glassStyle(0.18) as object]}>
         <Icon name="search" size={14} color="rgba(255,255,255,.8)" />
         <Text style={s.searchTx}>Search</Text>
       </Pressable>
 
-      <View style={[s.dock, glassStyle(0.16) as object]}>
+      <View {...lg} style={[s.dock, glassStyle(0.16) as object]}>
         {DOCK.map((id) => <Tile key={id} id={id} inDock onOpen={onOpen} />)}
       </View>
 

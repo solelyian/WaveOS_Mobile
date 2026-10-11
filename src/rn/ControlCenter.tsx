@@ -5,11 +5,11 @@ import { View, Pressable, Text, StyleSheet } from "react-native";
 import { useSys, set } from "./sys";
 import { cur } from "../system/media";
 import { Icon } from "./Icon";
-import { glassStyle, domOf } from "./fx";
+import { glassStyle, domOf, lg } from "./fx";
 import type { SysState } from "../system/state";
 
 function Tile({ children, style, r = 28, onPress }: { children: React.ReactNode; style?: object; r?: number; onPress?: () => void }) {
-  const inner = <View style={[st.tile, { borderRadius: r }, glassStyle(0.18) as object, style]}>{children}</View>;
+  const inner = <View {...lg} style={[st.tile, { borderRadius: r }, glassStyle(0.18) as object, style]}>{children}</View>;
   return onPress ? <Pressable onPress={onPress}>{inner}</Pressable> : inner;
 }
 
@@ -83,7 +83,7 @@ function SquareBtn({ icon, label, onPress, active }: { icon: string; label: stri
   return (
     <View style={{ alignItems: "center", gap: 4 }}>
       <Pressable onPress={onPress}>
-        <View style={[st.sqBtn, glassStyle(active ? 0.4 : 0.18) as object]}>
+        <View {...lg} style={[st.sqBtn, glassStyle(active ? 0.4 : 0.18) as object]}>
           <Icon name={icon} size={22} color="#fff" />
         </View>
       </Pressable>

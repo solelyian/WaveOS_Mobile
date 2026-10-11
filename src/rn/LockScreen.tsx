@@ -4,7 +4,7 @@ import * as React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { fmtDate, fmtTime } from "../system/state";
 import { Icon } from "./Icon";
-import { glassStyle, domOf } from "./fx";
+import { glassStyle, domOf, lg } from "./fx";
 
 const clkMask = (t: string, w: number, h: number, fs: number, ls: number, stroke: boolean) => {
   const cv = document.createElement("canvas");
@@ -66,7 +66,7 @@ export function GlassClock({ size = 96 }: { size?: number }) {
 
 function RoundBtn({ icon }: { icon: string }) {
   return (
-    <View style={[st.round, glassStyle(0.18) as object]}>
+    <View {...lg} style={[st.round, glassStyle(0.18) as object]}>
       <Icon name={icon} size={22} color="#fff" />
     </View>
   );

@@ -256,3 +256,47 @@ void wg_glass_render(float ox, float oy, int w, int h, float r,
 
 EXP("wg_glass_size")
 void wg_glass_size(int *w, int *h) { *w = g_outW; *h = g_outH; }
+
+/* ---------------- displacement map « vrai liquid glass » ----------------
+ * wg_glass_disp(w,h,r,amp) → g_out = carte RGBA pour feDisplacementMap +
+ * feSpecularLighting :
+ *   R/G = direction × amplitude de la réfraction (128 = neutre) — normale
+ *         sortante du SDF pondérée par le profil de lentille (max au bord,
+ *         décroît vers l'intérieur) ;
+ *   B   = profondeur intérieure 0..255 (réserve) ;
+ *   A   = silhouette antialiasée (height-field pour l'éclairage spéculaire).
+ * amp ∈ [0,1] : force de la lentille normalisée (l'échelle en px est fixée
+ * par feDisplacementMap scale côté TS).
+ */
+EXP("wg_glass_disp")
+void wg_glass_disp(int w, int h, float r, float amp) {
+  if (w > GLASS_MAXW) w = GLASS_MAXW;
+  if (h > GLASS_MAXH) h = GLASS_MAXH;
+  g_outW = w; g_outH = h;
+  const float hw = w * 0.5f, hh = h * 0.5f;
+  const float DEPTH = 26.f;            // bande de réfraction (px)
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      float px = x + 0.5f, py = y + 0.5f;
+      float d = drect(px, py, hw, hh, hw, hh, r);
+      unsigned char *q = g_out + (y * w + x) * 4;
+      float cov = wv_clampf(0.5f - d / 1.4f, 0.f, 1.f); // AA silhouette
+      if (cov <= 0.f) { q[0] = 128; q[1] = 128; q[2] = 0; q[3] = 0; continue; }
+      float inside = wv_max(-d, 0.f);
+      // normale sortante
+      float nx, ny; drectGrad(px, py, hw, hh, hw, hh, r, &nx, &ny);
+      // profil de lentille : max au bord → 0 à DEPTH px (verre plat au centre)
+      float t = wv_clampf(inside / DEPTH, 0.f, 1.f);
+      float wt = (1.f - t) * (1.f - t);
+      // creux léger : les 2 premiers px tirent un peu moins (bord net)
+      wt *= 0.55f + 0.45f * wv_clampf(inside / 2.f, 0.f, 1.f);
+      wt *= amp;
+      int rr = (int)(128.f + nx * wt * 127.f);
+      int gg = (int)(128.f + ny * wt * 127.f);
+      q[0] = (unsigned char)wv_clampf((float)rr, 0.f, 255.f);
+      q[1] = (unsigned char)wv_clampf((float)gg, 0.f, 255.f);
+      q[2] = (unsigned char)wv_clampf(t * 255.f, 0.f, 255.f);
+      q[3] = (unsigned char)(cov * 255.f);
+    }
+  }
+}
