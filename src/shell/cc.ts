@@ -4,7 +4,6 @@ import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
 import { sys, set, onChange } from "../system/state";
 import { Spring } from "../core/motion";
-import { liquidGlass } from "./glass";
 
 export class ControlCenter {
   el = h("div", { class: "sheet", attrs: { id: "cc" } });
@@ -40,7 +39,7 @@ export class ControlCenter {
     const r2 = h("div", { class: "cc-r2" },
       h("button", { class: "cc-pill g-dark", onClick: () => { this.close(); set("sheet", "sd"); } },
         h("div", { class: "pi link" }, svgIcon(I.link, "", 18)),
-        h("div", { class: "tx" }, h("span", { class: "nm" }, "Nyne Link"), h("span", { class: "sub" }, "5 devices nearby"))),
+        h("div", { class: "tx" }, h("span", { class: "nm" }, "Nyne Link"))),
       this.slider(this.brightFill, I.sun, "brightness", "green"));
 
     // --- ligne 3 : pilule Ne pas déranger | slider volume ---
@@ -73,12 +72,6 @@ export class ControlCenter {
 
     const handle = h("div", { class: "handle" }, h("i"));
     this.el.append(top, r1, r2, r3, grid, handle);
-    // chaque surface verre → moteur (réfraction + filet + caustique)
-    requestAnimationFrame(() => {
-      for (const t of this.el.querySelectorAll<HTMLElement>(".g-dark")) {
-        liquidGlass(t);
-      }
-    });
     onChange(() => this.sync());
     this.sync();
   }
@@ -144,11 +137,6 @@ export class ControlCenter {
 
   open() {
     this.sy.to(0);
-    requestAnimationFrame(() => {
-      for (const t of this.el.querySelectorAll<HTMLElement>(".g-dark")) {
-        liquidGlass(t, { radius: 30, blur: 5, scale: 14 });
-      }
-    });
   }
   close() { this.sy.to(-tokens_H); }
   /** retourne true quand le panneau est complètement sorti (à retirer du DOM). */
