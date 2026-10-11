@@ -4,6 +4,7 @@ import { I } from "../core/lucide";
 import { Spring } from "../core/motion";
 import { fmtDate, fmtTime } from "../system/state";
 import { glassClock } from "./glassClock";
+import { glass, type GlassSurface } from "./glass";
 
 const NOTIFS = [
   { user: "Sarah Connor", text: "The future is not set. There is no fate but what we make for ourselves.", time: "2m ago", icon: I.messageCircle, color: "#22c55e" },
@@ -19,6 +20,7 @@ export class NotificationCenter {
   private clockEl = h("div", { class: "nc-clock" });
   private dateEl = h("div", { class: "nc-date" });
   private list = h("div", { class: "nc-list no-sb" });
+  private glassSurfaces: GlassSurface[] = [];
 
   constructor() {
     const head = h("div", { class: "nc-head" }, this.dateEl, this.clockEl);
@@ -37,12 +39,16 @@ export class NotificationCenter {
       return;
     }
     for (const [i, n] of NOTIFS.entries()) {
-      const card = h("div", { class: "nc-card g-dark", style: { opacity: "0", transform: "translateX(-50px) scale(.9)", transition: `opacity .3s ${i * 0.05}s, transform .3s ${i * 0.05}s` } },
+      const card = h("div", { class: "nc-card", style: { opacity: "0", transform: "translateX(-50px) scale(.9)", transition: `opacity .3s ${i * 0.05}s, transform .3s ${i * 0.05}s` } },
         h("div", { class: "bd", style: { background: n.color } }, svgIcon(n.icon)),
         h("div", { class: "tx" },
           h("div", { class: "r1" }, h("span", { class: "app" }, n.user), h("span", { class: "tm" }, n.time)),
           h("div", { class: "txt" }, n.text)));
       this.list.append(card);
+      glass(card, { radius: 34, tint: [255, 255, 255], alpha: 0.10 }).then((g) => {
+        card.prepend(g.canvas); card.classList.add("glx-on");
+        this.glassSurfaces.push(g);
+      });
       requestAnimationFrame(() => requestAnimationFrame(() => {
         card.style.opacity = "1"; card.style.transform = "none";
       }));
@@ -50,7 +56,12 @@ export class NotificationCenter {
   }
   private clear() { NOTIFS.length = 0; this.buildList(); }
 
-  open() { this.sy.to(0); }
+  open() {
+    this.sy.to(0);
+    // le verre échantillonne le wallpaper sous le panneau — on re-rend
+    // quand il est ouvert pour que la position soit exacte.
+    requestAnimationFrame(() => this.glassSurfaces.forEach((g) => g.refresh()));
+  }
   close() { this.sy.to(-850); }
   tick() {
     const t = fmtTime();

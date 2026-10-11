@@ -19,6 +19,12 @@ export interface WasmApi {
   wg_map_ptr(): number;
   wg_map_size(w: number, h: number): void;
   wg_map_render(): void;
+  wg_bg_ptr(): number;
+  wg_out_ptr(): number;
+  wg_glass_set_bg(w: number, h: number): void;
+  wg_glass_render(ox: number, oy: number, w: number, h: number, r: number,
+                 tr: number, tg: number, tb: number, al: number): void;
+  wg_glass_size(w: number, h: number): void;
 }
 
 let wasm: WasmApi | null = null;
