@@ -58,7 +58,9 @@ export class Home {
   private icon(id: AppId, inDock: boolean) {
     const m = appMeta(id);
     const tile = h("div", { class: "tile", style: { background: m.color } }, svgIcon(I[m.icon]));
-    const wrap = h("div", { class: "aicon" }, tile, h("span", { class: "nm" }, m.name));
+    const wrap = inDock
+      ? h("div", { class: "aicon" }, tile)
+      : h("div", { class: "aicon" }, tile, h("span", { class: "nm" }, m.name));
     wrap.addEventListener("pointerdown", () => wrap.classList.add("pressed"));
     wrap.addEventListener("pointerup", () => wrap.classList.remove("pressed"));
     wrap.addEventListener("pointerleave", () => wrap.classList.remove("pressed"));
