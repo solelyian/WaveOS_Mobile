@@ -25,14 +25,14 @@ declare module "react-native-web" {
   export interface ImageProps { source: { uri: string } | number; style?: Style; resizeMode?: string; }
   export class Image extends React.Component<ImageProps> {}
   export interface PressableProps extends ViewProps {
-    onPress?: (e?: unknown) => void; onLongPress?: () => void; onPressIn?: () => void; onPressOut?: () => void;
+    onPress?: (e?: unknown) => void; onLongPress?: () => void; onPressIn?: (e?: any) => void; onPressOut?: (e?: any) => void;
     disabled?: boolean; accessibilityRole?: string; accessibilityLabel?: string;
   }
   export class Pressable extends React.Component<PressableProps> {}
   export class Press extends React.Component<PressableProps> {}
   export interface ScrollViewProps extends ViewProps { horizontal?: boolean; showsVerticalScrollIndicator?: boolean; showsHorizontalScrollIndicator?: boolean; contentContainerStyle?: Style; scrollEventThrottle?: number; onScroll?: (e: unknown) => void; }
   export class ScrollView extends React.Component<ScrollViewProps> {}
-  export interface TextInputProps { style?: Style; value?: string; defaultValue?: string; placeholder?: string; placeholderTextColor?: string; autoFocus?: boolean; multiline?: boolean; autoCapitalize?: string; autoCorrect?: boolean; onChangeText?: (t: string) => void; onSubmitEditing?: () => void; keyboardType?: string; returnKeyType?: string; }
+  export interface TextInputProps { style?: Style; value?: string; defaultValue?: string; placeholder?: string; placeholderTextColor?: string; autoFocus?: boolean; multiline?: boolean; nativeID?: string; autoCapitalize?: string; autoCorrect?: boolean; onChangeText?: (t: string) => void; onSubmitEditing?: () => void; keyboardType?: string; returnKeyType?: string; }
   export class TextInput extends React.Component<TextInputProps> { focus(): void; blur(): void; }
   export const StyleSheet: {
     create<T extends Record<string, object>>(s: T): T;

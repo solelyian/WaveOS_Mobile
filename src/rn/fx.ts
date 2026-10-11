@@ -57,3 +57,13 @@ export const glassStyle = (alpha = 0.16, extra: Record<string, string> = {}) => 
   WebkitBackdropFilter: "blur(22px) saturate(180%)",
   ...extra,
 } as const);
+
+export function tween(ms: number, fn: (v: number) => void, done?: () => void) {
+  const t0 = performance.now();
+  const off = onFrame(() => {
+    const v = Math.min(1, (performance.now() - t0) / ms);
+    const e = 1 - Math.pow(1 - v, 3); // easeOutCubic
+    fn(e);
+    if (v >= 1) { off(); done?.(); }
+  });
+}

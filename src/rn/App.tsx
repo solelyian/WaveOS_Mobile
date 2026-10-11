@@ -13,6 +13,7 @@ import type { AppId } from "../system/state";
 import { SheetHost, sheetCtl } from "./SheetHost";
 import { AppWindow, appwinCtl } from "./AppWindow";
 import { Recents } from "./Recents";
+import { Spotlight } from "./Spotlight";
 import { host, pushRecent, type AppRect } from "./host";
 
 function Boot({ onDone }: { onDone: () => void }) {
@@ -44,6 +45,7 @@ export default function App() {
   const [booted, setBooted] = React.useState(false);
   const done = React.useCallback(() => setBooted(true), []);
   const [from, setFrom] = React.useState<AppRect | null>(null);
+  const [spot, setSpot] = React.useState(false);
   const root = React.useRef<View>(null);
 
   const iconRect = React.useCallback((id: AppId): AppRect | null => {
@@ -99,13 +101,14 @@ export default function App() {
   return (
     <View ref={rootEl} style={st.phone}>
       <View style={st.wall} nativeID="wp" pointerEvents="none" />
-      {!s.locked && <HomeGrid onOpen={(id) => openApp(id)} onSpot={() => {}} />}
+      {!s.locked && <HomeGrid onOpen={(id) => openApp(id)} onSpot={() => setSpot(true)} />}
       {s.locked && <LockScreen />}
       {s.activeApp && from && (
         <AppWindow id={s.activeApp} from={from} onClosed={() => { set("activeApp", null); setFrom(null); }} />
       )}
       <SheetHost />
       {s.switcherOpen && <Recents onOpen={(id, r) => { set("switcherOpen", false); openApp(id, r); }} />}
+      {spot && <Spotlight onOpen={(id) => { setSpot(false); openApp(id); }} onClose={() => setSpot(false)} />}
       <StatusBar />
       <DynamicIsland />
       {!booted && <Boot onDone={done} />}

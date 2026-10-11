@@ -1,15 +1,16 @@
 // ControlCenter.tsx — toggles 2×2, sliders verticaux brightness/volume, carte média,
 // Zen/Cast, rangée utilitaires, tuile Nyne Link — métriques identiques à main.
 import * as React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Pressable, Text, StyleSheet } from "react-native";
 import { useSys, set } from "./sys";
 import { cur } from "../system/media";
 import { Icon } from "./Icon";
 import { glassStyle, domOf } from "./fx";
 import type { SysState } from "../system/state";
 
-function Tile({ children, style, r = 28 }: { children: React.ReactNode; style?: object; r?: number }) {
-  return <View style={[st.tile, { borderRadius: r }, glassStyle(0.18) as object, style]}>{children}</View>;
+function Tile({ children, style, r = 28, onPress }: { children: React.ReactNode; style?: object; r?: number; onPress?: () => void }) {
+  const inner = <View style={[st.tile, { borderRadius: r }, glassStyle(0.18) as object, style]}>{children}</View>;
+  return onPress ? <Pressable onPress={onPress}>{inner}</Pressable> : inner;
 }
 
 function Toggle({ k, on, off }: { k: keyof SysState; on: string; off?: string }) {
@@ -127,7 +128,7 @@ export function ControlCenter() {
       </View>
 
       <View style={st.sdWrap}>
-        <Tile style={st.sd} r={24}>
+        <Tile style={st.sd} r={24} onPress={() => set("sheet", "sd")}>
           <View style={st.sdIc}><Icon name="cast" size={18} color="#fff" /></View>
           <View style={{ flex: 1 }}>
             <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>Nyne Link</Text>

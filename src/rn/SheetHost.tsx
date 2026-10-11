@@ -5,6 +5,7 @@ import { useSys } from "./sys";
 import { Spring, SPRINGS, onFrame, domOf } from "./fx";
 import { NotificationCenter } from "./NotificationCenter";
 import { ControlCenter } from "./ControlCenter";
+import { SuperDevice } from "./SuperDevice";
 
 const H = 850;
 
@@ -23,7 +24,7 @@ export function SheetHost() {
   if (s.sheet === "nc" || s.sheet === "cc") last.current = s.sheet;
 
   const [preview, setPreview] = React.useState<"nc" | "cc" | null>(null);
-  const active = s.sheet === "nc" || s.sheet === "cc" ? s.sheet : preview ?? last.current;
+  const active = s.sheet === "sd" ? "sd" : s.sheet === "nc" || s.sheet === "cc" ? s.sheet : preview ?? last.current;
   React.useEffect(() => { if (!preview) sp.to(s.sheet ? 0 : -H); }, [s.sheet, sp, preview]);
   React.useEffect(() => {
     sheetCtl.preview = (which, dy) => { setPreview(which); sp.set(Math.min(0, -H + Math.max(0, dy))); };
@@ -54,7 +55,7 @@ export function SheetHost() {
   return (
     <View ref={wrap} style={st.wrap} pointerEvents="box-none">
       <View style={st.frost} nativeID="sheet-frost" pointerEvents="none" />
-      {active === "nc" ? <NotificationCenter /> : <ControlCenter />}
+      {active === "sd" ? <SuperDevice /> : active === "nc" ? <NotificationCenter /> : <ControlCenter />}
     </View>
   );
 }

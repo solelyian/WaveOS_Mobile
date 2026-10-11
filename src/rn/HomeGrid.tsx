@@ -53,7 +53,7 @@ export function HomeGrid({ onOpen, onSpot }: { onOpen: (id: AppId) => void; onSp
         {APPS.concat(EXTRA_APPS.filter((a) => INSTALLED.has(a.id))).map((a) => <Tile key={a.id} id={a.id} onOpen={onOpen} />)}
       </View>
 
-      <Pressable onPress={onSpot} style={[s.search, glassStyle(0.18) as object]}>
+      <Pressable onPress={onSpot} nativeID="search-capsule" style={[s.search, glassStyle(0.18) as object]}>
         <Icon name="search" size={14} color="rgba(255,255,255,.8)" />
         <Text style={s.searchTx}>Search</Text>
       </Pressable>
