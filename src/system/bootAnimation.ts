@@ -20,14 +20,15 @@ export function bootFrameAt(time: number, reducedMotion = false) {
     manufacturerOpacity: reducedMotion ? 0 : 1 - smooth(3.6, 3.95, t),
     sweep: reducedMotion ? 0 : smooth(1.6, 2.65, t),
     sweepOpacity: reducedMotion ? 0 : smooth(1.55, 1.8, t) * (1 - smooth(2.5, 2.95, t)),
-    cloudOpacity: reducedMotion ? 0 : smooth(3.95, 4.16, t) * (1 - smooth(6.3, 6.7, t)),
+    cloudOpacity: reducedMotion ? 0 : smooth(3.95, 4.16, t) * (1 - smooth(6.08, 6.72, t)),
     convergence: smooth(4.9, 5.65, t),
     morph,
-    wordmarkScale: reducedMotion ? 1 : mix(4.9, 1, smooth(6.45, 7.05, t)),
+    wordmarkScale: reducedMotion ? 1 : mix(4.9, 1, smooth(6.4, 6.93, t)),
     wordmarkOpacity: reducedMotion ? smooth(0, .25, t)
-      : .025 * smooth(5.75, 6.05, t) + .975 * smooth(6.38, 7.05, t),
-    ringGlyphOpacity: reducedMotion ? 1 : smooth(6.25, 6.58, t),
-    underlineOpacity: reducedMotion ? 1 : smooth(6.85, 7.15, t),
+      : .025 * smooth(5.75, 6.05, t) + .975 * smooth(6.35, 6.95, t),
+    ringGlyphOpacity: reducedMotion ? 1 : smooth(6.08, 6.6, t),
+    underlineOpacity: reducedMotion ? 1 : smooth(6.85, 7.07, t),
+    underlineAlpha: reducedMotion ? 1 : smooth(6.83, 6.95, t),
     exitOpacity: reducedMotion ? 1 - smooth(1.15, REDUCED_BOOT_DURATION, t)
       : 1 - smooth(7.85, BOOT_DURATION, t),
     done: t >= (reducedMotion ? REDUCED_BOOT_DURATION : BOOT_DURATION),
@@ -45,13 +46,13 @@ function particles(): Particle[] {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
     return seed / 4294967296;
   };
-  return Array.from({ length: 1800 }, () => ({
+  return Array.from({ length: 1600 }, () => ({
     angle: random() * Math.PI * 2,
-    distance: 24 + Math.pow(random(), .55) * 250,
+    distance: 6 + Math.pow(random(), 1.55) * 280,
     depth: random(),
     size: .28 + Math.pow(random(), 4) * 1.05,
     phase: random() * Math.PI * 2,
-    radialOffset: (random() + random() + random() - 1.5) * 9,
+    radialOffset: (random() + random() + random() - 1.5) * 8,
     gather: random() < .92,
     cloudVisible: random() < .25,
   }));
@@ -192,21 +193,21 @@ export class BootRenderer {
       const twinkle = .55 + .45 * Math.pow(Math.sin(p.phase + frame.time * 2.6), 2);
       const visibility = p.cloudVisible ? 1 : Math.pow(gather, 5);
       const cluster = mix(1, .75 + .25 * Math.sin(angle * 5 + drift * 1.7), gather);
-      const opacity = frame.cloudOpacity * twinkle * visibility * cluster
+      const depthLight = mix(.22 + .78 * Math.pow(p.depth, .8), 1, gather);
+      const opacity = frame.cloudOpacity * twinkle * visibility * cluster * depthLight
         * (p.gather ? 1 : 1 - smooth(5.7, 6.25, frame.time));
       if (opacity < .01) continue;
       const defocused = p.depth > .9;
-      const size = p.size * mix(defocused ? 5 : 1 + p.depth, 1.35, gather);
+      const size = p.size * mix(defocused ? 5 : 1 + p.depth, 1.18, gather);
       if (p.size > .45 || defocused) {
-        ctx.globalAlpha = opacity * mix(.35, .65, gather);
-        const haloSize = size * mix(defocused ? 14 : 6, 9, gather);
+        ctx.globalAlpha = opacity * mix(defocused ? .85 : .35, .95, gather);
+        const haloSize = size * mix(defocused ? 14 : 6, 11, gather);
         ctx.drawImage(this.halo, x - haloSize / 2, y - haloSize / 2, haloSize, haloSize);
       }
-      if (defocused && gather < .5) continue;
-      ctx.globalAlpha = opacity;
+      ctx.globalAlpha = opacity * mix(defocused ? .45 : 1, .65, gather);
       ctx.fillStyle = "#f6f8fb";
       ctx.beginPath();
-      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.arc(x, y, size * (defocused ? mix(.22, 1, gather) : 1), 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
@@ -229,7 +230,7 @@ export class BootRenderer {
     ctx.beginPath();
     ctx.arc(0, 0, m.oHeight / 2 - 1.3, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.globalAlpha = frame.underlineOpacity;
+    ctx.globalAlpha = frame.underlineAlpha;
     ctx.fillStyle = "#3b8cff";
     ctx.beginPath();
     ctx.roundRect(-m.o * .22, m.oHeight / 2 + 6, m.o * .44 * frame.underlineOpacity, 2.3, 1.15);

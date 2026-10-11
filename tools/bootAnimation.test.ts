@@ -12,7 +12,7 @@ test("boot phases follow the reference sequence", () => {
 
 test("timeline is deterministic, bounded and finite at every frame", () => {
   const bounded = ["manufacturerOpacity", "sweep", "sweepOpacity", "cloudOpacity", "convergence",
-    "morph", "wordmarkOpacity", "ringGlyphOpacity", "underlineOpacity", "exitOpacity"] as const;
+    "morph", "wordmarkOpacity", "ringGlyphOpacity", "underlineOpacity", "underlineAlpha", "exitOpacity"] as const;
   for (let i = -10; i <= 1200; i++) {
     const time = i / 120;
     const frame = bootFrameAt(time);
