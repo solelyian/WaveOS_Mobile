@@ -6,10 +6,12 @@ export interface GestureHandlers {
   openSheet(s: "nc" | "cc" | "spot" | "sd"): void;
   closeSheet(): void;
   openSwitcher(): void;
-  closeApp(): void;
+  appDrag(dy: number): void;
+  appRelease(dy: number, vy: number): void;
   isLocked(): boolean;
   hasSheet(): boolean;
   hasApp(): boolean;
+  hasRecents(): boolean;
 }
 
 const interactiveSel = "button, a, input, #di-capsule, #cc-slider, #nc-card, .tabbar, .ghdr, #app-scroll, #spot";
@@ -17,7 +19,7 @@ const interactiveSel = "button, a, input, #di-capsule, #cc-slider, #nc-card, .ta
 interface Drag {
   sx: number; sy: number; lx: number; ly: number; lt: number;
   vy: number; target: "top-nc" | "top-cc" | "bottom" | "mid" | null;
-  moved: boolean;
+  moved: boolean; appDrag: boolean;
 }
 
 export function attachGestures(root: HTMLElement, h: GestureHandlers) {
@@ -38,6 +40,7 @@ export function attachGestures(root: HTMLElement, h: GestureHandlers) {
       sx: (e.clientX - r.left) * k, sy: (e.clientY - r.top) * k,
       lx: e.clientX, ly: e.clientY, lt: performance.now(), vy: 0,
       target: null, moved: false,
+      appDrag: h.hasApp() && ((e.clientY - r.top) * k) > 780,
     };
     d.target = zone(d.sx, d.sy);
     root.setPointerCapture?.(e.pointerId);
@@ -60,15 +63,24 @@ export function attachGestures(root: HTMLElement, h: GestureHandlers) {
       if (dy < -60 || d.vy < -400) { h.unlock(); d = null; }
       return;
     }
+    if (d.appDrag) { h.appDrag(dy); return; }
     if (d.target === "top-nc" && dy > 40) { h.openSheet("nc"); d = null; }
     else if (d.target === "top-cc" && dy > 40) { h.openSheet("cc"); d = null; }
     else if (d.target === "bottom" && dy < -60) {
-      if (h.hasApp()) h.closeApp(); else h.openSwitcher();
+      if (h.hasRecents()) h.openSwitcher();
       d = null;
     } else if (h.hasSheet() && dy < -50) { h.closeSheet(); d = null; }
   };
 
-  const up = () => { d = null; };
+  const up = () => {
+    if (d?.appDrag) {
+      const r = root.getBoundingClientRect();
+      const k = 400 / r.width;
+      const y = (d.ly - r.top) * k;
+      h.appRelease(y - d.sy, d.vy);
+    }
+    d = null;
+  };
 
   root.addEventListener("pointerdown", down);
   root.addEventListener("pointermove", move);

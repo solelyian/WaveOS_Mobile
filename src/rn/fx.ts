@@ -32,6 +32,7 @@ export class Spring {
     this.v = v; this.k = k; this.c = c; this.target = target ?? v;
   }
   to(t: number) { this.target = t; }
+  set(v: number) { this.v = v; this.target = v; this.vel = 0; }
   get settled() { return Math.abs(this.v - this.target) < 0.002 && Math.abs(this.vel) < 0.01; }
   step(dt: number) {
     if (this.settled) { this.v = this.target; this.vel = 0; return; }

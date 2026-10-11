@@ -11,6 +11,8 @@ export interface SysState {
   locked: boolean;
   activeApp: AppId | null;
   sheet: Sheet;
+  recents: AppId[];
+  switcherOpen: boolean;
   brightness: number; // 0..100
   volume: number;     // 0..100
   playing: boolean;
@@ -27,6 +29,8 @@ export const sys: SysState = {
   locked: true,
   activeApp: null,
   sheet: null,
+  recents: [],
+  switcherOpen: false,
   brightness: 80,
   volume: 50,
   playing: false,

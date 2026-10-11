@@ -1,4 +1,5 @@
-// App.tsx — coquille téléphone : wallpaper, boot NYNE, lockscreen, statusbar, DI.
+// App.tsx — coquille téléphone : wallpaper, boot NYNE, lockscreen, statusbar,
+// DI, sheets, fenêtre d'app (morph) et switcher de recents.
 import * as React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useSys, set } from "./sys";
@@ -8,7 +9,11 @@ import { DynamicIsland } from "./DynamicIsland";
 import { HomeGrid } from "./HomeGrid";
 import { attachGestures } from "./gestures";
 import { sys } from "../system/state";
+import type { AppId } from "../system/state";
 import { SheetHost } from "./SheetHost";
+import { AppWindow, appwinCtl } from "./AppWindow";
+import { Recents } from "./Recents";
+import { host, pushRecent, type AppRect } from "./host";
 
 function Boot({ onDone }: { onDone: () => void }) {
   const [t, setT] = React.useState(0);
@@ -38,7 +43,31 @@ export default function App() {
   const s = useSys();
   const [booted, setBooted] = React.useState(false);
   const done = React.useCallback(() => setBooted(true), []);
+  const [from, setFrom] = React.useState<AppRect | null>(null);
   const root = React.useRef<View>(null);
+
+  const iconRect = React.useCallback((id: AppId): AppRect | null => {
+    const phone = root.current as unknown as HTMLElement | null;
+    const tile = document.getElementById(`icon-${id}`) ?? document.getElementById(`dock-${id}`);
+    if (!phone || !tile) return null;
+    const pr = phone.getBoundingClientRect();
+    const r = tile.getBoundingClientRect();
+    const sx = 400 / pr.width, sy = 850 / pr.height;
+    return { x: (r.left - pr.left) * sx, y: (r.top - pr.top) * sy, w: r.width * sx, h: r.height * sy };
+  }, []);
+
+  const openApp = React.useCallback((id: AppId, rect?: AppRect | null) => {
+    const r = rect ?? iconRect(id) ?? { x: 170, y: 380, w: 60, h: 60 };
+    pushRecent(id);
+    setFrom(r);
+    set("activeApp", id);
+  }, [iconRect]);
+
+  React.useEffect(() => {
+    host.openApp = (id) => openApp(id);
+    host.closeApp = () => appwinCtl.current?.close();
+  }, [openApp]);
+
   const rootEl = React.useCallback((n: View | null) => {
     (root as { current: View | null }).current = n;
     const el = n as unknown as HTMLElement | null;
@@ -46,19 +75,26 @@ export default function App() {
       unlock: () => set("locked", false),
       openSheet: (x) => set("sheet", x as never),
       closeSheet: () => set("sheet", null),
-      openSwitcher: () => {},
-      closeApp: () => set("activeApp", null),
+      openSwitcher: () => { if (sys.recents.length) set("switcherOpen", true); },
+      appDrag: (dy) => appwinCtl.current?.drag(dy),
+      appRelease: (dy, vy) => { appwinCtl.current?.release(dy, vy); },
       isLocked: () => sys.locked,
       hasSheet: () => sys.sheet != null,
       hasApp: () => sys.activeApp != null,
+      hasRecents: () => sys.recents.length > 0,
     });
   }, []);
+
   return (
     <View ref={rootEl} style={st.phone}>
-      <View style={st.wall} pointerEvents="none" />
-      {!s.locked && <HomeGrid onOpen={() => {}} onSpot={() => {}} />}
+      <View style={st.wall} nativeID="wp" pointerEvents="none" />
+      {!s.locked && <HomeGrid onOpen={(id) => openApp(id)} onSpot={() => {}} />}
       {s.locked && <LockScreen />}
+      {s.activeApp && from && (
+        <AppWindow id={s.activeApp} from={from} onClosed={() => { set("activeApp", null); setFrom(null); }} />
+      )}
       <SheetHost />
+      {s.switcherOpen && <Recents onOpen={(id, r) => { set("switcherOpen", false); openApp(id, r); }} />}
       <StatusBar />
       <DynamicIsland />
       {!booted && <Boot onDone={done} />}
@@ -79,5 +115,4 @@ const st = StyleSheet.create({
     backgroundColor: "#050505", alignItems: "center", justifyContent: "center",
   },
   bootL: { color: "#fff", fontSize: 44, fontWeight: "200", letterSpacing: 18 },
-  homeStub: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" },
 });

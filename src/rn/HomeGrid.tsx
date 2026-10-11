@@ -2,30 +2,23 @@
 import * as React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Icon } from "./Icon";
-import { glassStyle } from "./fx";
+import { glassStyle, domOf } from "./fx";
 import type { AppId } from "../system/state";
+import { APPS, INSTALLED, EXTRA_APPS } from "../apps/registry";
+import { appMeta } from "./apps";
 
-export const APPS: { id: AppId; name: string; icon: string; color: string }[] = [
-  { id: "weather", name: "Weather", icon: "cloudSun", color: "#3b82f6" },
-  { id: "calendar", name: "Calendar", icon: "calendar", color: "#ef4444" },
-  { id: "photos", name: "Photos", icon: "image", color: "#f59e0b" },
-  { id: "calculator", name: "Calculator", icon: "calculator", color: "#111111" },
-  { id: "settings", name: "Settings", icon: "settings", color: "#6b7280" },
-  { id: "maps", name: "Maps", icon: "mapPin", color: "#22c55e" },
-  { id: "phone", name: "Phone", icon: "phone", color: "#22c55e" },
-  { id: "mail", name: "Mail", icon: "mail", color: "#2563eb" },
-  { id: "messages", name: "Messages", icon: "messageCircle", color: "#22c55e" },
-  { id: "music", name: "Music", icon: "music", color: "#ef4444" },
-  { id: "safari", name: "Surf", icon: "compass", color: "#0f0f0f" },
-  { id: "store", name: "Nyne Store", icon: "store", color: "#8b5cf6" },
-];
 export const DOCK: AppId[] = ["phone", "safari", "messages", "music"];
 
 function Tile({ id, inDock, onOpen }: { id: AppId; inDock?: boolean; onOpen: (id: AppId) => void }) {
-  const a = APPS.find((x) => x.id === id)!;
+  const a = appMeta(id);
+  const tileRef = React.useRef<View>(null);
+  React.useEffect(() => {
+    const el = domOf(tileRef);
+    if (el) el.style.background = a.color; // dégradés via DOM (RN ne sait pas)
+  }, [a.color]);
   return (
     <Pressable onPress={() => onOpen(id)} style={s.icon}>
-      <View style={[s.tile, { backgroundColor: a.color }]}>
+      <View ref={tileRef} nativeID={inDock ? `dock-${id}` : `icon-${id}`} style={s.tile}>
         <Icon name={a.icon} size={30} color="#fff" />
       </View>
       {!inDock && <Text style={s.nm} numberOfLines={1}>{a.name}</Text>}
@@ -57,7 +50,7 @@ export function HomeGrid({ onOpen, onSpot }: { onOpen: (id: AppId) => void; onSp
       </View>
 
       <View style={s.grid}>
-        {APPS.map((a) => <Tile key={a.id} id={a.id} onOpen={onOpen} />)}
+        {APPS.concat(EXTRA_APPS.filter((a) => INSTALLED.has(a.id))).map((a) => <Tile key={a.id} id={a.id} onOpen={onOpen} />)}
       </View>
 
       <Pressable onPress={onSpot} style={[s.search, glassStyle(0.18) as object]}>

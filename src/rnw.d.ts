@@ -24,7 +24,10 @@ declare module "react-native-web" {
   export class Text extends React.Component<TextProps> {}
   export interface ImageProps { source: { uri: string } | number; style?: Style; resizeMode?: string; }
   export class Image extends React.Component<ImageProps> {}
-  export interface PressableProps extends ViewProps { onPress?: () => void; onLongPress?: () => void; }
+  export interface PressableProps extends ViewProps {
+    onPress?: () => void; onLongPress?: () => void; disabled?: boolean;
+    accessibilityRole?: string; accessibilityLabel?: string;
+  }
   export class Pressable extends React.Component<PressableProps> {}
   export class Press extends React.Component<PressableProps> {}
   export interface ScrollViewProps extends ViewProps { horizontal?: boolean; showsVerticalScrollIndicator?: boolean; showsHorizontalScrollIndicator?: boolean; contentContainerStyle?: Style; scrollEventThrottle?: number; onScroll?: (e: unknown) => void; }
