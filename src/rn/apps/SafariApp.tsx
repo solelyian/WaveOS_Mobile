@@ -50,7 +50,7 @@ export function SafariApp() {
         </View>
       </ScrollView>
       <View ref={barRef} style={sf.bar}>
-        <Text style={{ color: "rgba(0,0,0,.6)", fontWeight: "500", fontSize: 14 }}>Aa</Text>
+        <Icon n="shield" size={16} color="rgba(0,0,0,.5)" />
         <TextInput style={sf.url} value={url} onChangeText={setUrl} autoCapitalize="none" autoCorrect={false}
           onSubmitEditing={() => setPage(url.trim().replace(/\.com$/, "") || "nyne")} />
         <Pressable onPress={() => setPage(url.trim().replace(/\.com$/, "") || "nyne")}>
