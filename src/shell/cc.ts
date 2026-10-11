@@ -4,7 +4,7 @@ import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
 import { sys, set, onChange } from "../system/state";
 import { Spring } from "../core/motion";
-import { glass, type GlassSurface } from "./glass";
+import { liquidGlass } from "./glass";
 
 function toggle(icon: HTMLElement, on: boolean, cls: string, el: HTMLElement) {
   el.className = `cc-tg ${cls} ${on ? "on" : "off"}`;
@@ -19,7 +19,7 @@ export class ControlCenter {
   private volFill = h("div", { class: "fill" });
   private mediaSlot = h("div", { class: "cc-media g-dark" });
   private tgs: Record<string, HTMLElement> = {};
-  private glassSurfaces: GlassSurface[] = [];
+
 
   constructor() {
     const cluster = h("div", { class: "cc-cluster g-dark" });
@@ -65,13 +65,13 @@ export class ControlCenter {
 
     const handle = h("div", { class: "handle" }, h("i"));
     this.el.append(r1, r2, r3, sdBtn, home, handle);
-    // chaque tuile .g-dark devient une plaque de verre liquide (raster C++)
-    for (const t of this.el.querySelectorAll<HTMLElement>(".g-dark")) {
-      glass(t, { radius: 30, tint: [255, 255, 255], alpha: 0.04, backdropFilter: "brightness(.72) saturate(125%)" }).then((g) => {
-        t.prepend(g.canvas); t.classList.add("glx-on");
-        this.glassSurfaces.push(g);
-      });
-    }
+    // chaque tuile .g-dark devient une plaque de verre liquide (réfraction)
+    requestAnimationFrame(() => {
+      for (const t of this.el.querySelectorAll<HTMLElement>(".g-dark")) {
+        t.classList.add("glx-on");
+        liquidGlass(t, { radius: 30, blur: 5, scale: 14 });
+      }
+    });
     onChange(() => this.sync());
     this.sync();
   }
@@ -123,7 +123,11 @@ export class ControlCenter {
 
   open() {
     this.sy.to(0);
-    requestAnimationFrame(() => this.glassSurfaces.forEach((g) => g.refresh()));
+    requestAnimationFrame(() => {
+      for (const t of this.el.querySelectorAll<HTMLElement>(".g-dark")) {
+        liquidGlass(t, { radius: 30, blur: 5, scale: 14 });
+      }
+    });
   }
   close() { this.sy.to(-tokens_H); }
   /** retourne true quand le panneau est complètement sorti (à retirer du DOM). */

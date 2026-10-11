@@ -11,6 +11,7 @@ import { Spotlight } from "./spotlight";
 import { SuperDevice } from "./superdevice";
 import { RecentsSwitcher } from "./recents";
 import { renderApp } from "../apps";
+import { liquidGlassAll } from "./glass";
 import { registerAppCloser, registerAppLauncher, registerAppInstaller } from "./api";
 import { appMeta, INSTALLED } from "../apps/registry";
 import { sys, set, onChange } from "../system/state";
@@ -41,13 +42,14 @@ export class Shell {
     this.home = new Home((id, rect) => this.openApp(id, rect));
     this.home.onSpot = () => {
       if (sys.locked || sys.activeApp || sys.sheet) return;
-      if (!this.spot) { this.spot = new Spotlight((id, rect) => this.openApp(id, rect)); this.phone.append(this.spot.el); }
+      if (!this.spot) { this.spot = new Spotlight((id, rect) => this.openApp(id, rect)); this.phone.append(this.spot.el); liquidGlassAll(this.spot.el); }
       this.spot.open(this.home.searchEl);
     };
     this.lock = new Lock(() => {});
     phone.append(this.wp.el, this.home.el, this.sb.el, this.di.el, this.lock.el);
     this.lock.bar.style.pointerEvents = "auto";
     attachGestures(phone);
+    liquidGlassAll(phone);
     onChange((k) => { if (k === "darkMode") phone.classList.toggle("dark", sys.darkMode); });
     registerAppCloser(() => this.closeActiveApp());
     registerAppLauncher((id) => this.launchApp(id));
@@ -95,6 +97,7 @@ export class Shell {
     };
     this.phone.append(this.appwin.el);
     this.home.setIconHidden(id, true);
+    liquidGlassAll(this.appwin.el);
   }
 
   closeActiveApp() { this.appwin?.close(); }
@@ -300,11 +303,11 @@ export class Shell {
     return this.cc;
   }
   private ensureNC() {
-    if (!this.nc) { this.nc = new NotificationCenter(); this.phone.append(this.nc.el); }
+    if (!this.nc) { this.nc = new NotificationCenter(); this.phone.append(this.nc.el); liquidGlassAll(this.nc.el); }
     return this.nc;
   }
   private ensureSD() {
-    if (!this.sd) { this.sd = new SuperDevice(); this.phone.append(this.sd.el); }
+    if (!this.sd) { this.sd = new SuperDevice(); this.phone.append(this.sd.el); liquidGlassAll(this.sd.el); }
     return this.sd;
   }
 
