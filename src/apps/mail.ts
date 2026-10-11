@@ -29,10 +29,10 @@ const MAILS: Mail[] = [
 function mailDetail(host: HTMLElement, m: Mail, refresh: () => void, openComposer: (opts: { to: string; subject: string; body: string }) => void) {
   m.unread = false;
   pane(host, (close) => {
-    const flagBtn = h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: m.flagged ? "#f59e0b" : "#2563eb" },
+    const flagBtn = h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: m.flagged ? "#f59e0b" : "var(--accent)" },
       onClick: (e) => {
         m.flagged = !m.flagged;
-        (e.currentTarget as HTMLElement).style.color = m.flagged ? "#f59e0b" : "#2563eb";
+        (e.currentTarget as HTMLElement).style.color = m.flagged ? "#f59e0b" : "var(--accent)";
         (e.currentTarget as HTMLElement).replaceChildren(svgIcon(I.flag, m.flagged ? "fill" : "", 16) as Node);
         refresh();
         toast(host, m.flagged ? "Flagged" : "Unflagged");
@@ -44,7 +44,7 @@ function mailDetail(host: HTMLElement, m: Mail, refresh: () => void, openCompose
         h("div", { style: { flex: "1" } }),
         flagBtn,
         ...([["archive", () => { m.archived = true; refresh(); close(); toast(host, "Archived"); }], ["trash2", () => { m.archived = true; refresh(); close(); toast(host, "Moved to Bin"); }], ["reply", () => { close(); openComposer({ to: m.folder === "inbox" ? m.from : (m.to ?? ""), subject: m.subject.startsWith("Re:") ? m.subject : `Re: ${m.subject}`, body: `\n\n—— Original message ——\n${m.body}` }); }]] as [keyof typeof I, () => void][]).map(([ic, fn]) =>
-          h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb" }, onClick: fn }, svgIcon(I[ic], "", 16)))),
+          h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)" }, onClick: fn }, svgIcon(I[ic], "", 16)))),
       h("div", { class: "no-sb", style: { flex: "1", overflowY: "auto", padding: "0 20px 40px" } },
         h("h2", { style: { fontSize: "22px", fontWeight: "700", letterSpacing: "-.01em", margin: "8px 0 14px" } }, m.subject),
         h("div", { class: "card-white", style: { display: "flex", alignItems: "center", gap: "12px", padding: "12px" } },
@@ -55,7 +55,7 @@ function mailDetail(host: HTMLElement, m: Mail, refresh: () => void, openCompose
           h("span", { style: { fontSize: "12px", color: "#9ca3af" } }, m.time)),
         h("div", { class: "card-white", style: { marginTop: "14px", padding: "18px" } },
           ...m.body.split("\n\n").map((p) => h("p", { style: { fontSize: "15px", lineHeight: "1.55", color: "#374151", marginBottom: "12px", whiteSpace: "pre-wrap" } }, p))),
-        h("button", { class: "pressable", style: { width: "100%", marginTop: "14px", padding: "13px", borderRadius: "16px", background: "#2563eb", color: "#fff", fontWeight: "700", fontSize: "15px" },
+        h("button", { class: "pressable", style: { width: "100%", marginTop: "14px", padding: "13px", borderRadius: "16px", background: "var(--accent)", color: "#fff", fontWeight: "700", fontSize: "15px" },
           onClick: () => { close(); openComposer({ to: m.folder === "inbox" ? m.from : (m.to ?? ""), subject: m.subject.startsWith("Re:") ? m.subject : `Re: ${m.subject}`, body: `\n\n—— Original message ——\n${m.body}` }); } }, "Reply")));
   });
 }
@@ -106,7 +106,7 @@ export function MailApp() {
         h("div", { style: { display: "flex", alignItems: "center", padding: "60px 16px 10px" } },
           h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }, onClick: dismiss }, svgIcon(I.x, "", 16)),
           h("span", { style: { flex: "1", textAlign: "center", fontWeight: "700", fontSize: "17px" } }, "New Message"),
-          h("button", { class: "pressable", style: { padding: "8px 18px", borderRadius: "999px", background: "#2563eb", color: "#fff", fontWeight: "700", fontSize: "14px" }, onClick: send }, "Send")),
+          h("button", { class: "pressable", style: { padding: "8px 18px", borderRadius: "999px", background: "var(--accent)", color: "#fff", fontWeight: "700", fontSize: "14px" }, onClick: send }, "Send")),
         fld(to), fld(subj), body);
     });
   };
@@ -120,7 +120,7 @@ export function MailApp() {
       img(m.avatar, "av rd"),
       h("div", { class: "tx" },
         h("div", { style: { display: "flex", gap: "6px", alignItems: "center" } },
-          m.unread ? h("i", { style: { width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb", flex: "none" } }) : null,
+          m.unread ? h("i", { style: { width: "8px", height: "8px", borderRadius: "50%", background: "var(--accent)", flex: "none" } }) : null,
           m.flagged ? h("span", { style: { color: "#f59e0b", display: "flex" } }, svgIcon(I.flag, "fill", 12)) : null,
           h("div", { class: "t1" }, who)),
         h("div", { class: "t1", style: { fontSize: "13px", fontWeight: "600", color: m.folder === "drafts" ? "#d97706" : "#4b5563" } }, m.subject),
@@ -157,7 +157,7 @@ export function MailApp() {
   root.append(
     GlassHeader("Inbox", { large: true }),
     scroll, tabs.el,
-    h("button", { class: "app-fab", style: { width: "56px", height: "56px", right: "20px", bottom: "116px", background: "#2563eb", color: "#fff" },
+    h("button", { class: "app-fab", style: { width: "56px", height: "56px", right: "20px", bottom: "116px", background: "var(--accent)", color: "#fff" },
       onClick: () => composer() }, svgIcon(I.pencil)));
   return root;
 }

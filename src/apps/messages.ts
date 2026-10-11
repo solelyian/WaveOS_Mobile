@@ -52,7 +52,7 @@ export function MessagesApp() {
         h("div", { style: { fontSize: "12px", color: "#22c55e", fontWeight: "600", marginTop: "3px" } }, "Online"),
         h("div", { style: { display: "flex", gap: "16px", marginTop: "24px" } },
           ...([["messageCircle", "Message", "#22c55e", () => { close(); openConvo(convoFor(name, avatar)); }],
-               ["phone", "Call", "#2563eb", () => toast(root, `Calling ${name.split(" ")[0]}…`)],
+               ["phone", "Call", "var(--accent)", () => toast(root, `Calling ${name.split(" ")[0]}…`)],
                ["video", "Nyne Vision", "#0ea5e9", () => toast(root, "Starting Nyne Vision…")]] as [keyof typeof I, string, string, () => void][]).map(([ic, l, bg, fn]) =>
             h("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" } },
               h("button", { class: "pressable", style: { width: "54px", height: "54px", borderRadius: "50%", background: bg, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }, onClick: fn }, svgIcon(I[ic], "", 20)),
@@ -105,8 +105,8 @@ export function MessagesApp() {
           h("button", { style: { flex: "1", textAlign: "left" }, onClick: () => contactCard(c.name, c.avatar) },
             h("div", { style: { fontWeight: "700", fontSize: "16px" } }, c.name),
             h("div", { style: { fontSize: "11px", color: "#22c55e", fontWeight: "600" } }, "Online")),
-          h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb" }, onClick: () => toast(root, "Starting Nyne Vision…") }, svgIcon(I.video, "", 16)),
-          h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb" }, onClick: () => toast(root, `Calling ${c.name.split(" ")[0]}…`) }, svgIcon(I.phone, "", 16))),
+          h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)" }, onClick: () => toast(root, "Starting Nyne Vision…") }, svgIcon(I.video, "", 16)),
+          h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)" }, onClick: () => toast(root, `Calling ${c.name.split(" ")[0]}…`) }, svgIcon(I.phone, "", 16))),
         list,
         h("div", { style: { display: "flex", alignItems: "center", gap: "8px", padding: "10px 12px 96px" } },
           h("button", { class: "g-btn", style: { width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280", flex: "none" }, onClick: photoPicker }, svgIcon(I.plus, "", 16)),
@@ -174,7 +174,7 @@ export function MessagesApp() {
           return h("div", { class: "lrow pressable", onClick: () => c ? contactCard(n, c.avatar) : undefined },
             h("div", { class: "set-ic", style: { background: ic === "phoneMissed" ? "#ef4444" : "#22c55e" } }, svgIcon(I[ic as keyof typeof I])),
             h("div", { class: "tx" }, h("div", { class: "t1", style: { color: ic === "phoneMissed" ? "#ef4444" : "#111" } }, n), h("div", { class: "t2" }, t)),
-            h("button", { class: "pressable", style: { color: "#2563eb" }, onClick: (e) => { e.stopPropagation(); if (c) contactCard(n, c.avatar); } }, svgIcon(I.info, "", 20)));
+            h("button", { class: "pressable", style: { color: "var(--accent)" }, onClick: (e) => { e.stopPropagation(); if (c) contactCard(n, c.avatar); } }, svgIcon(I.info, "", 20)));
         })));
     } else if (tab === "people") {
       scroll.append(h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px", padding: "4px" } },

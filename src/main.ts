@@ -3,6 +3,7 @@ import "./styles.css";
 import { loadWasm } from "./wasm/bridge";
 import { Shell } from "./shell/shell";
 import { runBoot } from "./shell/boot";
+import { initTheme } from "./theme";
 
 async function boot() {
   const phone = document.getElementById("phone")!;
@@ -16,6 +17,7 @@ async function boot() {
   fit();
   const splash = runBoot(phone);           // animation par-dessus tout
   await loadWasm();
+  initTheme();                        // moteur Monet : palette du wallpaper → --accent
   new Shell(phone);
   await splash;                            // le lockscreen est déjà rendu dessous
 }

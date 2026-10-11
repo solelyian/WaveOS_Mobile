@@ -7,6 +7,7 @@ import { I } from "../core/lucide";
 import type { IconName } from "../core/lucide";
 import { sys, set, onChange } from "../system/state";
 import { GlassHeader, img, pane, setRow, switchEl, toast } from "./ui";
+import { theme, setAccent, setDynamic, reextract } from "../theme";
 
 const NETWORKS = ["Home_5G", "Nyne Guest", "CoffeeShop WiFi", "Airport_Free"];
 let wifiNet = "Home_5G";
@@ -48,8 +49,8 @@ export function SettingsApp() {
   const wifiSub = () => page(root, "Wi-Fi", (s) => {
     const netList = h("div", { class: "set-group" });
     const draw = () => netList.replaceChildren(...NETWORKS.map((n) =>
-      setRow("wifi", n === wifiNet && sys.wifi ? "#2563eb" : "#9ca3af", n, {
-        end: n === wifiNet && sys.wifi ? svgIcon(I.check, "", 18) : undefined,
+      setRow("wifi", n === wifiNet && sys.wifi ? "var(--accent)" : "#9ca3af", n, {
+        end: n === wifiNet && sys.wifi ? h("i",{style:{color:"var(--accent)",display:"flex"}},svgIcon(I.check, "", 18)) : undefined,
         onClick: () => {
           if (!sys.wifi) { toast(root, "Turn Wi-Fi on first"); return; }
           if (n === wifiNet) return;
@@ -58,7 +59,7 @@ export function SettingsApp() {
         },
       })));
     s.append(
-      grp(h("div", { class: "set-row" }, h("div", { class: "set-ic", style: { background: "#2563eb" } }, svgIcon(I.wifi)),
+      grp(h("div", { class: "set-row" }, h("div", { class: "set-ic", style: { background: "var(--accent)" } }, svgIcon(I.wifi)),
         h("span", { class: "set-lbl" }, "Wi-Fi"), switchEl(sys.wifi, (v) => { set("wifi", v); draw(); }))),
       cap("Known networks — tap to join"),
       netList);
@@ -69,7 +70,7 @@ export function SettingsApp() {
     const devList = h("div", { class: "set-group" });
     const draw = () => devList.replaceChildren(...BT_DEVICES.map((n) => {
       const on = btConnected.has(n) && sys.bluetooth;
-      return setRow("bluetooth", on ? "#2563eb" : "#9ca3af", n, {
+      return setRow("bluetooth", on ? "var(--accent)" : "#9ca3af", n, {
         value: on ? "Connected" : "Not Connected",
         onClick: () => {
           if (!sys.bluetooth) { toast(root, "Turn Bluetooth on first"); return; }
@@ -81,7 +82,7 @@ export function SettingsApp() {
       });
     }));
     s.append(
-      grp(h("div", { class: "set-row" }, h("div", { class: "set-ic", style: { background: "#2563eb" } }, svgIcon(I.bluetooth)),
+      grp(h("div", { class: "set-row" }, h("div", { class: "set-ic", style: { background: "var(--accent)" } }, svgIcon(I.bluetooth)),
         h("span", { class: "set-lbl" }, "Bluetooth"), switchEl(sys.bluetooth, (v) => { set("bluetooth", v); draw(); }))),
       cap("My devices — tap to connect"),
       devList);
@@ -123,14 +124,14 @@ export function SettingsApp() {
 
   const soundSub = () => page(root, "Sounds & Haptics", (s) => {
     const slider = h("input", { attrs: { type: "range", min: "0", max: "100", value: String(sys.volume) },
-      style: { width: "100%", accentColor: "#2563eb" }, onInput: (e) => set("volume", +(e.target as HTMLInputElement).value) }) as HTMLInputElement;
+      style: { width: "100%", accentColor: "var(--accent)" }, onInput: (e) => set("volume", +(e.target as HTMLInputElement).value) }) as HTMLInputElement;
     onChange((k) => { if (k === "volume") slider.value = String(sys.volume); });
     let ring = 0;
     const tones = ["Ripples", "Aurora", "Zen Bell", "Nova"];
     const toneGrp = h("div", { class: "set-group" });
     const drawTones = () => toneGrp.replaceChildren(...tones.map((r, i) =>
       setRow("music", i === ring ? "#22c55e" : "#9ca3af", r,
-        { end: i === ring ? svgIcon(I.check, "", 18) : undefined, onClick: () => { ring = i; drawTones(); toast(root, `Ringtone “${r}”`); } })));
+        { end: i === ring ? h("i",{style:{color:"var(--accent)",display:"flex"}},svgIcon(I.check, "", 18)) : undefined, onClick: () => { ring = i; drawTones(); toast(root, `Ringtone “${r}”`); } })));
     s.append(
       cap("Ringer and alerts"),
       grp(h("div", { class: "set-row" }, h("div", { class: "set-ic", style: { background: "#f43f5e" } }, svgIcon(I.volume2)), h("div", { style: { flex: "1" } }, slider))),
@@ -160,8 +161,8 @@ export function SettingsApp() {
 
   const updateSub = () => page(root, "Software Update", (s) => {
     const pct = h("span", { class: "set-val" }, "");
-    const pfill = h("div", { style: { height: "100%", width: "0%", borderRadius: "4px", background: "#2563eb", transition: "width .5s" } });
-    const btn = h("button", { class: "pressable", style: { width: "100%", padding: "14px", borderRadius: "16px", background: "#2563eb", color: "#fff", fontWeight: "700", fontSize: "15px" },
+    const pfill = h("div", { style: { height: "100%", width: "0%", borderRadius: "4px", background: "var(--accent)", transition: "width .5s" } });
+    const btn = h("button", { class: "pressable", style: { width: "100%", padding: "14px", borderRadius: "16px", background: "var(--accent)", color: "#fff", fontWeight: "700", fontSize: "15px" },
       onClick: (e) => {
         const b = e.currentTarget as HTMLButtonElement;
         b.style.opacity = ".5"; b.style.pointerEvents = "none"; b.textContent = "Downloading…";
@@ -188,7 +189,7 @@ export function SettingsApp() {
     const airSub = () => page(root, "Nyne Share", (ss) => {
       const g = h("div", { class: "set-group" });
       const draw = () => g.replaceChildren(...ads.map((n, i) =>
-        setRow("share", i === airdrop ? "#2563eb" : "#9ca3af", n, { end: i === airdrop ? svgIcon(I.check, "", 18) : undefined, onClick: () => { airdrop = i; draw(); } })));
+        setRow("share", i === airdrop ? "var(--accent)" : "#9ca3af", n, { end: i === airdrop ? h("i",{style:{color:"var(--accent)",display:"flex"}},svgIcon(I.check, "", 18)) : undefined, onClick: () => { airdrop = i; draw(); } })));
       ss.append(g); draw();
     });
     const storageSub = () => page(root, "Storage", (ss) => {
@@ -213,15 +214,15 @@ export function SettingsApp() {
 
   const displaySub = () => page(root, "Display & Brightness", (s) => {
     const slider = h("input", { attrs: { type: "range", min: "0", max: "100", value: String(sys.brightness) },
-      style: { width: "100%", accentColor: "#2563eb" }, onInput: (e) => set("brightness", +(e.target as HTMLInputElement).value) }) as HTMLInputElement;
+      style: { width: "100%", accentColor: "var(--accent)" }, onInput: (e) => set("brightness", +(e.target as HTMLInputElement).value) }) as HTMLInputElement;
     onChange((k) => { if (k === "brightness") slider.value = String(sys.brightness); });
     const night = () => { const h = new Date().getHours(); return h < 7 || h >= 19; };
     let mode = sys.darkMode ? 1 : 0;
     const modes = ["Light", "Dark", "Automatic"];
     const modeGrp = h("div", { class: "set-group" });
     const drawModes = () => modeGrp.replaceChildren(...modes.map((m, i) =>
-      setRow(i === 0 ? "sun" : i === 1 ? "moon" : "clock", i === mode ? "#2563eb" : "#9ca3af", m,
-        { end: i === mode ? svgIcon(I.check, "", 18) : undefined,
+      setRow(i === 0 ? "sun" : i === 1 ? "moon" : "clock", i === mode ? "var(--accent)" : "#9ca3af", m,
+        { end: i === mode ? h("i",{style:{color:"var(--accent)",display:"flex"}},svgIcon(I.check, "", 18)) : undefined,
           onClick: () => { mode = i; set("darkMode", i === 1 || (i === 2 && night())); drawModes(); } })));
     s.append(
       cap("Brightness — mirrors Control Center"),
@@ -235,17 +236,34 @@ export function SettingsApp() {
   const wallpaperSub = () => page(root, "Wallpaper", (s) => {
     const g = h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" } });
     const draw = () => g.replaceChildren(...WALLPAPERS.map((w) =>
-      h("div", { class: "pressable", style: { position: "relative", aspectRatio: "9/16", borderRadius: "14px", overflow: "hidden", border: w === wallpaper ? "3px solid #2563eb" : "1px solid #e5e7eb", cursor: "pointer" },
+      h("div", { class: "pressable", style: { position: "relative", aspectRatio: "9/16", borderRadius: "14px", overflow: "hidden", border: w === wallpaper ? "3px solid var(--accent)" : "1px solid #e5e7eb", cursor: "pointer" },
         onClick: () => {
           wallpaper = w;
           const wp = document.getElementById("wp");
           if (wp) wp.style.backgroundImage = `url(${w})`;
-          draw(); toast(root, "Wallpaper applied");
+          reextract(w);
+          draw(); drawPal(); toast(root, "Wallpaper applied");
         } },
         img(w, "img-fill"),
-        w === wallpaper ? h("div", { style: { position: "absolute", top: "6px", right: "6px", width: "20px", height: "20px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" } }, svgIcon(I.check, "", 12)) : null)));
+        w === wallpaper ? h("div", { style: { position: "absolute", top: "6px", right: "6px", width: "20px", height: "20px", borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" } }, svgIcon(I.check, "", 12)) : null)));
     s.append(cap("Pick a wallpaper — applied to the home screen"), g);
-    draw();
+    // moteur Monet : couleurs dynamiques extraites du fond d'écran
+    const palRow = h("div", { style: { display: "flex", gap: "10px", padding: "12px 14px", background: "#fff" } });
+    const palCap = h("div", { style: { fontSize: "12px", color: "#9ca3af", padding: "8px 14px 12px", background: "#fff" } });
+    const drawPal = () => {
+      palRow.replaceChildren(...theme.palette.map((hex) =>
+        h("div", { class: "pressable", style: { width: "38px", height: "38px", borderRadius: "50%", background: hex, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff", border: hex === theme.accent ? "3px solid #111" : "3px solid transparent" },
+          onClick: () => { setAccent(hex); drawPal(); } },
+          hex === theme.accent ? svgIcon(I.check, "", 16) : null)));
+      palCap.textContent = theme.dynamic
+        ? "Pulled from your wallpaper — pick another to override."
+        : "Turn on Dynamic Colors to tint the system from your wallpaper, or pick a color manually.";
+    };
+    const themeGrp = grp(
+      setRow("star", "var(--accent)", "Dynamic Colors", { end: switchEl(theme.dynamic, (v) => { setDynamic(v); drawPal(); draw(); }) }),
+      palRow, palCap);
+    s.append(cap("Theme engine — colors adapt to your wallpaper"), themeGrp);
+    draw(); drawPal();
   });
 
   const batterySub = () => page(root, "Battery", (s) => {
@@ -321,7 +339,7 @@ export function SettingsApp() {
     add("airplane wifi cellular bluetooth hotspot", grp(
       setRow("plane", "#f97316", "Airplane Mode", { end: switchEl(sys.airplane, (v) => set("airplane", v)) }),
       h("div", { class: "set-row pressable", onClick: wifiSub },
-        h("div", { class: "set-ic", style: { background: "#2563eb" } }, svgIcon(I.wifi)),
+        h("div", { class: "set-ic", style: { background: "var(--accent)" } }, svgIcon(I.wifi)),
         h("span", { class: "set-lbl" }, "Wi-Fi"), wifiVal, h("span", { class: "chev" }, svgIcon(I.chevronLeft))),
       setRow("signal", "#22c55e", "Cellular", { onClick: cellularSub }),
       setRow("bluetooth", "#2563eb", "Bluetooth", { value: "On", onClick: btSub }),

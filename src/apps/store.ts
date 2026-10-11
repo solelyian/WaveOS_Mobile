@@ -128,7 +128,7 @@ export function StoreApp() {
   const sectionTitle = (t: string, to?: string) =>
     h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "20px 4px 12px" } },
       h("span", { style: { fontSize: "20px", fontWeight: "800", color: "#111" } }, t),
-      h("span", { class: "pressable", style: { fontSize: "13px", fontWeight: "600", color: "#3b82f6", cursor: "pointer" }, onClick: (ev) => { ev.stopPropagation(); if (to) { tab = to; refresh(); } } }, "See All"));
+      h("span", { class: "pressable", style: { fontSize: "13px", fontWeight: "600", color: "var(--accent)", cursor: "pointer" }, onClick: (ev) => { ev.stopPropagation(); if (to) { tab = to; refresh(); } } }, "See All"));
 
   // ---------- vues ----------
   const views: Record<string, () => HTMLElement> = {

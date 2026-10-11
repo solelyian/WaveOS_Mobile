@@ -128,7 +128,7 @@ export function PhoneApp() {
           h("div", { style: { width: "104px", height: "104px", borderRadius: "50%", overflow: "hidden", marginBottom: "12px", boxShadow: "0 12px 30px rgba(0,0,0,.15)" } }, img(avatar, "img-fill")),
           h("div", { style: { fontSize: "24px", fontWeight: "800", letterSpacing: "-.01em" } }, name),
           h("div", { style: { display: "flex", gap: "18px", margin: "20px 0 26px" } },
-            act("messageCircle", "message", "#2563eb", () => shell.launchApp("messages")),
+            act("messageCircle", "message", "var(--accent)", () => shell.launchApp("messages")),
             act("phone", "call", "#22c55e", () => call(name, avatar)),
             act("video", "video", "#0ea5e9", () => call(name, avatar)),
             act("mail", "mail", "#8b5cf6", () => shell.launchApp("mail"))),
@@ -146,9 +146,9 @@ export function PhoneApp() {
     pane(root, (close) => {
       let playing = false, pos = 0;
       const secs = (() => { const [m, s] = dur.split(":").map(Number); return m * 60 + s; })();
-      const fill = h("i", { style: { display: "block", height: "100%", width: "0%", background: "#2563eb", borderRadius: "3px", transition: "width .2s linear" } });
+      const fill = h("i", { style: { display: "block", height: "100%", width: "0%", background: "var(--accent)", borderRadius: "3px", transition: "width .2s linear" } });
       const timeEl = h("span", { style: { fontSize: "11px", color: "#9ca3af", fontVariantNumeric: "tabular-nums" } }, `0:00 / ${dur}`);
-      const pp = h("button", { class: "pressable", style: { width: "52px", height: "52px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" },
+      const pp = h("button", { class: "pressable", style: { width: "52px", height: "52px", borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" },
         onClick: () => { playing = !playing; draw(); } });
       const draw = () => pp.replaceChildren(svgIcon(playing ? I.pause : I.play, "fill", 22) as Node);
       let raf = 0, last = 0;
@@ -271,7 +271,7 @@ export function PhoneApp() {
           h("div", { class: "lrow pressable", onClick: () => voicemail(n, d, t, tr, a) },
             h("div", { class: "set-ic", style: { background: "#6b7280" } }, svgIcon(I.voicemail)),
             h("div", { class: "tx" }, h("div", { class: "t1" }, n), h("div", { class: "t2" }, `${d} · ${t}`)),
-            h("button", { class: "pressable", style: { color: "#2563eb" }, onClick: (e) => { e.stopPropagation(); voicemail(n, d, t, tr, a); } }, svgIcon(I.play, "fill", 20))))));
+            h("button", { class: "pressable", style: { color: "var(--accent)" }, onClick: (e) => { e.stopPropagation(); voicemail(n, d, t, tr, a); } }, svgIcon(I.play, "fill", 20))))));
     } else {
       scroll.append(h("div", { class: "card-white", style: { padding: "2px 14px" } },
         ...RECENTS.map(([n, ic, t, how]) => {
