@@ -45,8 +45,8 @@ export function SheetHost() {
   }, []);
 
   React.useEffect(() => { const off = onFrame((dt) => {
-    const el = domOf(wrap); if (!el) return;
     sp.step(dt);
+    const el = domOf(wrap); if (!el) return;
     el.style.transform = `translateY(${sp.v}px)`;
     el.style.visibility = sp.v <= -H + 1 && sp.settled ? "hidden" : "visible";
     el.style.opacity = `${Math.min(1, (sp.v + H) / (H * 0.6))}`;

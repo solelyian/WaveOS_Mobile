@@ -43,9 +43,11 @@ export function SuperDevice() {
     e.preventDefault();
     const { x: ox, y: oy } = home(i, DEVICES.length);
     el.dataset.ox = String(ox); el.dataset.oy = String(oy);
-    const ne = e.nativeEvent as unknown as { clientX: number; clientY: number };
-    const sx = ne.clientX, sy = ne.clientY;
+    const ne = e.nativeEvent as unknown as { clientX?: number; clientY?: number; pageX?: number; pageY?: number };
+    let sx = ne.clientX ?? ne.pageX ?? 0, sy = ne.clientY ?? ne.pageY ?? 0;
+    let seeded = sx !== 0 || sy !== 0;
     const mv = (ev: PointerEvent) => {
+      if (!seeded) { sx = ev.clientX; sy = ev.clientY; seeded = true; }
       const dx = ev.clientX - sx, dy = ev.clientY - sy;
       el.style.transform = `translate(${dx}px,${dy}px)`;
       setHot(Math.hypot(ox + dx + BUB / 2 - CX, oy + dy + BUB / 2 - CY) < 78 && !docked.includes(d.id));

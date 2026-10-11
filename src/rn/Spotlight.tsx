@@ -49,8 +49,8 @@ export function Spotlight({ onOpen, onClose }: { onOpen: (id: AppId) => void; on
 
   React.useEffect(() => {
     const off = onFrame((dt) => {
-      const el = domOf(wrap); if (!el) return;
       ms.step(dt);
+      const el = domOf(wrap); if (!el) return;
       const t = ms.v, iv = 1 - t;
       const scrim = domOf(scrimRef), bar = domOf(barRef), list = domOf(listRef);
       if (scrim) scrim.style.opacity = t.toFixed(3);
