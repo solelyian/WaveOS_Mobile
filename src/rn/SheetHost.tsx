@@ -17,6 +17,15 @@ export function SheetHost() {
 
   const active = s.sheet === "nc" || s.sheet === "cc" ? s.sheet : last.current;
   React.useEffect(() => { sp.to(s.sheet ? 0 : -H); }, [s.sheet, sp]);
+  // backdrop-filter n'est pas un style RNW — on l'applique au DOM.
+  React.useEffect(() => {
+    const el = domOf(wrap);
+    const f = el?.querySelector<HTMLElement>(".sheet-frost");
+    if (f) {
+      f.style.backdropFilter = "blur(30px) saturate(160%)";
+      (f.style as unknown as Record<string, string>).WebkitBackdropFilter = "blur(30px) saturate(160%)";
+    }
+  }, []);
 
   React.useEffect(() => { const off = onFrame((dt) => {
     const el = domOf(wrap); if (!el) return;
@@ -28,7 +37,7 @@ export function SheetHost() {
 
   return (
     <View ref={wrap} style={st.wrap} pointerEvents="box-none">
-      <View style={st.frost} pointerEvents="none" />
+      <View style={st.frost} className="sheet-frost" pointerEvents="none" />
       {active === "nc" ? <NotificationCenter /> : <ControlCenter />}
     </View>
   );
@@ -39,7 +48,5 @@ const st = StyleSheet.create({
   frost: {
     position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: "rgba(10,10,14,.45)",
-    backdropFilter: "blur(30px) saturate(160%)",
-    WebkitBackdropFilter: "blur(30px) saturate(160%)",
   } as object,
 });
