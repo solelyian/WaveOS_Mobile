@@ -43,7 +43,6 @@ export function attachGestures(root: HTMLElement, h: GestureHandlers) {
       appDrag: h.hasApp() && ((e.clientY - r.top) * k) > 780,
     };
     d.target = zone(d.sx, d.sy);
-    root.setPointerCapture?.(e.pointerId);
   };
 
   const move = (e: PointerEvent) => {
@@ -82,14 +81,16 @@ export function attachGestures(root: HTMLElement, h: GestureHandlers) {
     d = null;
   };
 
+  // move/up sur window : pas de setPointerCapture (il volerait les clics
+  // des Pressables RNW). Les événements hors téléphone restent suivis.
   root.addEventListener("pointerdown", down);
-  root.addEventListener("pointermove", move);
-  root.addEventListener("pointerup", up);
-  root.addEventListener("pointercancel", up);
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", up);
+  window.addEventListener("pointercancel", up);
   return () => {
     root.removeEventListener("pointerdown", down);
-    root.removeEventListener("pointermove", move);
-    root.removeEventListener("pointerup", up);
-    root.removeEventListener("pointercancel", up);
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", up);
+    window.removeEventListener("pointercancel", up);
   };
 }

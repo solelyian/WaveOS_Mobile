@@ -104,10 +104,10 @@ export function AppWindow({ id, from, onClosed }: { id: AppId; from: AppRect; on
 
   return (
     <View ref={win} style={stx.win}>
-      <View ref={body} style={stx.body} nativeID="app-scroll">
+      <View ref={body} style={stx.body}>
         {renderApp(id)}
       </View>
-      <View style={stx.grabber} pointerEvents="none">
+      <View style={stx.grabber}>
         <View style={[stx.grab, meta.theme === "dark" ? stx.grabDark : stx.grabLight]} />
       </View>
       <ToastLayer />

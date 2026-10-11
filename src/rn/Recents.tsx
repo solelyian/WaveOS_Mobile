@@ -99,12 +99,20 @@ export function Recents({ onOpen }: { onOpen: (id: AppId, r: AppRect | null) => 
     });
   }, []);
   const close = () => set("switcherOpen", false);
+  const scrimRef = React.useRef<View>(null);
+  React.useEffect(() => {
+    const el = domOf(scrimRef);
+    if (el) {
+      el.style.backdropFilter = "blur(26px) saturate(120%)";
+      (el.style as unknown as Record<string, string>).WebkitBackdropFilter = "blur(26px) saturate(120%)";
+    }
+  }, []);
   const clearAll = () => {
     ids.forEach((id, i) => setTimeout(() => killRecent(id), i * 55 + 300));
   };
   return (
     <View style={rs.root}>
-      <Pressable style={rs.scrim} onPress={close} />
+      <Pressable ref={scrimRef} style={rs.scrim} onPress={close} />
       {ids.length ? (
         <>
           <ScrollView ref={strip} horizontal style={{ flex: 1 }} contentContainerStyle={rs.strip} showsHorizontalScrollIndicator={false}>

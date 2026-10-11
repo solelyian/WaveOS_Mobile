@@ -71,6 +71,10 @@ export default function App() {
   const rootEl = React.useCallback((n: View | null) => {
     (root as { current: View | null }).current = n;
     const el = n as unknown as HTMLElement | null;
+    if (el) {
+      el.style.userSelect = "none";
+      (el.style as unknown as Record<string, string>).webkitUserSelect = "none";
+    }
     if (el) attachGestures(el, {
       unlock: () => set("locked", false),
       openSheet: (x) => set("sheet", x as never),
