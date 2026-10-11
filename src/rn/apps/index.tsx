@@ -9,6 +9,7 @@ import { Icon } from "../Icon";
 import { SettingsApp } from "./SettingsApp";
 import { MessagesApp } from "./MessagesApp";
 import { PhoneApp } from "./PhoneApp";
+import { CalculatorApp } from "./CalculatorApp";
 
 export function appMeta(id: AppId): AppMeta {
   return APPS.find((a) => a.id === id) ?? EXTRA_APPS.find((a) => a.id === id)!;
@@ -36,6 +37,7 @@ export function renderApp(id: AppId): React.ReactNode {
     case "settings": return <SettingsApp />;
     case "messages": return <MessagesApp />;
     case "phone": return <PhoneApp />;
+    case "calculator": return <CalculatorApp />;
     default: return <StubApp id={id} />;
   }
 }
