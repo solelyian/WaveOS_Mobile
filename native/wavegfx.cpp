@@ -220,19 +220,31 @@ void wg_glass_render(float ox, float oy, int w, int h, float r,
       float inside = wv_max(-d, 0.f);
       float vert = py / h;
 
-      // liseré : rim net sur le bord + halo interne doux (fresnel)
-      float rim = wv_clampf(1.f - inside / 1.8f, 0.f, 1.f) * 0.45f;
-      float glow = wv_pow(wv_clampf(1.f - inside / 16.f, 0.f, 1.f), 2.2f) * 0.22f;
+      // éclairage directionnel (source haut-gauche) : le bord tourné vers
+      // la lumière est lumineux, l'opposé plus sombre → épaisseur 3D
+      float nx, ny; drectGrad(px, py, hw, hh, hw, hh, r, &nx, &ny);
+      // normale sortante : inversée par rapport au gradient SDF
+      float lx = -0.62f, ly = -0.79f;             // dir lumière haut-gauche
+      float facing = nx * lx + ny * ly;            // +1 face, -1 opposé
+      float lit = 0.5f + 0.5f * facing;
 
-      // reflet spéculaire : bande diagonale haut-gauche
+      // liseré : rim net modulé par la lumière + halo interne doux
+      float rim = wv_clampf(1.f - inside / 1.8f, 0.f, 1.f);
+      float rimL = rim * (0.28f + 0.42f * lit);    // haut-gauche ~.70, bas ~.28
+      float glow = wv_pow(wv_clampf(1.f - inside / 16.f, 0.f, 1.f), 2.2f)
+                 * (0.10f + 0.16f * lit);
+
+      // reflet spéculaire concentré au coin haut-gauche
+      float corner = wv_clampf(1.f - vert * 2.6f, 0.f, 1.f)
+                   * wv_clampf(1.f - px / w * 1.15f, 0.f, 1.f);
       float dl = (px * 0.82f + py * 0.57f) / wv_sqrt(hw * hw + hh * hh);
-      float spec = wv_exp(-wv_fabs(dl - 0.36f) * 9.f) * wv_clampf(1.f - vert * 3.0f, 0.f, 1.f) * 0.30f;
+      float spec = wv_exp(-wv_fabs(dl - 0.30f) * 10.f) * corner * 0.34f;
 
-      // ombre interne bas (masse de verre)
-      float ish = wv_clampf((vert - 0.70f) / 0.30f, 0.f, 1.f)
-                * wv_clampf(inside / 10.f, 0.f, 1.f) * 0.16f;
+      // ombre interne bas (masse de verre) — accentuée côté opposé
+      float ish = wv_clampf((vert - 0.68f) / 0.32f, 0.f, 1.f)
+                * wv_clampf(inside / 10.f, 0.f, 1.f) * 0.18f;
 
-      float lum = rim + glow + spec - ish;
+      float lum = rimL + glow + spec - ish;
       if (lum >= 0.f) {
         q[0] = q[1] = q[2] = 255;
         q[3] = (unsigned char)(wv_clampf(lum, 0.f, 1.f) * cov * 255.f);
