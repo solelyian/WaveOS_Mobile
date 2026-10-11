@@ -176,7 +176,7 @@ input { font: inherit; }
 .sheet .handle i { width: 48px; height: 4px; background: #fff; border-radius: 2px; }
 
 /* Control Center — grille exacte de la maquette */
-#cc { padding: 64px 24px 24px; display: flex; flex-direction: column; gap: 20px; }
+#cc { padding: 64px 24px 24px; display: flex; flex-direction: column; gap: 20px; backdrop-filter: blur(34px) saturate(125%) brightness(0.72); -webkit-backdrop-filter: blur(34px) saturate(125%) brightness(0.72); }
 .cc-r1 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; height: 160px; }
 .cc-cluster { border-radius: 34px; padding: 12px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px; }
 .cc-tg { border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background .2s, transform .12s; }
@@ -221,12 +221,12 @@ input { font: inherit; }
 
 /* Liquid Glass — surfaces rendues par le raster C++/WASM */
 .glx { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: inherit; z-index: 0; pointer-events: none; }
-.glx-on { background: transparent !important; border-color: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; position: relative; overflow: hidden; }
+.glx-on { background: transparent !important; border-color: transparent !important; backdrop-filter: blur(2px) !important; -webkit-backdrop-filter: blur(2px) !important; position: relative; overflow: hidden; }
 .glx-on > :not(.glx) { position: relative; z-index: 1; }
 
 /* Notification Center */
 #nc { padding: 64px 24px 24px; display: flex; flex-direction: column; }
-#nc { backdrop-filter: blur(38px) saturate(160%) brightness(1.02); -webkit-backdrop-filter: blur(38px) saturate(160%) brightness(1.02); }
+#nc { backdrop-filter: blur(38px) saturate(115%) brightness(0.60); -webkit-backdrop-filter: blur(38px) saturate(115%) brightness(0.60); }
 .nc-head { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.35)); }
 .nc-date { font-size: 19px; font-weight: 500; opacity: .9; margin-top: 2px; }
 .nc-clock { font-size: 74px; font-weight: 700; letter-spacing: -.03em; line-height: 1.05;

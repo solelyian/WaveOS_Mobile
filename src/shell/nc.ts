@@ -45,7 +45,7 @@ export class NotificationCenter {
           h("div", { class: "r1" }, h("span", { class: "app" }, n.user), h("span", { class: "tm" }, n.time)),
           h("div", { class: "txt" }, n.text)));
       this.list.append(card);
-      glass(card, { radius: 34, tint: [255, 255, 255], alpha: 0.10 }).then((g) => {
+      glass(card, { radius: 34, tint: [255, 255, 255], alpha: 0.05 }).then((g) => {
         card.prepend(g.canvas); card.classList.add("glx-on");
         this.glassSurfaces.push(g);
       });

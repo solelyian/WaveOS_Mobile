@@ -67,7 +67,7 @@ export class ControlCenter {
     this.el.append(r1, r2, r3, sdBtn, home, handle);
     // chaque tuile .g-dark devient une plaque de verre liquide (raster C++)
     for (const t of this.el.querySelectorAll<HTMLElement>(".g-dark")) {
-      glass(t, { radius: 30, tint: [255, 255, 255], alpha: 0.10 }).then((g) => {
+      glass(t, { radius: 30, tint: [255, 255, 255], alpha: 0.04, backdropFilter: "brightness(.72) saturate(125%)" }).then((g) => {
         t.prepend(g.canvas); t.classList.add("glx-on");
         this.glassSurfaces.push(g);
       });

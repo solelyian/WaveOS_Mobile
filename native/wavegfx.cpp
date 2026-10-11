@@ -113,6 +113,7 @@ void wg_map_render(void) {
  *   tr/tg/tb = teinte, al = opacité du corps vitré (0..1).
  */
 static unsigned char g_bg[GLASS_MAXW * GLASS_MAXH * 4];
+static unsigned char g_bg2[GLASS_MAXW * GLASS_MAXH * 4]; // copie floutée
 static unsigned char g_out[GLASS_MAXW * GLASS_MAXH * 4];
 static int g_bgW = 0, g_bgH = 0;
 static int g_outW = 0, g_outH = 0;
@@ -126,7 +127,53 @@ void wg_glass_set_bg(int w, int h) {
   g_bgH = h > GLASS_MAXH ? GLASS_MAXH : h;
 }
 
-// échantillon bilinéaire du fond, borné
+EXP("wg_glass_blur")
+void wg_glass_blur(int radius) {
+  // box blur séparable ×2 ≈ gaussien — l'intérieur du verre montre
+  // le même flou que le backdrop du sheet (verre quasi incolore)
+  if (radius < 1) radius = 1;
+  const int w = g_bgW, h = g_bgH, n = radius * 2 + 1;
+  for (int pass = 0; pass < 2; pass++) {
+    // horizontal : g_bg -> g_bg2
+    for (int y = 0; y < h; y++) {
+      int sr = 0, sg = 0, sb = 0;
+      const unsigned char *row = g_bg + y * w * 4;
+      for (int x = -radius; x <= radius; x++) {
+        int xx = x < 0 ? 0 : x >= w ? w - 1 : x;
+        sr += row[xx * 4]; sg += row[xx * 4 + 1]; sb += row[xx * 4 + 2];
+      }
+      for (int x = 0; x < w; x++) {
+        unsigned char *o = g_bg2 + (y * w + x) * 4;
+        o[0] = sr / n; o[1] = sg / n; o[2] = sb / n; o[3] = 255;
+        int xa = x - radius < 0 ? 0 : x - radius;
+        int xb = x + radius + 1 >= w ? w - 1 : x + radius + 1;
+        sr += row[xb * 4] - row[xa * 4];
+        sg += row[xb * 4 + 1] - row[xa * 4 + 1];
+        sb += row[xb * 4 + 2] - row[xa * 4 + 2];
+      }
+    }
+    // vertical : g_bg2 -> g_bg
+    for (int x = 0; x < w; x++) {
+      int sr = 0, sg = 0, sb = 0;
+      for (int y = -radius; y <= radius; y++) {
+        int yy = y < 0 ? 0 : y >= h ? h - 1 : y;
+        const unsigned char *p = g_bg2 + (yy * w + x) * 4;
+        sr += p[0]; sg += p[1]; sb += p[2];
+      }
+      for (int y = 0; y < h; y++) {
+        unsigned char *o = g_bg + (y * w + x) * 4;
+        o[0] = sr / n; o[1] = sg / n; o[2] = sb / n;
+        int ya = y - radius < 0 ? 0 : y - radius;
+        int yb = y + radius + 1 >= h ? h - 1 : y + radius + 1;
+        const unsigned char *pa = g_bg2 + (ya * w + x) * 4;
+        const unsigned char *pb = g_bg2 + (yb * w + x) * 4;
+        sr += pb[0] - pa[0]; sg += pb[1] - pa[1]; sb += pb[2] - pa[2];
+      }
+    }
+  }
+}
+
+// échantillon bilinéaire du fond (déjà flouté), borné
 static void bgSample(float fx, float fy, float *r, float *g, float *b) {
   int x0 = (int)wv_floor(fx), y0 = (int)wv_floor(fy);
   float tx = fx - (float)x0, ty = fy - (float)y0;
@@ -156,68 +203,43 @@ static void drectGrad(float px, float py, float cx, float cy, float hw, float hh
 EXP("wg_glass_render")
 void wg_glass_render(float ox, float oy, int w, int h, float r,
                      float tr, float tg, float tb, float al) {
+  // Effets optiques de bord uniquement — l'intérieur est transparent :
+  // le backdrop-filter natif de l'élément fournit le fond réfracté réel
+  // (auto-aligné, identique au sheet). (ox,oy,tr,tg,tb,al réservés.)
   if (w > GLASS_MAXW) w = GLASS_MAXW;
   if (h > GLASS_MAXH) h = GLASS_MAXH;
   g_outW = w; g_outH = h;
   const float hw = w * 0.5f, hh = h * 0.5f;
-  const float BEND = 14.f;      // amplitude de réfraction près du bord
-  const float EDGE = 26.f;      // profondeur de la lentille de bord
-  const float FROST = 3.2f;     // rayon du givrage
   for (int y = 0; y < h; y++) {
     for (int x = 0; x < w; x++) {
       float px = x + 0.5f, py = y + 0.5f;
       float d = drect(px, py, hw, hh, hw, hh, r);   // <0 dedans
-
-      // alpha du contour (AA ~1.4px)
       float cov = wv_clampf(0.5f - d / 1.4f, 0.f, 1.f);
-      if (cov <= 0.f) { unsigned char *q = g_out + (y*w+x)*4; q[3] = 0; continue; }
-
-      // normale de bord + réfraction : les pixels proches du bord
-      // échantillonnent le fond décalé vers l'intérieur (lentille).
-      float gx, gy; drectGrad(px, py, hw, hh, hw, hh, r, &gx, &gy);
+      unsigned char *q = g_out + (y * w + x) * 4;
+      if (cov <= 0.f) { q[3] = 0; continue; }
       float inside = wv_max(-d, 0.f);
-      float bend = BEND * wv_exp(-inside / EDGE);
-
-      // givrage : moyenne de 5 taps autour du point réfracté
-      float sx = ox + px - gx * bend, sy = oy + py - gy * bend;
-      float rr = 0, gg = 0, bb = 0;
-      for (int i = 0; i < 5; i++) {
-        float ang = i == 0 ? 0.f : i * 1.5707963f + 0.7853981f;
-        float dxs = i == 0 ? 0.f : wv_cos(ang) * FROST;
-        float dys = i == 0 ? 0.f : wv_sin(ang) * FROST;
-        float sr, sg, sb; bgSample(sx + dxs, sy + dys, &sr, &sg, &sb);
-        rr += sr; gg += sg; bb += sb;
-      }
-      rr /= 5.f; gg /= 5.f; bb /= 5.f;
-
-      // corps vitré : teinte + assombrissement en bas (épaisseur)
       float vert = py / h;
-      float bodyA = al * (0.75f + 0.25f * (1.f - vert));
-      float R = wv_lerpf(rr, tr, bodyA);
-      float G = wv_lerpf(gg, tg, bodyA);
-      float B = wv_lerpf(bb, tb, bodyA);
 
-      // rim fresnel : liseré lumineux sur le bord intérieur
-      float rim = wv_clampf(1.f - inside / 2.6f, 0.f, 1.f);
-      float rimIn = wv_clampf(1.f - inside / 10.f, 0.f, 1.f) * 0.22f;
-      R += 255.f * rim * 0.55f + 255.f * rimIn; G += 255.f * rim * 0.55f + 255.f * rimIn; B += 255.f * rim * 0.55f + 255.f * rimIn;
+      // liseré : rim net sur le bord + halo interne doux (fresnel)
+      float rim = wv_clampf(1.f - inside / 1.8f, 0.f, 1.f) * 0.45f;
+      float glow = wv_pow(wv_clampf(1.f - inside / 16.f, 0.f, 1.f), 2.2f) * 0.22f;
 
       // reflet spéculaire : bande diagonale haut-gauche
       float dl = (px * 0.82f + py * 0.57f) / wv_sqrt(hw * hw + hh * hh);
-      float spec = wv_exp(-wv_fabs(dl - 0.38f) * 8.5f) * wv_clampf(1.f - vert * 1.6f, 0.f, 1.f);
-      R += 255.f * spec * 0.30f; G += 255.f * spec * 0.30f; B += 255.f * spec * 0.30f;
+      float spec = wv_exp(-wv_fabs(dl - 0.36f) * 9.f) * wv_clampf(1.f - vert * 3.0f, 0.f, 1.f) * 0.30f;
 
       // ombre interne bas (masse de verre)
-      float ish = wv_clampf((vert - 0.72f) / 0.28f, 0.f, 1.f) * 0.14f;
-      R -= 255.f * ish * (inside > 4.f ? 1.f : inside / 4.f);
-      G -= 255.f * ish * (inside > 4.f ? 1.f : inside / 4.f);
-      B -= 255.f * ish * (inside > 4.f ? 1.f : inside / 4.f);
+      float ish = wv_clampf((vert - 0.70f) / 0.30f, 0.f, 1.f)
+                * wv_clampf(inside / 10.f, 0.f, 1.f) * 0.16f;
 
-      unsigned char *q = g_out + (y * w + x) * 4;
-      q[0] = (unsigned char)wv_clampf(R, 0.f, 255.f);
-      q[1] = (unsigned char)wv_clampf(G, 0.f, 255.f);
-      q[2] = (unsigned char)wv_clampf(B, 0.f, 255.f);
-      q[3] = (unsigned char)(cov * 255.f);
+      float lum = rim + glow + spec - ish;
+      if (lum >= 0.f) {
+        q[0] = q[1] = q[2] = 255;
+        q[3] = (unsigned char)(wv_clampf(lum, 0.f, 1.f) * cov * 255.f);
+      } else {
+        q[0] = q[1] = q[2] = 0;
+        q[3] = (unsigned char)(wv_clampf(-lum, 0.f, 1.f) * cov * 255.f);
+      }
     }
   }
 }

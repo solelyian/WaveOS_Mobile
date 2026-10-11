@@ -22,6 +22,7 @@ export interface WasmApi {
   wg_bg_ptr(): number;
   wg_out_ptr(): number;
   wg_glass_set_bg(w: number, h: number): void;
+  wg_glass_blur(radius: number): void;
   wg_glass_render(ox: number, oy: number, w: number, h: number, r: number,
                  tr: number, tg: number, tb: number, al: number): void;
   wg_glass_size(w: number, h: number): void;
