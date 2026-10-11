@@ -1,5 +1,6 @@
 // main.ts — entrée web : styles du stage + mount de l'app RN dans #phone.
-import { AppRegistry } from "react-native-web";
+import { createRoot } from "react-dom/client";
+import { createElement } from "react";
 import App from "./rn/App";
 
 const PHONE_W = 400, PHONE_H = 850;
@@ -23,5 +24,4 @@ function layoutStage() {
 addEventListener("resize", layoutStage);
 layoutStage();
 
-AppRegistry.registerComponent("waveos", () => App);
-AppRegistry.runApplication("waveos", { rootTag: document.getElementById("phone") });
+createRoot(document.getElementById("phone")!).render(createElement(App));
