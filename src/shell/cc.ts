@@ -1,4 +1,4 @@
-// cc.ts — Control Center : capsules mates, curseurs horizontaux et grille 4×4.
+// cc.ts — Control Center : commandes en verre, curseurs neutres et grille 4×4.
 import { h, svgIcon } from "../core/el";
 import { I } from "../core/lucide";
 import { sys, set, onChange, type SysState } from "../system/state";
@@ -126,7 +126,11 @@ export class ControlCenter {
         if (pi) { pi.replaceChildren(svgIcon(ic, "", 26)); pi.classList.toggle("off", !on); }
       } else {
         const dot = el.querySelector(".cc-dot");
-        if (dot) { dot.replaceChildren(svgIcon(ic, "", 26)); dot.classList.toggle("on", !!on); }
+        if (dot) {
+          const edge = dot.querySelector(":scope > .lg-edge");
+          dot.replaceChildren(...(edge ? [edge] : []), svgIcon(ic, "", 30));
+          dot.classList.toggle("on", !!on);
+        }
       }
     }
     // carte média
@@ -134,7 +138,8 @@ export class ControlCenter {
     const focusLabel = this.mediaSlot.contains(document.activeElement)
       ? document.activeElement?.getAttribute("aria-label") : null;
     const track = cur();
-    this.mediaSlot.replaceChildren(
+    const edge = this.mediaSlot.querySelector(":scope > .lg-edge");
+    this.mediaSlot.replaceChildren(...(edge ? [edge] : []),
       h("button", { class: "cast", attrs: { "aria-label": "Audio devices" }, onClick: () => { this.close(); set("sheet", "sd"); } }, svgIcon(I.airplay, "", 18)),
       h("div", { class: "art" }, sys.playing
         ? h("img", { attrs: { src: track.art, alt: "" } })

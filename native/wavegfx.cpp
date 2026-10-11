@@ -271,12 +271,12 @@ void wg_glass_size(int *w, int *h) { *w = g_outW; *h = g_outH; }
  *  3) CORPS : quasi incolore (léger blur+saturate dans le filtre).
  */
 EXP("wg_glass_disp")
-void wg_glass_disp(int w, int h, float r, float amp) {
+void wg_glass_disp(int w, int h, float r, float amp, float depth) {
   if (w > GLASS_MAXW) w = GLASS_MAXW;
   if (h > GLASS_MAXH) h = GLASS_MAXH;
   g_outW = w; g_outH = h;
   const float hw = w * 0.5f, hh = h * 0.5f;
-  const float DEPTH = 30.f;            // bande de lentille (px)
+  const float DEPTH = depth > 0.f ? wv_max(1.f, depth) : 30.f;
   for (int y = 0; y < h; y++) {
     for (int x = 0; x < w; x++) {
       float px = x + 0.5f, py = y + 0.5f;
@@ -304,13 +304,13 @@ void wg_glass_disp(int w, int h, float r, float amp) {
  *   filet spéculaire directionnel + halo + ombre interne + caustique.
  * Lumière fixe haut-gauche (même convention que l'ancien moteur). */
 EXP("wg_glass_edge")
-void wg_glass_edge(int w, int h, float r) {
+void wg_glass_edge(int w, int h, float r, float depth) {
   if (w > GLASS_MAXW) w = GLASS_MAXW;
   if (h > GLASS_MAXH) h = GLASS_MAXH;
   g_outW = w; g_outH = h;
   const float hw = w * 0.5f, hh = h * 0.5f;
   const float lx = -0.62f, ly = -0.79f;  // lumière haut-gauche (normée)
-  const float DEPTH = 30.f;
+  const float DEPTH = depth > 0.f ? wv_max(1.f, depth) : 30.f;
   for (int y = 0; y < h; y++) {
     for (int x = 0; x < w; x++) {
       float px = x + 0.5f, py = y + 0.5f;
