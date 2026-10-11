@@ -127,6 +127,76 @@ export function SearchPill({ value, onChange, placeholder = "Search" }: {
   );
 }
 
+/* ---------- GBtn : bouton rond en verre ---------- */
+export function GBtn({ icon, onPress, color = "#111", size = 34 }: {
+  icon: IconName; onPress: () => void; color?: string; size?: number;
+}) {
+  return (
+    <Pressable style={[uh.gbtn, { width: size, height: size, borderRadius: size / 2 }]} onPress={onPress}>
+      <Icon n={icon} size={Math.round(size * 0.52)} color={color} />
+    </Pressable>
+  );
+}
+
+/* ---------- PageBlank : panneau glissant sans en-tête imposé ---------- */
+export function PageBlank({ children, onClose }: { children: React.ReactNode; onClose?: () => void }) {
+  const el = React.useRef<View>(null);
+  React.useEffect(() => {
+    const node = domOf(el);
+    const sp = new Spring(400, ...SPRINGS.snap);
+    if (node) node.style.transform = "translateX(400px)";
+    requestAnimationFrame(() => sp.to(0));
+    const off = onFrame((dt) => {
+      sp.step(dt);
+      const n = domOf(el);
+      if (n) n.style.transform = `translateX(${sp.v.toFixed(1)}px)`;
+    });
+    return () => { off(); };
+  }, []);
+  return <View ref={el} style={uh.pane}>{children}</View>;
+}
+
+/* ---------- FloatingTabBar : pill + dot portés par un spring ---------- */
+export function FloatingTabBar({ tabs, active, onTab, dark }: {
+  tabs: { id: string; icon: IconName; label: string }[];
+  active: string; onTab: (id: string) => void; dark?: boolean;
+}) {
+  const inRef = React.useRef<View>(null);
+  const pillRef = React.useRef<View>(null);
+  const dotRef = React.useRef<View>(null);
+  const w = React.useRef(0);
+  const sx = React.useRef(new Spring(0, ...SPRINGS.snap)).current;
+  const idx = Math.max(0, tabs.findIndex((t) => t.id === active));
+  React.useEffect(() => {
+    const el = domOf(inRef);
+    if (el) w.current = el.getBoundingClientRect().width;
+    const c = (idx + 0.5) * (w.current / tabs.length);
+    sx.to(c);
+    const off = onFrame((dt) => {
+      sx.step(dt);
+      const p = domOf(pillRef), d = domOf(dotRef);
+      if (p) p.style.transform = `translateX(${sx.v - 24}px)`;
+      if (d) d.style.transform = `translateX(${sx.v - 2}px)`;
+    });
+    return () => { off(); };
+  }, [idx, tabs.length]);
+  return (
+    <View style={uh.tabbar}>
+      <View ref={inRef} style={[uh.tabIn, dark ? uh.tabInDark : uh.tabInLight]}>
+        {tabs.map((t) => (
+          <Pressable key={t.id} style={uh.tabBtn} onPress={() => onTab(t.id)}>
+            <Icon n={t.icon} size={24}
+              color={t.id === active ? (dark ? "#fff" : "#2563eb") : dark ? "rgba(255,255,255,.6)" : "rgba(0,0,0,.6)"}
+              style={t.id === active ? { transform: "scale(1.1)" } : undefined} />
+          </Pressable>
+        ))}
+        <View ref={pillRef} style={[uh.tabPill, dark ? uh.pillDark : uh.pillLight]} pointerEvents="none" />
+        <View ref={dotRef} style={[uh.tabDot, dark ? uh.dotDark : uh.dotLight]} pointerEvents="none" />
+      </View>
+    </View>
+  );
+}
+
 /* ---------- Slider horizontal (réglages Luminosité / Volume) ---------- */
 export function HSlider({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const track = React.useRef<View>(null);
@@ -206,4 +276,15 @@ const uh = StyleSheet.create({
     backgroundColor: "#fff", shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 4,
     shadowOffset: { width: 0, height: 1 }, borderWidth: 0.5, borderColor: "rgba(0,0,0,.08)",
   } as object,
+  tabbar: { position: "absolute", bottom: 32, left: "5%" as unknown as number, width: "90%" as unknown as number, maxWidth: 360, height: 72, zIndex: 50 } as object,
+  tabIn: { flex: 1, borderRadius: 36, overflow: "hidden", flexDirection: "row", alignItems: "center", paddingHorizontal: 4 } as object,
+  tabInLight: { backgroundColor: "rgba(255,255,255,.55)", borderWidth: 1, borderColor: "rgba(255,255,255,.6)" } as object,
+  tabInDark: { backgroundColor: "rgba(20,20,24,.55)", borderWidth: 1, borderColor: "rgba(255,255,255,.14)" } as object,
+  tabBtn: { flex: 1, height: "100%" as unknown as number, alignItems: "center", justifyContent: "center", zIndex: 1 } as object,
+  tabPill: { position: "absolute", top: 12, left: 0, width: 48, height: 48, borderRadius: 20 } as object,
+  pillLight: { backgroundColor: "rgba(255,255,255,.2)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.6)" } as object,
+  pillDark: { backgroundColor: "rgba(255,255,255,.1)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.2)" } as object,
+  tabDot: { position: "absolute", top: 60, left: 0, width: 4, height: 4, borderRadius: 2 } as object,
+  dotLight: { backgroundColor: "#2563eb" } as object,
+  dotDark: { backgroundColor: "#fff" } as object,
 });

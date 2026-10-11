@@ -7,6 +7,7 @@ import type { AppMeta } from "../../apps/registry";
 import type { AppId } from "../../system/state";
 import { Icon } from "../Icon";
 import { SettingsApp } from "./SettingsApp";
+import { MessagesApp } from "./MessagesApp";
 
 export function appMeta(id: AppId): AppMeta {
   return APPS.find((a) => a.id === id) ?? EXTRA_APPS.find((a) => a.id === id)!;
@@ -32,6 +33,7 @@ const sb = StyleSheet.create({
 export function renderApp(id: AppId): React.ReactNode {
   switch (id) {
     case "settings": return <SettingsApp />;
+    case "messages": return <MessagesApp />;
     default: return <StubApp id={id} />;
   }
 }
