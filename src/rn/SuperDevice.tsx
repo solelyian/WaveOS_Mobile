@@ -92,6 +92,7 @@ export function SuperDevice() {
       </View>
       <View style={sd.stage}>
         <View style={sd.ring} pointerEvents="none" />
+        <View style={sd.ringIn} pointerEvents="none" />
         {DEVICES.map((d, i) => {
           const h = home(i, DEVICES.length);
           const on = docked.includes(d.id);
@@ -188,6 +189,7 @@ function Actions({ dev, onDisconnect }: { dev: typeof DEVICES[number]; onDisconn
 
 const sd = StyleSheet.create({
   ring: { position: "absolute", left: 200 - 130, top: 300 - 130, width: 260, height: 260, borderRadius: 130, borderWidth: 1, borderColor: "rgba(255,255,255,.14)" } as object,
+  ringIn: { position: "absolute", left: 200 - 65, top: 300 - 65, width: 130, height: 130, borderRadius: 65, borderWidth: 1, borderColor: "rgba(255,255,255,.14)" } as object,
   stage: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } as object,
   dev: {
     position: "absolute", width: BUB, height: BUB, borderRadius: 31, alignItems: "center", justifyContent: "center",

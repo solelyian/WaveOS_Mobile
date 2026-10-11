@@ -55,9 +55,16 @@ export function SheetHost() {
   return (
     <View ref={wrap} style={st.wrap} pointerEvents="box-none">
       <View style={st.frost} nativeID="sheet-frost" pointerEvents="none" />
+      {active === "sd" && <SDNavy />}
       {active === "sd" ? <SuperDevice /> : active === "nc" ? <NotificationCenter /> : <ControlCenter />}
     </View>
   );
+}
+
+function SDNavy() {
+  const r = React.useRef<View>(null);
+  React.useEffect(() => { const el = domOf(r); if (el) el.style.background = "linear-gradient(200deg,#0d1226,#131b3a 55%,#0a0f24)"; }, []);
+  return <View ref={r} style={StyleSheet.absoluteFill as object} pointerEvents="none" />;
 }
 
 const st = StyleSheet.create({

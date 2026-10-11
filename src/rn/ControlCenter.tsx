@@ -137,6 +137,14 @@ export function ControlCenter() {
           <Icon name="chevronDown" size={16} color="rgba(255,255,255,.5)" />
         </Tile>
       </View>
+
+      <Tile style={st.home} r={24}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <View style={st.sdIc}><Icon name="home" size={18} color="#fff" /></View>
+          <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>Home</Text>
+        </View>
+        <Text style={{ color: "rgba(255,255,255,.6)", fontSize: 12 }}>3 Scenes Active</Text>
+      </Tile>
     </View>
   );
 }
@@ -156,7 +164,8 @@ const st = StyleSheet.create({
   } as object,
   icWrap: { position: "absolute", bottom: 0, left: 0, right: 0, alignItems: "center", paddingBottom: 14 },
   sqBtn: { width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center" },
-  sdWrap: { marginTop: "auto", marginBottom: 26 },
+  sdWrap: { marginTop: "auto" },
+  home: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 14, marginBottom: 26 },
   sd: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14 },
   sdIc: {
     width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center",
