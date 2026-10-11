@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { createElement } from "react";
 import App from "./rn/App";
 import { loadWasm } from "./wasm/bridge";
+import { initTheme } from "./rn/theme";
 
 const PHONE_W = 400, PHONE_H = 850;
 
@@ -27,3 +28,4 @@ layoutStage();
 
 createRoot(document.getElementById("phone")!).render(createElement(App));
 loadWasm(); // moteur C++ : raster Maps, surfaces verre
+initTheme(); // moteur Monet : palette extraite du wallpaper → accents système

@@ -6,6 +6,7 @@ import { Icon } from "../Icon";
 import type { IconName } from "../../core/lucide";
 import { Spring, SPRINGS, domOf, onFrame } from "../fx";
 import { host, onToasts, toasts } from "../host";
+import { useTheme, useAccent } from "../theme";
 
 /* ---------- GlassHeader : rangée back/action + titre (large ou compact) ---------- */
 export function GlassHeader({ title, large, action, onAction, onBack, color = "#111" }: {
@@ -32,9 +33,10 @@ export function GlassHeader({ title, large, action, onAction, onBack, color = "#
 /* ---------- iOS switch ---------- */
 export function IOSSwitch({ on, onFlip }: { on: boolean; onFlip: (v: boolean) => void }) {
   const [v, setV] = React.useState(on);
+  const t = useTheme();
   return (
     <Pressable
-      style={[uh.sw, v && uh.swOn]}
+      style={[uh.sw, v && { backgroundColor: t.accent }]}
       onPress={() => { const nv = !v; setV(nv); onFlip(nv); }}
       accessibilityRole="switch"
     >
@@ -161,6 +163,7 @@ export function FloatingTabBar({ tabs, active, onTab, dark }: {
   tabs: { id: string; icon: IconName; label: string }[];
   active: string; onTab: (id: string) => void; dark?: boolean;
 }) {
+  const th = useTheme();
   const inRef = React.useRef<View>(null);
   const pillRef = React.useRef<View>(null);
   const dotRef = React.useRef<View>(null);
@@ -190,12 +193,12 @@ export function FloatingTabBar({ tabs, active, onTab, dark }: {
         {tabs.map((t) => (
           <Pressable key={t.id} style={uh.tabBtn} onPress={() => onTab(t.id)}>
             <Icon n={t.icon} size={24}
-              color={t.id === active ? (dark ? "#fff" : "#2563eb") : dark ? "rgba(255,255,255,.6)" : "rgba(0,0,0,.6)"}
+              color={t.id === active ? (dark ? "#fff" : th.accent) : dark ? "rgba(255,255,255,.6)" : "rgba(0,0,0,.6)"}
               style={t.id === active ? { transform: "scale(1.1)" } : undefined} />
           </Pressable>
         ))}
-        <View ref={pillRef} style={[uh.tabPill, dark ? uh.pillDark : uh.pillLight]} pointerEvents="none" />
-        <View ref={dotRef} style={[uh.tabDot, dark ? uh.dotDark : uh.dotLight]} pointerEvents="none" />
+        <View ref={pillRef} style={[uh.tabPill, dark ? uh.pillDark : uh.pillLight, !dark && th.dynamic ? { backgroundColor: th.accentSoft } : null]} pointerEvents="none" />
+        <View ref={dotRef} style={[uh.tabDot, dark ? uh.dotDark : uh.dotLight, !dark ? { backgroundColor: th.accent } : null]} pointerEvents="none" />
       </View>
     </View>
   );
@@ -204,6 +207,7 @@ export function FloatingTabBar({ tabs, active, onTab, dark }: {
 /* ---------- Slider horizontal (réglages Luminosité / Volume) ---------- */
 export function HSlider({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const track = React.useRef<View>(null);
+  const accent = useAccent();
   const set = (x: number) => {
     const el = domOf(track);
     if (!el) return;
@@ -219,7 +223,7 @@ export function HSlider({ value, onChange }: { value: number; onChange: (v: numb
       onResponderGrant={(e: { nativeEvent: { pageX: number } }) => set(e.nativeEvent.pageX)}
       onResponderMove={(e: { nativeEvent: { pageX: number } }) => set(e.nativeEvent.pageX)}
     >
-      <View style={[uh.hfill, { width: `${value}%` as unknown as number }]} />
+      <View style={[uh.hfill, { width: `${value}%` as unknown as number, backgroundColor: accent }]} />
       <View style={[uh.hknob, { left: `${value}%` as unknown as number }]} />
     </View>
   );
@@ -248,7 +252,6 @@ const uh = StyleSheet.create({
   h1: { fontSize: 34, fontWeight: "800", letterSpacing: -0.8, color: "#111", marginTop: 8, marginLeft: 4 },
   ttlSm: { fontSize: 17, fontWeight: "700", color: "#111", textAlign: "center", marginTop: -24 },
   sw: { width: 51, height: 31, borderRadius: 16, backgroundColor: "#d1d1d6", padding: 2, justifyContent: "center" } as object,
-  swOn: { backgroundColor: "#34c759" } as object,
   knob: { width: 27, height: 27, borderRadius: 14, backgroundColor: "#fff", shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 3, shadowOffset: { width: 0, height: 1 } } as object,
   row: {
     flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 11, paddingHorizontal: 14,

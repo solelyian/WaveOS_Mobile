@@ -5,6 +5,7 @@ import { View, Text, Pressable, ScrollView, TextInput, StyleSheet } from "react-
 import { Icon } from "../Icon";
 import type { IconName } from "../../core/lucide";
 import { GlassHeader, FloatingTabBar, SearchPill } from "./ui";
+import { useAccent } from "../theme";
 import { EXTRA_APPS, INSTALLED, appMeta } from "../../apps/registry";
 import type { AppId } from "../../system/state";
 import { host } from "../host";
@@ -37,6 +38,7 @@ function Grad({ color, style, children }: { color: string; style?: object; child
 }
 
 export function StoreApp() {
+  const ac = useAccent();
   const [tab, setTab] = React.useState("today");
   const [detail, setDetail] = React.useState<Entry | null>(null);
   const [q, setQ] = React.useState("");
@@ -63,9 +65,9 @@ export function StoreApp() {
       <Pressable disabled={!e.id} onPress={(ev) => { (ev as unknown as { stopPropagation: () => void }).stopPropagation?.(); install(e); }}
         style={[st.get, big && st.getBig, !e.id && { opacity: 0.55 }, busy && st.getBusy]}>
         {busy ? (
-          <View style={st.prog}><View style={[st.progFill, { transform: [{ scaleX: installs[e.id!] }] }]} /></View>
+          <View style={st.prog}><View style={[st.progFill, { transform: [{ scaleX: installs[e.id!] }], backgroundColor: ac }]} /></View>
         ) : (
-          <Text style={{ fontSize: big ? 15 : 13, fontWeight: "700", color: installed ? "#2563eb" : "#2563eb" }}>
+          <Text style={{ fontSize: big ? 15 : 13, fontWeight: "700", color: ac }}>
             {!e.id ? "SOON" : installed ? "OPEN" : "GET"}
           </Text>
         )}

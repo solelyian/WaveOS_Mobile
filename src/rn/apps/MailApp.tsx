@@ -5,6 +5,7 @@ import { View, Text, Pressable, Image, ScrollView, TextInput, StyleSheet } from 
 import { Icon } from "../Icon";
 import { toast } from "../host";
 import { GlassHeader, FloatingTabBar, GBtn, SearchPill, PageBlank } from "./ui";
+import { useAccent } from "../theme";
 
 type Folder = "inbox" | "sent" | "drafts";
 interface Mail {
@@ -29,6 +30,7 @@ const MAILS: Mail[] = [
 type Pane = { kind: "detail"; m: Mail } | { kind: "composer"; to?: string; subject?: string; body?: string; draft?: Mail };
 
 export function MailApp() {
+  const ac = useAccent();
   const [tab, setTab] = React.useState("inbox");
   const [q, setQ] = React.useState("");
   const [panes, setPanes] = React.useState<Pane[]>([]);
@@ -54,7 +56,7 @@ export function MailApp() {
         <Image source={{ uri: m.avatar }} style={ms.av} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
-            {m.unread && <View style={ms.dot} />}
+            {m.unread && <View style={[ms.dot, { backgroundColor: ac }]} />}
             {m.flagged && <Icon n="flag" size={12} color="#f59e0b" />}
             <Text style={ms.t1} numberOfLines={1}>{who}</Text>
           </View>
@@ -85,13 +87,13 @@ export function MailApp() {
         { id: "drafts", icon: "file", label: "Drafts" },
         { id: "flag", icon: "flag", label: "Flagged" },
       ]} />
-      <Pressable style={ms.fab} onPress={() => composer()}>
+      <Pressable style={[ms.fab, { backgroundColor: ac }]} onPress={() => composer()}>
         <Icon n="pencil" size={22} color="#fff" />
       </Pressable>
       {panes.map((p, i) => (
         <PageBlank key={i} onClose={pop}>
           {p.kind === "detail"
-            ? <Detail m={p.m} onBack={pop} bump={bump} onReply={(o) => { pop(); composer(o); }} />
+            ? <Detail m={p.m} onBack={pop} bump={bump} onReply={(o) => { pop(); composer(o); }} ac={ac} />
             : <ComposerPane opts={p} onDone={(sent) => { pop(); bump(); toast(sent ? "Message sent" : "Saved to drafts"); }} />}
         </PageBlank>
       ))}
@@ -99,7 +101,8 @@ export function MailApp() {
   );
 }
 
-function Detail({ m, onBack, bump, onReply }: {
+function Detail({ m, onBack, bump, onReply, ac }: {
+  ac: string;
   m: Mail; onBack: () => void; bump: () => void;
   onReply: (o: { to: string; subject: string; body: string }) => void;
 }) {
@@ -110,10 +113,10 @@ function Detail({ m, onBack, bump, onReply }: {
       <View style={ms.thdr}>
         <GBtn icon="chevronLeft" onPress={() => { bump(); onBack(); }} />
         <View style={{ flex: 1 }} />
-        <GBtn icon="flag" color={m.flagged ? "#f59e0b" : "#2563eb"} onPress={() => { m.flagged = !m.flagged; bump(); toast(m.flagged ? "Flagged" : "Unflagged"); }} />
-        <GBtn icon="archive" color="#2563eb" onPress={() => { m.archived = true; bump(); onBack(); toast("Archived"); }} />
-        <GBtn icon="trash2" color="#2563eb" onPress={() => { m.archived = true; bump(); onBack(); toast("Moved to Bin"); }} />
-        <GBtn icon="reply" color="#2563eb" onPress={() => onReply(reply)} />
+        <GBtn icon="flag" color={m.flagged ? "#f59e0b" : ac} onPress={() => { m.flagged = !m.flagged; bump(); toast(m.flagged ? "Flagged" : "Unflagged"); }} />
+        <GBtn icon="archive" color={ac} onPress={() => { m.archived = true; bump(); onBack(); toast("Archived"); }} />
+        <GBtn icon="trash2" color={ac} onPress={() => { m.archived = true; bump(); onBack(); toast("Moved to Bin"); }} />
+        <GBtn icon="reply" color={ac} onPress={() => onReply(reply)} />
       </View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }} nativeID="app-scroll">
         <Text style={{ fontSize: 22, fontWeight: "700", letterSpacing: -0.2, marginVertical: 12 }}>{m.subject}</Text>
@@ -130,7 +133,7 @@ function Detail({ m, onBack, bump, onReply }: {
             <Text key={i} style={{ fontSize: 15, lineHeight: 23, color: "#374151", marginBottom: 12 }}>{p}</Text>
           ))}
         </View>
-        <Pressable style={ms.replyBtn} onPress={() => onReply(reply)}>
+        <Pressable style={[ms.replyBtn, { backgroundColor: ac }]} onPress={() => onReply(reply)}>
           <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>Reply</Text>
         </Pressable>
       </ScrollView>
@@ -142,6 +145,7 @@ function ComposerPane({ opts, onDone }: {
   opts: { to?: string; subject?: string; body?: string; draft?: Mail };
   onDone: (sent: boolean) => void;
 }) {
+  const ac = useAccent();
   const [to, setTo] = React.useState(opts.to ?? "");
   const [subj, setSubj] = React.useState(opts.subject ?? "");
   const [body, setBody] = React.useState(opts.body ?? "");
@@ -163,7 +167,7 @@ function ComposerPane({ opts, onDone }: {
       <View style={[ms.thdr, { gap: 0 }]}>
         <GBtn icon="x" onPress={dismiss} />
         <Text style={{ flex: 1, textAlign: "center", fontWeight: "700", fontSize: 17 }}>New Message</Text>
-        <Pressable style={ms.send} onPress={send}><Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>Send</Text></Pressable>
+        <Pressable style={[ms.send, { backgroundColor: ac }]} onPress={send}><Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>Send</Text></Pressable>
       </View>
       <View style={ms.fld}><TextInput style={ms.fldIn} value={to} onChangeText={setTo} placeholder="To:" placeholderTextColor="#9ca3af" autoFocus /></View>
       <View style={ms.fld}><TextInput style={ms.fldIn} value={subj} onChangeText={setSubj} placeholder="Subject:" placeholderTextColor="#9ca3af" /></View>

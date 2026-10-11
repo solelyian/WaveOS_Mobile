@@ -5,6 +5,7 @@ import { View, Text, Pressable, Image, ScrollView, TextInput, StyleSheet } from 
 import { Icon } from "../Icon";
 import { toast } from "../host";
 import { GlassHeader, FloatingTabBar, GBtn, PageBlank, IOSSwitch } from "./ui";
+import { useAccent } from "../theme";
 
 interface Msg { me?: boolean; text?: string; im?: string }
 interface Convo { name: string; avatar: string; time: string; unread?: number; msgs: Msg[] }
@@ -41,6 +42,7 @@ type Pane =
   | { kind: "new" };
 
 export function MessagesApp() {
+  const ac = useAccent();
   const [tab, setTab] = React.useState("chats");
   const [q, setQ] = React.useState("");
   const [panes, setPanes] = React.useState<Pane[]>([]);
@@ -101,7 +103,7 @@ export function MessagesApp() {
                     <Text style={ms.t2}>{t}</Text>
                   </View>
                   <Pressable onPress={() => c && contact(n, c.avatar)}>
-                    <Icon n="info" size={20} color="#2563eb" />
+                    <Icon n="info" size={20} color={ac} />
                   </Pressable>
                 </Pressable>
               );
@@ -141,7 +143,7 @@ export function MessagesApp() {
 
       {panes.map((p, i) => (
         <PageBlank key={i} onClose={pop}>
-          {p.kind === "thread" && <Thread c={p.convo} onBack={pop} onContact={contact} onPhotos={() => push({ kind: "photos", convo: p.convo })} bump={bump} />}
+          {p.kind === "thread" && <Thread c={p.convo} onBack={pop} onContact={contact} onPhotos={() => push({ kind: "photos", convo: p.convo })} bump={bump} ac={ac} />}
           {p.kind === "contact" && <Contact name={p.name} avatar={p.avatar} onBack={pop} onMessage={() => { clearPanes(); openConvo(convoFor(p.name, p.avatar)); }} />}
           {p.kind === "photos" && <PhotoPicker onBack={pop} onPick={(src) => { p.convo.msgs.push({ me: true, im: src }); pop(); bump(); }} />}
           {p.kind === "new" && <NewMessage all={[...CONVOS.map((c) => [c.name, c.avatar] as [string, string]), ...MORE]}
@@ -153,7 +155,8 @@ export function MessagesApp() {
 }
 
 /* ---------------- fil de discussion ---------------- */
-function Thread({ c, onBack, onContact, onPhotos, bump }: {
+function Thread({ c, onBack, onContact, onPhotos, bump, ac }: {
+  ac: string;
   c: Convo; onBack: () => void; onContact: (n: string, a: string) => void;
   onPhotos: () => void; bump: () => void;
 }) {
@@ -186,8 +189,8 @@ function Thread({ c, onBack, onContact, onPhotos, bump }: {
           <Text style={{ fontWeight: "700", fontSize: 16 }}>{c.name}</Text>
           <Text style={{ fontSize: 11, color: "#22c55e", fontWeight: "600" }}>Online</Text>
         </Pressable>
-        <GBtn icon="video" color="#2563eb" onPress={() => toast("Starting Nyne Vision…")} />
-        <GBtn icon="phone" color="#2563eb" onPress={() => toast(`Calling ${c.name.split(" ")[0]}…`)} />
+        <GBtn icon="video" color={ac} onPress={() => toast("Starting Nyne Vision…")} />
+        <GBtn icon="phone" color={ac} onPress={() => toast(`Calling ${c.name.split(" ")[0]}…`)} />
       </View>
       <ScrollView ref={list} style={{ flex: 1 }} contentContainerStyle={{ gap: 6, paddingHorizontal: 16, paddingBottom: 16 }} nativeID="app-scroll">
         {c.msgs.map((m, i) => m.im ? (
@@ -221,9 +224,10 @@ function Thread({ c, onBack, onContact, onPhotos, bump }: {
 function Contact({ name, avatar, onBack, onMessage }: {
   name: string; avatar: string; onBack: () => void; onMessage: () => void;
 }) {
+  const ac = useAccent();
   const acts: [string, string, string, () => void][] = [
     ["messageCircle", "Message", "#22c55e", onMessage],
-    ["phone", "Call", "#2563eb", () => toast(`Calling ${name.split(" ")[0]}…`)],
+    ["phone", "Call", ac, () => toast(`Calling ${name.split(" ")[0]}…`)],
     ["video", "Nyne Vision", "#0ea5e9", () => toast("Starting Nyne Vision…")],
   ];
   return (

@@ -9,6 +9,7 @@ import type { IconName } from "../../core/lucide";
 import { sys, set } from "../../system/state";
 import { useSys } from "../sys";
 import { toast } from "../host";
+import { useTheme, useAccent, setDynamic, setAccent, reextract, theme as themeState } from "../theme";
 import { GlassHeader, SearchPill, SetRow, ToggleRow, Group, Cap, Bar, PageSlide, HSlider } from "./ui";
 
 const NETWORKS = ["Home_5G", "Nyne Guest", "CoffeeShop WiFi", "Airport_Free"];
@@ -28,6 +29,7 @@ type PageId =
 
 export function SettingsApp() {
   const s = useSys();
+  const ac = useAccent();
   const [q, setQ] = React.useState("");
   const [stack, setStack] = React.useState<PageId[]>([]);
   const push = (p: PageId) => setStack((v) => [...v, p]);
@@ -46,8 +48,8 @@ export function SettingsApp() {
         <Group><ToggleRow icon="wifi" bg="#2563eb" label="Wi-Fi" on={s.wifi} onFlip={(v) => { set("wifi", v); bump(); }} /></Group>
         <Cap>Known networks — tap to join</Cap>
         <Group>{NETWORKS.map((n) => (
-          <SetRow key={n} icon="wifi" bg={n === wifiNet && s.wifi ? "#2563eb" : "#9ca3af"} label={n}
-            end={n === wifiNet && s.wifi ? <Icon n="check" size={18} color="#2563eb" /> : undefined}
+          <SetRow key={n} icon="wifi" bg={n === wifiNet && s.wifi ? ac : "#9ca3af"} label={n}
+            end={n === wifiNet && s.wifi ? <Icon n="check" size={18} color={ac} /> : undefined}
             onPress={() => {
               if (!s.wifi) { toast("Turn Wi-Fi on first"); return; }
               if (n === wifiNet) return;
@@ -63,7 +65,7 @@ export function SettingsApp() {
         <Cap>My devices — tap to connect</Cap>
         <Group>{BT_DEVICES.map((n) => {
           const on = btConnected.has(n) && s.bluetooth;
-          return <SetRow key={n} icon="bluetooth" bg={on ? "#2563eb" : "#9ca3af"} label={n}
+          return <SetRow key={n} icon="bluetooth" bg={on ? ac : "#9ca3af"} label={n}
             value={on ? "Connected" : "Not Connected"}
             onPress={() => {
               if (!s.bluetooth) { toast("Turn Bluetooth on first"); return; }
@@ -351,6 +353,7 @@ function RingtoneGroup() {
 }
 
 function UpdatePage() {
+  const ac = useAccent();
   const [pct, setPct] = React.useState(0);
   const [state, setStateUI] = React.useState<"idle" | "dl" | "done">("idle");
   const start = () => {
@@ -377,20 +380,21 @@ function UpdatePage() {
       <Text style={st.dlTxt}>{state === "idle" ? "Download and Install" : state === "dl" ? "Downloading…" : "Update ready — WaveOS 2.1"}</Text>
     </Pressable>
     <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-      <View style={{ flex: 1 }}><Bar frac={pct / 100} color="#2563eb" h={6} /></View>
+      <View style={{ flex: 1 }}><Bar frac={pct / 100} color={ac} h={6} /></View>
       <Text style={st.val}>{pct}%</Text>
     </View>
   </>;
 }
 
 function SharePage() {
+  const ac = useAccent();
   const ads = ["Receiving Off", "Contacts Only", "Everyone"];
   const [airdrop, setAirdrop] = React.useState(1);
   return (
     <Group>
       {ads.map((n, i) => (
-        <SetRow key={n} icon="share" bg={i === airdrop ? "#2563eb" : "#9ca3af"} label={n}
-          end={i === airdrop ? <Icon n="check" size={18} color="#2563eb" /> : undefined}
+        <SetRow key={n} icon="share" bg={i === airdrop ? ac : "#9ca3af"} label={n}
+          end={i === airdrop ? <Icon n="check" size={18} color={ac} /> : undefined}
           onPress={() => setAirdrop(i)} />
       ))}
     </Group>
@@ -398,6 +402,7 @@ function SharePage() {
 }
 
 function StoragePage() {
+  const ac = useAccent();
   const segs: [string, number, string][] = [["System", 0.22, "#6b7280"], ["Apps", 0.31, "#2563eb"], ["Photos", 0.14, "#f59e0b"], ["Media", 0.08, "#ef4444"], ["Other", 0.05, "#9ca3af"]];
   return <>
     <Group>
@@ -416,6 +421,7 @@ function StoragePage() {
 }
 
 function DisplayPage() {
+  const ac = useAccent();
   const s = useSys();
   const modes = ["Light", "Dark", "Automatic"];
   const icons: IconName[] = ["sun", "moon", "clock"];
@@ -432,8 +438,8 @@ function DisplayPage() {
     <Cap>Appearance</Cap>
     <Group>
       {modes.map((m, i) => (
-        <SetRow key={m} icon={icons[i]} bg={i === mode ? "#2563eb" : "#9ca3af"} label={m}
-          end={i === mode ? <Icon n="check" size={18} color="#2563eb" /> : undefined}
+        <SetRow key={m} icon={icons[i]} bg={i === mode ? ac : "#9ca3af"} label={m}
+          end={i === mode ? <Icon n="check" size={18} color={ac} /> : undefined}
           onPress={() => set("darkMode", i === 1 || (i === 2 && night()))} />
       ))}
     </Group>
@@ -445,6 +451,8 @@ function DisplayPage() {
 }
 
 function WallpaperPage({ bump }: { bump: () => void }) {
+  const th = useTheme();
+  const ac = useAccent();
   return <>
     <Cap>Pick a wallpaper — applied to the home screen</Cap>
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
@@ -453,15 +461,31 @@ function WallpaperPage({ bump }: { bump: () => void }) {
           wallpaper = w;
           const wp = document.getElementById("wp");
           if (wp) wp.style.backgroundImage = `url(${w})`;
+          reextract(w);
           bump(); toast("Wallpaper applied");
-        }} style={[st.wp, { borderColor: w === wallpaper ? "#2563eb" : "#e5e7eb", borderWidth: w === wallpaper ? 3 : 1 }]}>
+        }} style={[st.wp, { borderColor: w === wallpaper ? ac : "#e5e7eb", borderWidth: w === wallpaper ? 3 : 1 }]}>
           <Image source={{ uri: w }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
           {w === wallpaper && (
-            <View style={st.wpCheck}><Icon n="check" size={12} color="#fff" /></View>
+            <View style={[st.wpCheck, { backgroundColor: ac }]}><Icon n="check" size={12} color="#fff" /></View>
           )}
         </Pressable>
       ))}
     </View>
+    <Cap>Theme engine — colors adapt to your wallpaper</Cap>
+    <Group>
+      <ToggleRow icon="star" bg={ac} label="Dynamic Colors" on={th.dynamic} onFlip={(v) => { setDynamic(v); bump(); }} />
+      <View style={st.palRow}>
+        {th.palette.map((hex) => (
+          <Pressable key={hex} onPress={() => { setAccent(hex); bump(); }}
+            style={[st.swatch, { backgroundColor: hex }, hex === ac && { borderWidth: 3, borderColor: "#111" }]}>
+            {hex === ac && <Icon n="check" size={16} color="#fff" />}
+          </Pressable>
+        ))}
+      </View>
+      <Text style={st.palCap}>
+        {th.dynamic ? "Pulled from your wallpaper — pick another to override." : "Turn on Dynamic Colors to tint the system from your wallpaper, or pick a color manually."}
+      </Text>
+    </Group>
   </>;
 }
 
@@ -485,4 +509,7 @@ const st = StyleSheet.create({
     position: "absolute", top: 6, right: 6, width: 20, height: 20, borderRadius: 10,
     backgroundColor: "#2563eb", alignItems: "center", justifyContent: "center",
   } as object,
+  palRow: { flexDirection: "row", gap: 10, paddingHorizontal: 14, paddingVertical: 12, backgroundColor: "#fff" } as object,
+  swatch: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" } as object,
+  palCap: { fontSize: 12, color: "#9ca3af", paddingHorizontal: 14, paddingVertical: 8, paddingBottom: 12, backgroundColor: "#fff" },
 });

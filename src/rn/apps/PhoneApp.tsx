@@ -7,6 +7,7 @@ import { Icon } from "../Icon";
 import type { IconName } from "../../core/lucide";
 import { toast, host } from "../host";
 import { GlassHeader, FloatingTabBar, GBtn, PageBlank } from "./ui";
+import { useAccent } from "../theme";
 import { domOf } from "../fx";
 
 const CONTACTS = [
@@ -49,6 +50,7 @@ type Pane =
   | { kind: "incall-contacts" };
 
 export function PhoneApp() {
+  const ac = useAccent();
   const [tab, setTab] = React.useState("keypad");
   const [digits, setDigits] = React.useState("");
   const [panes, setPanes] = React.useState<Pane[]>([]);
@@ -143,7 +145,7 @@ export function PhoneApp() {
                 <Pressable style={{ flex: 1 }} onPress={() => push({ kind: "vm", i })}>
                   <Text style={ps.t1}>{n}</Text><Text style={ps.t2}>{d} · {t}</Text>
                 </Pressable>
-                <Pressable onPress={() => push({ kind: "vm", i })}><Icon n="play" size={20} color="#2563eb" /></Pressable>
+                <Pressable onPress={() => push({ kind: "vm", i })}><Icon n="play" size={20} color={ac} /></Pressable>
               </View>
             ))}
           </View>
@@ -167,7 +169,7 @@ export function PhoneApp() {
       {panes.map((p, i) => (
         <PageBlank key={i} onClose={pop}>
           {p.kind === "call" && <CallScreen name={p.name} avatar={p.avatar} onEnd={() => setPanes((v) => v.slice(0, i))} onContacts={() => push({ kind: "incall-contacts" })} />}
-          {p.kind === "contact" && <ContactCard name={p.name} num={p.num} avatar={p.avatar} onBack={pop} onCall={call} onClear={clear} />}
+          {p.kind === "contact" && <ContactCard name={p.name} num={p.num} avatar={p.avatar} onBack={pop} onCall={call} onClear={clear} ac={ac} />}
           {p.kind === "vm" && <Voicemail i={p.i} onBack={pop} onCall={call} />}
           {p.kind === "incall-contacts" && <InCallContacts onBack={pop} />}
         </PageBlank>
@@ -303,7 +305,8 @@ function InCallContacts({ onBack }: { onBack: () => void }) {
 }
 
 /* ---------------- fiche contact ---------------- */
-function ContactCard({ name, num, avatar, onBack, onCall, onClear }: {
+function ContactCard({ name, num, avatar, onBack, onCall, onClear, ac }: {
+  ac: string;
   name: string; num: string; avatar: string; onBack: () => void;
   onCall: (n: string, a?: string) => void; onClear: () => void;
 }) {
@@ -325,7 +328,7 @@ function ContactCard({ name, num, avatar, onBack, onCall, onClear }: {
         <Image source={{ uri: avatar }} style={{ width: 104, height: 104, borderRadius: 52, marginBottom: 12 }} />
         <Text style={{ fontSize: 24, fontWeight: "800", letterSpacing: -0.3 }}>{name}</Text>
         <View style={{ flexDirection: "row", gap: 18, marginVertical: 26 }}>
-          {act("messageCircle", "message", "#2563eb", () => host.openApp("messages"))}
+          {act("messageCircle", "message", ac, () => host.openApp("messages"))}
           {act("phone", "call", "#22c55e", () => onCall(name, avatar))}
           {act("video", "video", "#0ea5e9", () => onCall(name, avatar))}
           {act("mail", "mail", "#8b5cf6", () => host.openApp("mail"))}
@@ -349,6 +352,7 @@ function ContactCard({ name, num, avatar, onBack, onCall, onClear }: {
 
 /* ---------------- voicemail ---------------- */
 function Voicemail({ i, onBack, onCall }: { i: number; onBack: () => void; onCall: (n: string, a?: string) => void }) {
+  const ac = useAccent();
   const [n, dur, when, transcript, avatar] = VM[i];
   const secs = (() => { const [m, s] = dur.split(":").map(Number); return m * 60 + s; })();
   const [playing, setPlaying] = React.useState(false);
@@ -389,7 +393,7 @@ function Voicemail({ i, onBack, onCall }: { i: number; onBack: () => void; onCal
             </Pressable>
             <View style={{ flex: 1 }}>
               <View style={{ height: 6, borderRadius: 3, backgroundColor: "rgba(0,0,0,.08)", overflow: "hidden" }}>
-                <View style={{ height: "100%" as unknown as number, width: `${(pos / secs) * 100}%` as unknown as number, backgroundColor: "#2563eb", borderRadius: 3 }} />
+                <View style={{ height: "100%" as unknown as number, width: `${(pos / secs) * 100}%` as unknown as number, backgroundColor: ac, borderRadius: 3 }} />
               </View>
               <Text style={{ fontSize: 11, color: "#9ca3af", marginTop: 6, fontVariant: ["tabular-nums"] }}>
                 {Math.floor(pos / 60)}:{String(Math.floor(pos % 60)).padStart(2, "0")} / {dur}
