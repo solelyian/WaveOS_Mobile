@@ -45,10 +45,12 @@ export function SheetHost() {
     const el = domOf(wrap);
     const f = el?.querySelector<HTMLElement>("#sheet-frost");
     if (f) {
-      f.style.backdropFilter = "blur(30px) saturate(160%)";
-      (f.style as unknown as Record<string, string>).WebkitBackdropFilter = "blur(30px) saturate(160%)";
+      const filter = active === "cc" ? "blur(40px) saturate(65%) brightness(.72)" : "blur(30px) saturate(160%)";
+      f.style.backdropFilter = filter;
+      (f.style as unknown as Record<string, string>).webkitBackdropFilter = filter;
+      f.style.backgroundColor = active === "cc" ? "rgba(18,20,24,.30)" : "rgba(10,10,14,.45)";
     }
-  }, []);
+  }, [active]);
 
   React.useEffect(() => { const off = onFrame((dt) => {
     sp.step(dt);

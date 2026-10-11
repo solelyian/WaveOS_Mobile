@@ -5,11 +5,13 @@ declare module "react-native-web" {
   export interface GestureEvent {
     nativeEvent: { pageX: number; pageY: number; locationX?: number; locationY?: number };
   }
-  export interface ViewProps {
+  export interface ViewProps extends React.AriaAttributes {
     children?: React.ReactNode;
     style?: Style;
     className?: string;
     nativeID?: string;
+    role?: React.AriaRole;
+    tabIndex?: number;
     pointerEvents?: "auto" | "none" | "box-none" | "box-only";
     onLayout?: (e: { nativeEvent: { layout: { x: number; y: number; width: number; height: number } } }) => void;
     onStartShouldSetResponder?: (e: GestureEvent) => boolean;
