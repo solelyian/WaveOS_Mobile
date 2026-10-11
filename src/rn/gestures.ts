@@ -12,7 +12,7 @@ export interface GestureHandlers {
   hasApp(): boolean;
 }
 
-const interactiveSel = "button, a, input, .di-capsule, .cc-slider, .nc-card, .tabbar, .ghdr, .app-scroll, #spot";
+const interactiveSel = "button, a, input, #di-capsule, #cc-slider, #nc-card, .tabbar, .ghdr, #app-scroll, #spot";
 
 interface Drag {
   sx: number; sy: number; lx: number; ly: number; lt: number;

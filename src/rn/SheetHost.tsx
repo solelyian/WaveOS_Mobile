@@ -20,7 +20,7 @@ export function SheetHost() {
   // backdrop-filter n'est pas un style RNW — on l'applique au DOM.
   React.useEffect(() => {
     const el = domOf(wrap);
-    const f = el?.querySelector<HTMLElement>(".sheet-frost");
+    const f = el?.querySelector<HTMLElement>("#sheet-frost");
     if (f) {
       f.style.backdropFilter = "blur(30px) saturate(160%)";
       (f.style as unknown as Record<string, string>).WebkitBackdropFilter = "blur(30px) saturate(160%)";
@@ -37,7 +37,7 @@ export function SheetHost() {
 
   return (
     <View ref={wrap} style={st.wrap} pointerEvents="box-none">
-      <View style={st.frost} className="sheet-frost" pointerEvents="none" />
+      <View style={st.frost} nativeID="sheet-frost" pointerEvents="none" />
       {active === "nc" ? <NotificationCenter /> : <ControlCenter />}
     </View>
   );

@@ -21,9 +21,9 @@ export function NotificationCenter({ onClear }: { onClear?: () => void }) {
         <GlassClock size={74} />
         <Text style={st.date}>{fmtDate()}</Text>
       </View>
-      <View style={st.list} className="app-scroll">
+      <View style={st.list} nativeID="app-scroll">
         {items.map((n, i) => (
-          <View key={i} style={[st.card, glassStyle(0.16) as object]} className="nc-card">
+          <View key={i} style={[st.card, glassStyle(0.16) as object]} nativeID="nc-card">
             <View style={[st.ic, { backgroundColor: n.color }]}>
               <Icon name={n.icon} size={16} color="#fff" />
             </View>

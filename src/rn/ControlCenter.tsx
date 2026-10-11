@@ -37,7 +37,7 @@ function Slider({ icon, k }: { icon: string; k: "brightness" | "volume" }) {
     <Tile style={{ flex: 1, overflow: "hidden" }} r={34}>
       <View
         ref={ref}
-        className="cc-slider"
+        nativeID="cc-slider"
         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
         onStartShouldSetResponder={() => true}
         onResponderGrant={(e) => setFromY(e.nativeEvent.pageY)}
