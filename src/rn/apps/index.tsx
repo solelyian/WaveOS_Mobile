@@ -13,6 +13,8 @@ import { CalculatorApp } from "./CalculatorApp";
 import { MusicApp } from "./MusicApp";
 import { MailApp } from "./MailApp";
 import { WeatherApp } from "./WeatherApp";
+import { SafariApp } from "./SafariApp";
+import { CalendarApp } from "./CalendarApp";
 
 export function appMeta(id: AppId): AppMeta {
   return APPS.find((a) => a.id === id) ?? EXTRA_APPS.find((a) => a.id === id)!;
@@ -44,6 +46,8 @@ export function renderApp(id: AppId): React.ReactNode {
     case "music": return <MusicApp />;
     case "mail": return <MailApp />;
     case "weather": return <WeatherApp />;
+    case "safari": return <SafariApp />;
+    case "calendar": return <CalendarApp />;
     default: return <StubApp id={id} />;
   }
 }
