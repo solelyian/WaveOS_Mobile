@@ -26,8 +26,8 @@ export interface WasmApi {
   wg_glass_render(ox: number, oy: number, w: number, h: number, r: number,
                  tr: number, tg: number, tb: number, al: number): void;
   wg_glass_size(w: number, h: number): void;
-  wg_glass_disp(w: number, h: number, r: number, amp: number): void;
-  wg_glass_edge(w: number, h: number, r: number): void;
+  wg_glass_disp(w: number, h: number, r: number, amp: number, depth?: number): void;
+  wg_glass_edge(w: number, h: number, r: number, depth?: number): void;
 }
 
 let wasm: WasmApi | null = null;

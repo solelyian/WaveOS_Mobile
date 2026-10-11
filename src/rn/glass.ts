@@ -37,12 +37,12 @@ function ensureDefs(): SVGDefsElement {
 }
 
 /** Carte de déplacement RGBA rendue par le moteur C++ → dataURL PNG. */
-function dispMap(w: number, h: number, r: number, amp: number): string {
-  const key = `${w}-${h}-${r.toFixed(1)}-${amp.toFixed(2)}`;
+function dispMap(w: number, h: number, r: number, amp: number, depth: number): string {
+  const key = `${w}-${h}-${r.toFixed(1)}-${amp.toFixed(2)}-${depth.toFixed(2)}`;
   const hit = mapCache.get(key);
   if (hit) return hit;
   const api = W();
-  api.wg_glass_disp(w, h, r, amp);
+  api.wg_glass_disp(w, h, r, amp, depth);
   const c = document.createElement("canvas");
   c.width = w; c.height = h;
   const cx = c.getContext("2d")!;
@@ -54,12 +54,12 @@ function dispMap(w: number, h: number, r: number, amp: number): string {
 }
 
 /** Habillage de bord (filet spéculaire + halo + ombre + caustique) → dataURL. */
-function edgeMap(w: number, h: number, r: number): string {
-  const key = `e${w}-${h}-${r.toFixed(1)}`;
+function edgeMap(w: number, h: number, r: number, depth: number): string {
+  const key = `e${w}-${h}-${r.toFixed(1)}-${depth.toFixed(2)}`;
   const hit = mapCache.get(key);
   if (hit) return hit;
   const api = W();
-  api.wg_glass_edge(w, h, r);
+  api.wg_glass_edge(w, h, r, depth);
   const c = document.createElement("canvas");
   c.width = w; c.height = h;
   const cx = c.getContext("2d")!;
@@ -73,35 +73,41 @@ function edgeMap(w: number, h: number, r: number): string {
 export interface LGOpts {
   /** rayon des coins en px (défaut : border-radius calculé de l'élément) */
   radius?: number;
-  /** amplitude de la lentille 0..1 (défaut .8) */
+  /** amplitude de la lentille 0..1 */
   amp?: number;
-  /** déplacement max en px = scale du feDisplacementMap (défaut 18) */
+  /** largeur de la bande réfractive depuis le bord, en px */
+  depth?: number;
+  /** étendue du feDisplacementMap ; déplacement max = scale / 2 */
   scale?: number;
-  /** flou du givre en px (défaut 6) */
+  /** flou du décor en px */
   blur?: number;
-  /** saturation du fond (défaut 1.5) */
+  /** saturation du fond */
   saturate?: number;
-  /** intensité du liseré spéculaire 0..1 (défaut .85) */
+  /** intensité du liseré spéculaire 0..1 */
   spec?: number;
 }
 
-/** Applique le vrai liquid glass à `el` (son backdrop est réfracté). */
+/** Applique le matériau WaveOS à `el` (son backdrop est réfracté). */
 export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void> {
   await loadWasm();
+  const control = !!el.closest("#cc");
+  const slider = el.dataset.lgKind === "slider";
   const r = el.getBoundingClientRect();
-  const w = Math.min(512, Math.max(8, Math.round(r.width)));
-  const h = Math.min(640, Math.max(8, Math.round(r.height)));
+  const w = Math.min(512, Math.max(8, Math.round(control ? el.offsetWidth : r.width)));
+  const h = Math.min(640, Math.max(8, Math.round(control ? el.offsetHeight : r.height)));
   const cs = getComputedStyle(el).borderTopLeftRadius;
   const rad = o.radius ?? (cs.endsWith("%")
     ? (parseFloat(cs) / 100) * Math.min(w, h)
     : (parseFloat(cs) || 20));
   const amp = o.amp ?? 1.0;
-  const scale = o.scale ?? 100;         // lentille : ~2.8× de compression au bord
-  const blur = o.blur ?? 3;            // corps à peine givré
-  const sat = o.saturate ?? 1.15;      // légère saturation (verre Apple)
+  const size = Math.min(w, h);
+  const depth = o.depth ?? (control ? Math.min(16, Math.max(4, size * .12)) : 30);
+  const scale = o.scale ?? (control ? Math.min(44, Math.max(22, size * .5)) : 100);
+  const blur = o.blur ?? (control ? 1.2 : 3);
+  const sat = o.saturate ?? (slider ? 0 : control ? 1.3 : 1.15);
 
-  const map = dispMap(w, h, rad, amp);
-  const fid = `lg-${w}x${h}-${rad.toFixed(1)}-${amp.toFixed(2)}-${scale}-${blur}-${sat.toFixed(2)}`;
+  const map = dispMap(w, h, rad, amp, depth);
+  const fid = `lg-${w}x${h}-${rad.toFixed(1)}-${amp.toFixed(2)}-${scale}-${blur}-${sat.toFixed(2)}-${depth.toFixed(2)}`;
   if (!filterCache.has(fid)) {
     const d = ensureDefs();
     const f = document.createElementNS(SVGNS, "filter");
@@ -126,11 +132,13 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
     const edge = document.createElement("i");
     edge.className = "lg-edge";
     edge.style.cssText = `position:absolute;inset:0;border-radius:inherit;` +
-      `pointer-events:none;background-image:url("${edgeMap(w, h, rad)}");` +
+      `pointer-events:none;background-image:url("${edgeMap(w, h, rad, depth)}");` +
       `background-size:100% 100%;z-index:0;`;
     if (getComputedStyle(el).position === "static") el.style.position = "relative";
     el.prepend(edge);
   }
+  const edge = el.querySelector<HTMLElement>(":scope > .lg-edge")!;
+  edge.style.opacity = String(o.spec ?? (control ? .65 : 1));
   el.dataset.lgDone = "1";
 }
 

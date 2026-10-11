@@ -28,7 +28,7 @@ function Tile({ id, inDock, onOpen }: { id: AppId; inDock?: boolean; onOpen: (id
 
 export function HomeGrid({ onOpen, onSpot }: { onOpen: (id: AppId, el: HTMLElement | null) => void; onSpot: () => void }) {
   return (
-    <View style={s.home}>
+    <View style={s.home} nativeID="home">
       <View style={s.wdgRow}>
         <View {...lg} style={[s.wdg, glassStyle(0.05) as object]}>
           <View style={s.wt}>

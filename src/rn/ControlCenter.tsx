@@ -1,16 +1,21 @@
-// ControlCenter.tsx — capsules mates, curseurs horizontaux et grille 4×4.
+// ControlCenter.tsx — commandes en verre, curseurs neutres et grille 4×4.
 import * as React from "react";
 import { View, Pressable, Text, StyleSheet } from "react-native";
 import { useSys, set } from "./sys";
 import { cur, next, prev } from "../system/media";
 import { Icon } from "./Icon";
-import { domOf } from "./fx";
+import { domOf, lg } from "./fx";
 import { sys, type SysState } from "../system/state";
 
-function Tile({ children, style, r = 30, onPress, label, pressed }: {
-  children: React.ReactNode; style?: object; r?: number; onPress?: () => void; label?: string; pressed?: boolean;
+const sliderGlass: Record<string, unknown> = { dataSet: { lg: "", lgKind: "slider" } };
+const roundGlass: Record<string, unknown> = { dataSet: { lg: "", lgShape: "circle" } };
+const cornerGlass: Record<string, unknown> = { dataSet: { lg: "", lgShape: "corner" } };
+
+function Tile({ children, style, r = 30, onPress, label, pressed, slider = false }: {
+  children: React.ReactNode; style?: object; r?: number; onPress?: () => void;
+  label?: string; pressed?: boolean; slider?: boolean;
 }) {
-  const inner = <View style={[st.tile, { borderRadius: r }, style]}>{children}</View>;
+  const inner = <View {...(slider ? sliderGlass : lg)} style={[st.tile, { borderRadius: r }, slider ? st.sliderGlass : null, style]}>{children}</View>;
   return onPress ? <Pressable style={{ flex: 1, minWidth: 0 }} accessibilityRole="button" accessibilityLabel={label} aria-pressed={pressed} onPress={onPress}>{inner}</Pressable>
     : <View style={{ flex: 1, minWidth: 0 }}>{inner}</View>;
 }
@@ -23,7 +28,8 @@ function Pill({ k, icon, offIcon, name, tint = "transparent", label = name, onPr
   const piColor = k === "focus" ? `rgba(255,255,255,${on ? ".16" : ".06"})` : on ? tint : "rgba(255,255,255,.06)";
   const icColor = !on && k !== "focus" ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.90)";
   return (
-    <Tile style={st.pill} r={33} label={label} pressed={k ? on : undefined} onPress={onPress ?? (k ? () => set(k, !s[k] as never) : undefined)}>
+    <Tile style={on && (k === "wifi" || k === "bluetooth") ? [st.pill, st.activeTile] : st.pill}
+      r={33} label={label} pressed={k ? on : undefined} onPress={onPress ?? (k ? () => set(k, !s[k] as never) : undefined)}>
       <View style={[st.pi, { backgroundColor: piColor }]}>
         <Icon name={!on && offIcon ? offIcon : icon} size={26} color={icColor} />
       </View>
@@ -77,7 +83,7 @@ function HSlider({ icon, k }: { icon: string; k: "brightness" | "volume" }) {
     };
   }, [k]);
   return (
-    <Tile style={{ flex: 1 }} r={33}>
+    <Tile slider style={{ flex: 1 }} r={33}>
       <View
         ref={ref}
         nativeID={`cc-${k}`}
@@ -149,8 +155,8 @@ function Cell({ k, icon, label }: { k: keyof SysState; icon: string; label: stri
   const on = !!s[k];
   return (
     <Pressable style={st.cell} accessibilityRole="button" accessibilityLabel={label} aria-pressed={on} onPress={() => set(k, !s[k] as never)}>
-      <View style={[st.dot, on ? { backgroundColor: "#307bf6" } : st.dotOff]}>
-        <Icon name={icon} size={26} color={on ? "#fff" : "rgba(255,255,255,.90)"} />
+      <View {...roundGlass} style={[st.dot, on ? st.dotOn : st.dotOff]}>
+        <Icon name={icon} size={30} color="#fff" />
       </View>
       <Text numberOfLines={2} style={st.lb}>{label}</Text>
     </Pressable>
@@ -158,18 +164,38 @@ function Cell({ k, icon, label }: { k: keyof SysState; icon: string; label: stri
 }
 
 export function ControlCenter() {
+  React.useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.getElementById("cc");
+    if (root) {
+      root.style.backdropFilter = "blur(6px) saturate(115%) brightness(1.18)";
+      (root.style as CSSStyleDeclaration & { webkitBackdropFilter?: string }).webkitBackdropFilter = root.style.backdropFilter;
+    }
+    const css = document.createElement("style");
+    css.textContent = `
+      #cc [role="button"] > [data-lg] { transition: transform .12s, background-color .2s; }
+      #cc [role="button"]:active > [data-lg] { transform: scale(.97); }
+      #cc [aria-pressed]:active > [data-lg][data-lg-shape="circle"] { transform: scale(.93); }
+      #cc [role="button"]:active > [data-lg][data-lg-shape="corner"] { transform: scale(.9); }
+      #cc [data-lg] svg { filter: drop-shadow(0 1px 2px rgba(0,0,0,.22)); }
+      #cc :focus-visible { outline: 2px solid rgba(255,255,255,.85); outline-offset: 3px; }
+      @media (prefers-reduced-motion: reduce) { #cc [data-lg] { transition: none; } }
+    `;
+    document.head.append(css);
+    return () => css.remove();
+  }, []);
   return (
     <View style={st.root} nativeID="cc">
       <View style={st.top}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Edit controls"><View style={st.corner}><Icon name="squarePen" size={24} color="rgba(255,255,255,.90)" /></View></Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Settings"><View style={st.corner}><Icon name="settings" size={24} color="rgba(255,255,255,.90)" /></View></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Edit controls"><View {...cornerGlass} style={st.corner}><Icon name="squarePen" size={24} color="#fff" /></View></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Settings"><View {...cornerGlass} style={st.corner}><Icon name="settings" size={24} color="#fff" /></View></Pressable>
       </View>
 
       <View style={st.r1}>
         <MediaCard />
         <View style={st.conn}>
-          <Pill k="wifi" icon="wifi" offIcon="wifiOff" name="WAVE-5G" label="Wi-Fi: WAVE-5G" tint="#307bf6" />
-          <Pill k="bluetooth" icon="bluetooth" offIcon="bluetoothOff" name="Nyne Watch" label="Bluetooth: Nyne Watch" tint="#307bf6" />
+          <Pill k="wifi" icon="wifi" offIcon="wifiOff" name="WAVE-5G" label="Wi-Fi: WAVE-5G" tint="rgba(0,145,255,.28)" />
+          <Pill k="bluetooth" icon="bluetooth" offIcon="bluetoothOff" name="Nyne Watch" label="Bluetooth: Nyne Watch" tint="rgba(0,145,255,.28)" />
         </View>
       </View>
 
@@ -193,10 +219,13 @@ export function ControlCenter() {
 }
 
 const st = StyleSheet.create({
-  root: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, paddingTop: 74, paddingHorizontal: 44, paddingBottom: 10, gap: 16 },
-  tile: { flex: 1, position: "relative", overflow: "hidden", backgroundColor: "rgba(8,12,18,.54)" },
+  root: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, paddingTop: 74, paddingHorizontal: 44, paddingBottom: 10, gap: 16,
+    backgroundColor: "rgba(18,20,24,.06)" },
+  tile: { flex: 1, position: "relative", overflow: "hidden", backgroundColor: "rgba(255,255,255,.07)" },
+  sliderGlass: { backgroundColor: "rgba(20,20,20,.16)" },
+  activeTile: { backgroundColor: "rgba(0,135,255,.72)" },
   top: { flexDirection: "row", justifyContent: "space-between", height: 40 },
-  corner: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(8,10,14,.70)" },
+  corner: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,.07)" },
   r1: { flexDirection: "row", gap: 16, height: 148 },
   conn: { flex: 1, gap: 16 },
   pill: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, padding: 8 },
@@ -204,7 +233,7 @@ const st = StyleSheet.create({
   pillNm: { color: "#fff", fontSize: 15, fontWeight: "400", lineHeight: 18 },
   r2: { flexDirection: "row", gap: 16, height: 66 },
   track: { position: "absolute", left: 8, top: 8, right: 8, bottom: 8, borderRadius: 25, overflow: "hidden" },
-  fill: { position: "absolute", left: 0, top: 0, bottom: 0, backgroundColor: "rgba(255,255,255,.075)" },
+  fill: { position: "absolute", left: 0, top: 0, bottom: 0, backgroundColor: "rgba(255,255,255,.18)" },
   icWrap: { position: "absolute", left: 8, top: 8, width: 50, height: 50, alignItems: "center", justifyContent: "center" },
   cast: { position: "absolute", top: 12, right: 12, width: 28, height: 28, borderRadius: 14, backgroundColor: "rgba(255,255,255,.04)", alignItems: "center", justifyContent: "center" },
   transport: { position: "absolute", bottom: 10, left: 8, right: 8, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
@@ -214,7 +243,9 @@ const st = StyleSheet.create({
   grid: { gap: 8 },
   gridRow: { flexDirection: "row", gap: 16 },
   cell: { flex: 1, minWidth: 0, height: 88, alignItems: "center", gap: 6 },
-  dot: { width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center" },
-  dotOff: { backgroundColor: "rgba(8,12,18,.54)" },
-  lb: { color: "rgba(255,255,255,.80)", fontSize: 11, fontWeight: "400", lineHeight: 12, textAlign: "center", maxWidth: 70 },
+  dot: { width: 64, height: 64, flexShrink: 0, borderRadius: 32, alignItems: "center", justifyContent: "center" },
+  dotOn: { backgroundColor: "rgba(0,135,255,.72)", borderWidth: 1, borderColor: "rgba(105,235,255,.75)" },
+  dotOff: { backgroundColor: "rgba(255,255,255,.07)" },
+  lb: { color: "#fff", fontSize: 11, fontWeight: "400", lineHeight: 12, textAlign: "center", maxWidth: 70,
+    textShadowColor: "rgba(0,0,0,.55)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
 });
