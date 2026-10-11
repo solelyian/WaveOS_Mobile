@@ -109,7 +109,7 @@ export function attachGestures(root: HTMLElement, h: GestureHandlers) {
         else h.lockReset();
         break;
       case "sheet":
-        if (dy > 60 || vy > 300) h.openSheet(sheet!);
+        if (dy > 60 || vy > 300) { h.openSheet(sheet!); h.sheetPreviewEnd(true); }
         else h.sheetPreviewEnd(false);
         break;
       case "sheet-open":

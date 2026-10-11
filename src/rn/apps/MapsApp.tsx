@@ -4,7 +4,7 @@ import React from "react";
 import { View, Text, Pressable, Image, ScrollView, TextInput, StyleSheet } from "react-native";
 import { Icon } from "../Icon";
 import { host } from "../host";
-import { W } from "../../wasm/bridge";
+import { W, loadWasm } from "../../wasm/bridge";
 import { domOf } from "../fx";
 
 let mapData: Uint8ClampedArray | null = null;
@@ -21,6 +21,11 @@ function ensureMap() {
 function MapCanvas({ routed }: { routed: number }) {
   const ref = React.useRef<View>(null);
   const cv = React.useRef<HTMLCanvasElement | null>(null);
+  const [ready, setReady] = React.useState(!!mapData);
+  React.useEffect(() => {
+    try { ensureMap(); setReady(true); }
+    catch { loadWasm().then(() => { try { ensureMap(); } catch { /* */ } setReady(true); }); }
+  }, []);
   React.useEffect(() => {
     const el = domOf(ref); if (!el) return;
     if (!cv.current) {
@@ -42,7 +47,7 @@ function MapCanvas({ routed }: { routed: number }) {
       ctx.setLineDash([]); ctx.fillStyle = "#3b82f6";
       ctx.beginPath(); ctx.arc(56, 780, 10, 0, 7); ctx.fill();
     }
-  }, [routed]);
+  }, [routed, ready]);
   return <View ref={ref} style={StyleSheet.absoluteFill as object} pointerEvents="none" />;
 }
 
