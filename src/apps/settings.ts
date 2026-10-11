@@ -7,7 +7,7 @@ import { I } from "../core/lucide";
 import type { IconName } from "../core/lucide";
 import { sys, set, onChange } from "../system/state";
 import { GlassHeader, img, pane, setRow, switchEl, toast } from "./ui";
-import { theme, setAccent, setDynamic, reextract } from "../theme";
+import { theme, setAccent, setDynamic, reextract, onTheme } from "../theme";
 
 const NETWORKS = ["Home_5G", "Nyne Guest", "CoffeeShop WiFi", "Airport_Free"];
 let wifiNet = "Home_5G";
@@ -263,6 +263,8 @@ export function SettingsApp() {
       setRow("star", "var(--accent)", "Dynamic Colors", { end: switchEl(theme.dynamic, (v) => { setDynamic(v); drawPal(); draw(); }) }),
       palRow, palCap);
     s.append(cap("Theme engine — colors adapt to your wallpaper"), themeGrp);
+    // l'extraction est async : rafraîchir la rangée quand la palette/accent resolve
+    onTheme(() => { if (palRow.isConnected) drawPal(); });
     draw(); drawPal();
   });
 
