@@ -6,6 +6,7 @@ import { Icon } from "../Icon";
 import type { IconName } from "../../core/lucide";
 import { Spring, SPRINGS, domOf, onFrame } from "../fx";
 import { liquidGlass } from "../glass";
+import { lg } from "../fx";
 import { host, onToasts, toasts } from "../host";
 import { useTheme, useAccent } from "../theme";
 
@@ -16,11 +17,11 @@ export function GlassHeader({ title, large, action, onAction, onBack, color = "#
   return (
     <View style={uh.hdr} nativeID="ghdr">
       <View style={uh.hdrRow}>
-        <Pressable style={uh.gbtn} onPress={() => (onBack ?? host.closeApp)()}>
+        <Pressable {...lg} style={uh.gbtn} onPress={() => (onBack ?? host.closeApp)()}>
           <Icon n="chevronLeft" size={18} color={color} />
         </Pressable>
         {action ? (
-          <Pressable style={uh.gbtn} onPress={onAction}>
+          <Pressable {...lg} style={uh.gbtn} onPress={onAction}>
             <Icon n={action} size={18} color={color} />
           </Pressable>
         ) : <View style={{ width: 34 }} />}
@@ -246,8 +247,9 @@ const uh = StyleSheet.create({
   hdr: { paddingTop: 58, paddingHorizontal: 16, paddingBottom: 10, zIndex: 5 },
   hdrRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   gbtn: {
+    // vrai liquid glass : corps quasi incolore (filet via moteur)
     width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,.55)", borderWidth: 1, borderColor: "rgba(255,255,255,.6)",
+    backgroundColor: "rgba(255,255,255,.12)",
   } as object,
   h1: { fontSize: 34, fontWeight: "800", letterSpacing: -0.8, color: "#111", marginTop: 8, marginLeft: 4 },
   ttlSm: { fontSize: 17, fontWeight: "700", color: "#111", textAlign: "center", marginTop: -24 },

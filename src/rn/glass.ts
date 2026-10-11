@@ -91,7 +91,10 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
   const r = el.getBoundingClientRect();
   const w = Math.min(512, Math.max(8, Math.round(r.width)));
   const h = Math.min(640, Math.max(8, Math.round(r.height)));
-  const rad = o.radius ?? (parseFloat(getComputedStyle(el).borderTopLeftRadius) || 20);
+  const cs = getComputedStyle(el).borderTopLeftRadius;
+  const rad = o.radius ?? (cs.endsWith("%")
+    ? (parseFloat(cs) / 100) * Math.min(w, h)
+    : (parseFloat(cs) || 20));
   const amp = o.amp ?? 1.0;
   const scale = o.scale ?? 100;         // lentille : ~2.8× de compression au bord
   const blur = o.blur ?? 3;            // corps à peine givré
@@ -134,9 +137,32 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
 /** Balaie les surfaces « verre » connues sous `root` et applique le moteur.
  *  Idempotent (marqueur dataset.lgDone). À appeler après chaque montage de
  *  panneau contenant du verre (home, sheets, apps). */
+const SEL = "[data-lg]";
+
+let observer: MutationObserver | null = null;
+/** Surfaces montées tardivement (écran d'appel, sous-pages) → moteur auto. */
+function watch() {
+  if (observer) return;
+  observer = new MutationObserver((muts) => {
+    for (const m of muts) {
+      m.addedNodes.forEach((n) => {
+        if (!(n instanceof HTMLElement)) return;
+        const targets: HTMLElement[] = [];
+        if (n.matches(SEL)) targets.push(n);
+        n.querySelectorAll<HTMLElement>(SEL).forEach((e) => targets.push(e));
+        for (const el of targets) {
+          if (!el.dataset.lgDone && el.getBoundingClientRect().width >= 8) liquidGlass(el);
+        }
+      });
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
 export async function liquidGlassAll(root: ParentNode = document): Promise<void> {
   await loadWasm();
-  const sel = "[data-lg]";
+  watch();
+  const sel = SEL;
   const els = root.querySelectorAll<HTMLElement>(sel);
   const jobs: Promise<void>[] = [];
   els.forEach((el) => {

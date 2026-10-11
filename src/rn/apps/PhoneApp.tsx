@@ -208,7 +208,7 @@ function CallBtn({ ic, l, active, onPress }: { ic: IconName; l: string; active: 
   React.useEffect(() => {
     const el = domOf(ref);
     if (el) {
-      liquidGlass(el, { radius: 30, scale: 18, blur: 8 });
+      liquidGlass(el, { radius: 31 });
     }
   }, []);
   return (
@@ -245,9 +245,8 @@ function CallScreen({ name, avatar, onEnd, onContacts }: {
     if (v) v.style.background = "linear-gradient(180deg, rgba(0,0,0,.35), transparent 30%, transparent 60%, rgba(0,0,0,.5))";
     const c = domOf(card);
     if (c) {
-      c.style.backdropFilter = "blur(24px) saturate(160%)";
-      (c.style as CSSStyleDeclaration & { webkitBackdropFilter?: string }).webkitBackdropFilter = "blur(24px) saturate(160%)";
-      c.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,.16), 0 18px 40px rgba(0,0,0,.35)";
+      c.style.boxShadow = "0 18px 40px rgba(0,0,0,.35)";
+      liquidGlass(c, { radius: 40 });
     }
     const iv = setInterval(() => setSecs((v) => v + 1), 800);
     const t0 = setTimeout(() => setSecs((v) => (v < 0 ? 0 : v)), 1500);
