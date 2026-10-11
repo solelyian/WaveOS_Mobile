@@ -45,12 +45,24 @@ export function SheetHost() {
     const el = domOf(wrap);
     const f = el?.querySelector<HTMLElement>("#sheet-frost");
     if (f) {
-      const filter = active === "cc" ? "blur(40px) saturate(65%) brightness(.72)" : "blur(30px) saturate(160%)";
+      const filter = active === "cc" ? "none" : "blur(30px) saturate(160%)";
       f.style.backdropFilter = filter;
       (f.style as unknown as Record<string, string>).webkitBackdropFilter = filter;
-      f.style.backgroundColor = active === "cc" ? "rgba(18,20,24,.30)" : "rgba(10,10,14,.45)";
+      f.style.backgroundColor = active === "cc" ? "transparent" : "rgba(10,10,14,.45)";
     }
-  }, [active]);
+    const wallpaper = document.getElementById("wp");
+    if (wallpaper) {
+      wallpaper.style.transition = "transform .5s ease, filter .5s ease";
+      wallpaper.style.transform = s.sheet === "cc" ? "scale(1.1)" : "";
+      wallpaper.style.filter = s.sheet === "cc" ? "blur(10px) brightness(.7) saturate(1.2)" : "";
+    }
+    const home = document.getElementById("home");
+    if (home) {
+      home.style.transition = "transform .5s ease, opacity .5s ease";
+      home.style.transform = s.sheet === "cc" ? "scale(.9)" : "";
+      home.style.opacity = s.sheet === "cc" ? "0" : "1";
+    }
+  }, [active, s.sheet]);
 
   React.useEffect(() => { const off = onFrame((dt) => {
     sp.step(dt);
