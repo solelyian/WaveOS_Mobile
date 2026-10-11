@@ -11,6 +11,7 @@ import { MessagesApp } from "./MessagesApp";
 import { PhoneApp } from "./PhoneApp";
 import { CalculatorApp } from "./CalculatorApp";
 import { MusicApp } from "./MusicApp";
+import { MailApp } from "./MailApp";
 
 export function appMeta(id: AppId): AppMeta {
   return APPS.find((a) => a.id === id) ?? EXTRA_APPS.find((a) => a.id === id)!;
@@ -40,6 +41,7 @@ export function renderApp(id: AppId): React.ReactNode {
     case "phone": return <PhoneApp />;
     case "calculator": return <CalculatorApp />;
     case "music": return <MusicApp />;
+    case "mail": return <MailApp />;
     default: return <StubApp id={id} />;
   }
 }
