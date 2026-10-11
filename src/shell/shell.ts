@@ -70,7 +70,7 @@ export class Shell {
     this.sb.hidden = sys.locked;
     // maquette : le springboard n'existe pas sous le lock
     this.home.el.style.visibility = sys.locked ? "hidden" : "visible";
-    this.home.setMode(this.switcher || sys.sheet ? "sheet" : sys.activeApp ? "app" : "full");
+    this.home.setMode(sys.sheet === "cc" ? "cc" : this.switcher || sys.sheet ? "sheet" : sys.activeApp ? "app" : "full");
     // panneaux
     if (sys.sheet === "cc" && !this.cc) this.openCC();
     if (sys.sheet === "nc" && !this.nc) this.openNC();
