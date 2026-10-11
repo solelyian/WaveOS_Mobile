@@ -200,6 +200,30 @@ function Key({ n, sub, onDigit }: { n: string; sub: string; onDigit: (d: string,
 }
 
 /* ---------------- écran d'appel ---------------- */
+// bouton verre in-call — g-btn de main : fond .10, bord .30, liseré haut,
+// backdrop blur(12px) saturate(150%), état actif .28
+function CallBtn({ ic, l, active, onPress }: { ic: IconName; l: string; active: boolean; onPress: () => void }) {
+  const ref = React.useRef<View>(null);
+  React.useEffect(() => {
+    const el = domOf(ref);
+    if (el) {
+      el.style.backdropFilter = "blur(12px) saturate(150%)";
+      (el.style as CSSStyleDeclaration & { webkitBackdropFilter?: string }).webkitBackdropFilter = "blur(12px) saturate(150%)";
+      el.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,.60)";
+    }
+  }, []);
+  return (
+    <View style={{ width: "33.33%" as unknown as number, alignItems: "center", gap: 6 }}>
+      <Pressable ref={ref}
+        style={[ps.abtn, active && { backgroundColor: "rgba(255,255,255,.28)" }]}
+        onPress={onPress}>
+        <Icon n={ic} size={22} color="#fff" />
+      </Pressable>
+      <Text style={ps.albl}>{l}</Text>
+    </View>
+  );
+}
+
 function CallScreen({ name, avatar, onEnd, onContacts }: {
   name: string; avatar?: string; onEnd: () => void; onContacts: () => void;
 }) {
@@ -207,6 +231,8 @@ function CallScreen({ name, avatar, onEnd, onContacts }: {
   const [kp, setKp] = React.useState(false);
   const [act, setAct] = React.useState<Set<string>>(new Set());
   const bg = React.useRef<View>(null);
+  const veil = React.useRef<View>(null);
+  const card = React.useRef<View>(null);
   React.useEffect(() => {
     const el = domOf(bg);
     if (el) {
@@ -214,31 +240,27 @@ function CallScreen({ name, avatar, onEnd, onContacts }: {
       el.style.backgroundSize = "cover";
       el.style.backgroundPosition = "center";
       el.style.filter = avatar ? "blur(30px) brightness(.62) saturate(1.35)" : "blur(26px) brightness(.58) saturate(1.4)";
-      el.style.transform = "scale(1.05)";
+      el.style.transform = `scale(${avatar ? 1.05 : 1.08})`;
+    }
+    const v = domOf(veil);
+    if (v) v.style.background = "linear-gradient(180deg, rgba(0,0,0,.35), transparent 30%, transparent 60%, rgba(0,0,0,.5))";
+    const c = domOf(card);
+    if (c) {
+      c.style.backdropFilter = "blur(24px) saturate(160%)";
+      (c.style as CSSStyleDeclaration & { webkitBackdropFilter?: string }).webkitBackdropFilter = "blur(24px) saturate(160%)";
+      c.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,.16), 0 18px 40px rgba(0,0,0,.35)";
     }
     const iv = setInterval(() => setSecs((v) => v + 1), 800);
     const t0 = setTimeout(() => setSecs((v) => (v < 0 ? 0 : v)), 1500);
     return () => { clearInterval(iv); clearTimeout(t0); };
   }, [avatar]);
 
-  const Btn = ({ ic, l, fn }: { ic: IconName; l: string; fn?: () => void }) => (
-    <View style={{ alignItems: "center", gap: 6 }}>
-      <Pressable
-        style={[ps.abtn, act.has(l) && { backgroundColor: "rgba(255,255,255,.28)" }]}
-        onPress={() => {
-          if (fn) return fn();
-          setAct((v) => { const s = new Set(v); if (s.has(l)) s.delete(l); else s.add(l); return s; });
-        }}>
-        <Icon n={ic} size={22} color="#fff" />
-      </Pressable>
-      <Text style={ps.albl}>{l}</Text>
-    </View>
-  );
+  const toggle = (l: string) => setAct((v) => { const s = new Set(v); if (s.has(l)) s.delete(l); else s.add(l); return s; });
 
   return (
     <View style={ps.call}>
       <View ref={bg} style={ps.callBg} />
-      <View style={ps.callVeil} />
+      <View ref={veil} style={ps.callVeil} />
       <View style={ps.callCol}>
         {!avatar && <View style={ps.callAv}><Icon n="user" size={36} color="#fff" /></View>}
         <Text style={ps.callName}>{name}</Text>
@@ -247,19 +269,19 @@ function CallScreen({ name, avatar, onEnd, onContacts }: {
           {secs < 0 ? "calling…" : `${String(Math.floor(secs / 60)).padStart(2, "0")}:${String(secs % 60).padStart(2, "0")}`}
         </Text>
         <View style={{ flex: 1 }} />
-        <View style={ps.callCard}>
+        <View ref={card} style={ps.callCard}>
           <View style={ps.callGrid}>
-            <Btn ic="volume2" l="speaker" />
-            <Btn ic="video" l="Nyne Vision" fn={() => toast("Switching to Nyne Vision…")} />
-            <Btn ic="micOff" l="mute" />
-            <Btn ic="plus" l="add call" fn={onContacts} />
-            <View style={{ alignItems: "center", gap: 6 }}>
+            <CallBtn ic="volume2" l="speaker" active={act.has("speaker")} onPress={() => toggle("speaker")} />
+            <CallBtn ic="video" l="Nyne Vision" active={false} onPress={() => toast("Switching to Nyne Vision…")} />
+            <CallBtn ic="micOff" l="mute" active={act.has("mute")} onPress={() => toggle("mute")} />
+            <CallBtn ic="plus" l="add call" active={false} onPress={onContacts} />
+            <View style={{ width: "33.33%" as unknown as number, alignItems: "center", gap: 6 }}>
               <Pressable style={ps.endBtn} onPress={onEnd}>
                 <View style={{ transform: [{ rotate: "135deg" }] }}><Icon n="phone" size={28} color="#fff" /></View>
               </Pressable>
               <Text style={ps.albl}>end</Text>
             </View>
-            <Btn ic="layoutGrid" l="keypad" fn={() => setKp(true)} />
+            <CallBtn ic="layoutGrid" l="keypad" active={false} onPress={() => setKp(true)} />
           </View>
         </View>
       </View>
@@ -268,10 +290,10 @@ function CallScreen({ name, avatar, onEnd, onContacts }: {
           <Text style={{ fontSize: 22, fontWeight: "600", color: "#fff", marginBottom: 26 }}>{name}</Text>
           <View style={ps.keys}>
             {KEYS.map(([n, s]) => (
-              <View key={n} style={[ps.key, { backgroundColor: "rgba(255,255,255,.1)" }]}>
+              <Pressable key={n} style={[ps.ikkey]}>
                 <Text style={[ps.keyN, { color: "#fff" }]}>{n}</Text>
                 <Text style={[ps.keyS, { color: "rgba(255,255,255,.4)" }]}>{s || " "}</Text>
-              </View>
+              </Pressable>
             ))}
           </View>
           <View style={{ flex: 1 }} />
@@ -436,14 +458,15 @@ const ps = StyleSheet.create({
   callAv: { width: 84, height: 84, borderRadius: 42, backgroundColor: "rgba(255,255,255,.14)", alignItems: "center", justifyContent: "center", marginBottom: 12 } as object,
   callName: { fontSize: 30, fontWeight: "700", letterSpacing: -0.3, color: "#fff" },
   callCard: {
-    width: "100%" as unknown as number, paddingVertical: 24, paddingHorizontal: 18, borderRadius: 40,
+    width: "100%" as unknown as number, paddingTop: 22, paddingBottom: 24, paddingHorizontal: 18, borderRadius: 40,
     backgroundColor: "rgba(255,255,255,.08)", borderWidth: 1, borderColor: "rgba(255,255,255,.14)",
   } as object,
-  callGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-around", rowGap: 20 } as object,
-  abtn: { width: 62, height: 62, borderRadius: 31, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,.08)" } as object,
+  callGrid: { flexDirection: "row", flexWrap: "wrap", rowGap: 20 } as object,
+  abtn: { width: 62, height: 62, borderRadius: 31, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,.10)", borderWidth: 1, borderColor: "rgba(255,255,255,.30)" } as object,
   albl: { fontSize: 11, color: "rgba(255,255,255,.7)" },
-  endBtn: { width: 68, height: 68, borderRadius: 34, backgroundColor: "#ef4444", alignItems: "center", justifyContent: "center" } as object,
+  endBtn: { width: 68, height: 68, borderRadius: 34, backgroundColor: "#ef4444", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 20px rgba(239,68,68,.4)" } as object,
   inkp: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 90, backgroundColor: "rgba(10,10,12,.96)", alignItems: "center", paddingTop: 90, paddingHorizontal: 28, paddingBottom: 60 } as object,
+  ikkey: { width: 72, height: 72, borderRadius: 36, backgroundColor: "rgba(255,255,255,.1)", alignItems: "center", justifyContent: "center" } as object,
   hide: { paddingVertical: 12, paddingHorizontal: 34, borderRadius: 999, backgroundColor: "rgba(255,255,255,.14)" } as object,
   thdr: { flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 60, paddingHorizontal: 16, paddingBottom: 10 } as object,
   pp: { width: 52, height: 52, borderRadius: 26, backgroundColor: "#2563eb", alignItems: "center", justifyContent: "center" } as object,
