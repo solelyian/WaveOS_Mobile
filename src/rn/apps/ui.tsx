@@ -190,7 +190,7 @@ export function FloatingTabBar({ tabs, active, onTab, dark }: {
         {tabs.map((t) => (
           <Pressable key={t.id} style={uh.tabBtn} onPress={() => onTab(t.id)}>
             <Icon n={t.icon} size={24}
-              color={t.id === active ? (dark ? "#fff" : "#2563eb") : dark ? "rgba(255,255,255,.6)" : "rgba(0,0,0,.6)"}
+              color={t.id === active ? (dark ? "#fff" : "#2563eb") : dark ? "rgba(255,255,255,.75)" : "rgba(0,0,0,.75)"}
               style={t.id === active ? { transform: "scale(1.1)" } : undefined} />
           </Pressable>
         ))}

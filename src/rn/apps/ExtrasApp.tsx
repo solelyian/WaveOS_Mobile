@@ -97,7 +97,7 @@ export function FilesApp() {
   return (
     <View style={{ flex: 1, backgroundColor: "#f2f2f7" }}>
       <GlassHeader title="Files" large />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, alignItems: "center", paddingHorizontal: 20, paddingBottom: 4 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, alignItems: "center", paddingHorizontal: 20, paddingBottom: 0 }}>
         {path.map((n, i) => (
           <Pressable key={i} onPress={() => goto(i)} style={{ flexDirection: "row", alignItems: "center" }}>
             <Text style={{ fontSize: 13, fontWeight: i === path.length - 1 ? "700" : "500", color: i === path.length - 1 ? "#111" : "#3b82f6" }}>{n.name}</Text>
@@ -105,7 +105,7 @@ export function FilesApp() {
           </Pressable>
         ))}
       </ScrollView>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40 }} nativeID="app-scroll">
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 40 }} nativeID="app-scroll">
         {kids.map((n) => (
           <Pressable key={n.name} style={ex.frow} onPress={() => { if (n.dir) { setPath((p) => [...p, n]); setDepth((d) => d + 1); } }}>
             <View style={[ex.fic, { backgroundColor: n.dir ? "#3b82f6" : "#9ca3af" }]}>
