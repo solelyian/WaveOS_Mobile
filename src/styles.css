@@ -132,8 +132,8 @@ input { font: inherit; }
 .aicon .nm { font-size: 12px; font-weight: 600; color: #fff; letter-spacing: .02em; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
 .aicon.pressed .tile { transform: scale(.85); }
 
-#dock { margin-top: auto; margin-bottom: 32px; width: 100%; }
-#dock .dock-in { border-radius: 40px; padding: 16px; display: flex; justify-content: space-around; align-items: center; }
+#dock { margin-top: auto; margin-bottom: 32px; width: calc(100% + 20px); margin-left: -10px; }
+#dock .dock-in { border-radius: 40px; padding: 16px 12.5px; display: flex; justify-content: space-between; align-items: center; }
 
 
 /* ---------- Dynamic Island ---------- */
