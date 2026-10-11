@@ -22,7 +22,7 @@ export interface GestureHandlers {
 }
 
 const H = 850;
-const interactiveSel = "button, a, input, #di-capsule, #cc-slider, #nc-card, .tabbar, .ghdr, #app-scroll, #spot";
+const interactiveSel = "button, a, input, #di-capsule, #cc-slider, #nc-card, .tabbar, #tabbar, .ghdr, #ghdr, #app-scroll, #spot";
 
 interface Drag {
   sx: number; sy: number; lx: number; ly: number; lt: number;

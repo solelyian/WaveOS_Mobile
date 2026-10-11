@@ -52,7 +52,7 @@ export function DynamicIsland() {
 
   return (
     <View style={st.di} pointerEvents="box-none">
-      <Pressable onPress={() => setExpanded(!expanded)}>
+      <Pressable onPress={() => setExpanded(!expanded)} nativeID="di-capsule">
         <View ref={cap} style={st.cap}>
           {/* contenu étendu */}
           <View ref={big} style={[st.big, { opacity: 0 }]}>

@@ -171,8 +171,8 @@ export function FloatingTabBar({ tabs, active, onTab, dark }: {
     const el = domOf(inRef);
     if (el) {
       w.current = el.getBoundingClientRect().width;
-      el.style.backdropFilter = "blur(22px) saturate(160%)";
-      (el.style as unknown as Record<string, string>).WebkitBackdropFilter = "blur(22px) saturate(160%)";
+      el.style.backdropFilter = "blur(3px) saturate(140%) contrast(110%)";
+      (el.style as unknown as Record<string, string>).WebkitBackdropFilter = "blur(3px) saturate(140%) contrast(110%)";
     }
     const c = (idx + 0.5) * (w.current / tabs.length);
     sx.to(c);
@@ -185,12 +185,12 @@ export function FloatingTabBar({ tabs, active, onTab, dark }: {
     return () => { off(); };
   }, [idx, tabs.length]);
   return (
-    <View style={uh.tabbar}>
+    <View style={uh.tabbar} nativeID="tabbar">
       <View ref={inRef} style={[uh.tabIn, dark ? uh.tabInDark : uh.tabInLight]}>
         {tabs.map((t) => (
           <Pressable key={t.id} style={uh.tabBtn} onPress={() => onTab(t.id)}>
             <Icon n={t.icon} size={24}
-              color={t.id === active ? (dark ? "#fff" : "#2563eb") : dark ? "rgba(255,255,255,.75)" : "rgba(0,0,0,.75)"}
+              color={t.id === active ? (dark ? "#fff" : "#2563eb") : dark ? "rgba(255,255,255,.6)" : "rgba(0,0,0,.6)"}
               style={t.id === active ? { transform: "scale(1.1)" } : undefined} />
           </Pressable>
         ))}
@@ -282,12 +282,12 @@ const uh = StyleSheet.create({
   } as object,
   tabbar: { position: "absolute", bottom: 32, left: "5%" as unknown as number, width: "90%" as unknown as number, maxWidth: 360, height: 72, zIndex: 50 } as object,
   tabIn: { flex: 1, borderRadius: 36, overflow: "hidden", flexDirection: "row", alignItems: "center", paddingHorizontal: 4 } as object,
-  tabInLight: { backgroundColor: "rgba(255,255,255,.82)", borderWidth: 1, borderColor: "rgba(0,0,0,.07)", boxShadow: "0 8px 24px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.9)" } as object,
-  tabInDark: { backgroundColor: "rgba(20,20,24,.62)", borderWidth: 1, borderColor: "rgba(255,255,255,.14)", boxShadow: "0 8px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12)" } as object,
+  tabInLight: { backgroundColor: "rgba(255,255,255,.05)", borderWidth: 1, borderColor: "rgba(255,255,255,.40)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.80), inset 0 -1px 0 rgba(255,255,255,.20), 0 10px 40px rgba(0,0,0,.10)" } as object,
+  tabInDark: { backgroundColor: "rgba(0,0,0,.10)", borderWidth: 1, borderColor: "rgba(255,255,255,.20)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.30), inset 0 -1px 0 rgba(255,255,255,.10), 0 10px 40px rgba(0,0,0,.20)" } as object,
   tabBtn: { flex: 1, height: "100%" as unknown as number, alignItems: "center", justifyContent: "center", zIndex: 1 } as object,
   tabPill: { position: "absolute", top: 12, left: 0, width: 48, height: 48, borderRadius: 20 } as object,
-  pillLight: { backgroundColor: "rgba(0,0,0,.07)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.7)" } as object,
-  pillDark: { backgroundColor: "rgba(255,255,255,.12)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.25)" } as object,
+  pillLight: { backgroundColor: "rgba(255,255,255,.2)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.6)" } as object,
+  pillDark: { backgroundColor: "rgba(255,255,255,.1)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.2)" } as object,
   tabDot: { position: "absolute", top: 60, left: 0, width: 4, height: 4, borderRadius: 2 } as object,
   dotLight: { backgroundColor: "#2563eb" } as object,
   dotDark: { backgroundColor: "#fff" } as object,
