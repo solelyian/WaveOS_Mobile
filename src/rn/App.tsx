@@ -8,6 +8,7 @@ import { DynamicIsland } from "./DynamicIsland";
 import { HomeGrid } from "./HomeGrid";
 import { attachGestures } from "./gestures";
 import { sys } from "../system/state";
+import { SheetHost } from "./SheetHost";
 
 function Boot({ onDone }: { onDone: () => void }) {
   const [t, setT] = React.useState(0);
@@ -57,6 +58,7 @@ export default function App() {
       <View style={st.wall} pointerEvents="none" />
       {!s.locked && <HomeGrid onOpen={() => {}} onSpot={() => {}} />}
       {s.locked && <LockScreen />}
+      <SheetHost />
       <StatusBar />
       <DynamicIsland />
       {!booted && <Boot onDone={done} />}
