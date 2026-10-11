@@ -5,11 +5,11 @@ import { View, Pressable, Text, StyleSheet } from "react-native";
 import { useSys, set } from "./sys";
 import { cur } from "../system/media";
 import { Icon } from "./Icon";
-import { glassStyle, domOf, lg } from "./fx";
+import { domOf } from "./fx";
 import type { SysState } from "../system/state";
 
 function Tile({ children, style, r = 26, onPress }: { children: React.ReactNode; style?: object; r?: number; onPress?: () => void }) {
-  const inner = <View {...lg} style={[st.tile, { borderRadius: r }, {backgroundColor:"rgba(16,22,40,.48)"} as object, style]}>{children}</View>;
+  const inner = <View style={[st.tile, { borderRadius: r }, {backgroundColor:"rgba(16,22,40,.48)"} as object, style]}>{children}</View>;
   return onPress ? <Pressable onPress={onPress}>{inner}</Pressable> : inner;
 }
 
@@ -117,7 +117,7 @@ function Cell({ k, icon, label, tint }: { k: keyof SysState; icon: string; label
   const on = !!s[k];
   return (
     <Pressable style={st.cell} onPress={() => set(k, !s[k] as never)}>
-      <View {...lg} style={[st.dot, on ? { backgroundColor: tint || "rgba(255,255,255,.07)", boxShadow: tint ? `0 4px 18px ${tint}73` : "none" } : st.dotOff]}>
+      <View style={[st.dot, on ? { backgroundColor: tint || "rgba(255,255,255,.07)", boxShadow: tint ? `0 4px 18px ${tint}73` : "none" } : st.dotOff]}>
         <Icon name={icon} size={20} color={on && tint ? "#fff" : "rgba(255,255,255,.6)"} />
       </View>
       <Text numberOfLines={2} style={st.lb}>{label}</Text>
@@ -130,8 +130,8 @@ export function ControlCenter() {
   return (
     <View style={st.root}>
       <View style={st.top}>
-        <Pressable><View {...lg} style={[st.corner, {backgroundColor:"rgba(16,22,40,.48)"} as object]}><Icon name="squarePen" size={16} color="rgba(255,255,255,.85)" /></View></Pressable>
-        <Pressable><View {...lg} style={[st.corner, {backgroundColor:"rgba(16,22,40,.48)"} as object]}><Icon name="settings" size={16} color="rgba(255,255,255,.85)" /></View></Pressable>
+        <Pressable><View style={[st.corner, {backgroundColor:"rgba(16,22,40,.48)"} as object]}><Icon name="squarePen" size={16} color="rgba(255,255,255,.85)" /></View></Pressable>
+        <Pressable><View style={[st.corner, {backgroundColor:"rgba(16,22,40,.48)"} as object]}><Icon name="settings" size={16} color="rgba(255,255,255,.85)" /></View></Pressable>
       </View>
 
       <View style={st.r1}>
@@ -143,7 +143,7 @@ export function ControlCenter() {
       </View>
 
       <View style={st.r2}>
-        <Pill icon="link" name="Nyne Link" sub="5 devices nearby" tint="rgba(255,255,255,.08)" onPress={() => set("sheet", "sd")} />
+        <Pill icon="link" name="Nyne Link" tint="rgba(255,255,255,.08)" onPress={() => set("sheet", "sd")} />
         <HSlider icon="sun" k="brightness" tint="#22c55e" />
       </View>
 
@@ -164,23 +164,23 @@ const st = StyleSheet.create({
   tile: { position: "relative", overflow: "hidden" },
   top: { flexDirection: "row", justifyContent: "space-between", marginBottom: -4 },
   corner: { width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center" },
-  r1: { flexDirection: "row", gap: 14, height: 168 },
+  r1: { flexDirection: "row", gap: 14, height: 158 },
   conn: { flex: 1, gap: 14 },
-  pill: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14 },
-  pi: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
+  pill: { flex: 1, flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 14, borderRadius: 30 },
+  pi: { width: 52, height: 52, borderRadius: 26, marginLeft: -6, alignItems: "center", justifyContent: "center" },
   pillNm: { color: "#fff", fontSize: 14, fontWeight: "600", lineHeight: 16 },
   pillSub: { color: "rgba(255,255,255,.55)", fontSize: 11 },
-  r2: { flexDirection: "row", gap: 14, height: 64 },
+  r2: { flexDirection: "row", gap: 14, height: 74 },
   fill: { position: "absolute", left: 0, top: 0, bottom: 0 } as object,
   glowG: { boxShadow: "0 0 24px rgba(34,197,94,.45)" } as object,
   glowO: { boxShadow: "0 0 24px rgba(249,115,22,.45)" } as object,
-  icCap: { width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(0,0,0,.28)", alignItems: "center", justifyContent: "center" },
-  icWrap: { position: "absolute", left: 10, top: 0, bottom: 0, justifyContent: "center", width: 44 },
+  icCap: { width: 56, height: 56, borderRadius: 28, backgroundColor: "rgba(0,0,0,.28)", alignItems: "center", justifyContent: "center" },
+  icWrap: { position: "absolute", left: 8, top: 0, bottom: 0, justifyContent: "center", width: 56 },
   tb: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,.07)", alignItems: "center", justifyContent: "center" },
-  art: { width: 56, height: 56, borderRadius: 14, backgroundColor: "rgba(255,255,255,.08)", alignItems: "center", justifyContent: "center" },
-  grid: { flexDirection: "row", flexWrap: "wrap", rowGap: 16, paddingHorizontal: 2, marginTop: 4 },
+  art: { width: 62, height: 62, borderRadius: 14, backgroundColor: "rgba(255,255,255,.08)", alignItems: "center", justifyContent: "center" },
+  grid: { flexDirection: "row", flexWrap: "wrap", rowGap: 15, paddingHorizontal: 2, marginTop: 4 },
   cell: { width: "25%", alignItems: "center", gap: 7 },
-  dot: { width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
+  dot: { width: 54, height: 54, borderRadius: 27, alignItems: "center", justifyContent: "center" },
   dotOff: { backgroundColor: "rgba(16,22,40,.55)" },
   lb: { color: "rgba(255,255,255,.75)", fontSize: 10.5, lineHeight: 12, textAlign: "center", maxWidth: 74 },
 });
