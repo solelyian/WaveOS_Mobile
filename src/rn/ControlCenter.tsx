@@ -9,7 +9,7 @@ import { glassStyle, domOf, lg } from "./fx";
 import type { SysState } from "../system/state";
 
 function Tile({ children, style, r = 26, onPress }: { children: React.ReactNode; style?: object; r?: number; onPress?: () => void }) {
-  const inner = <View {...lg} style={[st.tile, { borderRadius: r }, glassStyle(0.05) as object, style]}>{children}</View>;
+  const inner = <View {...lg} style={[st.tile, { borderRadius: r }, {backgroundColor:"rgba(16,22,40,.48)"} as object, style]}>{children}</View>;
   return onPress ? <Pressable onPress={onPress}>{inner}</Pressable> : inner;
 }
 
@@ -51,7 +51,7 @@ function HSlider({ icon, k, tint }: { icon: string; k: "brightness" | "volume"; 
         onResponderMove={(e) => setFromX(e.nativeEvent.pageX)}
       >
         <View style={[st.fill, { width: `${s[k]}%`, backgroundColor: tint }, tint === "#22c55e" ? st.glowG : st.glowO]} />
-        <View style={st.icWrap}><Icon name={icon} size={18} color="#fff" /></View>
+        <View style={st.icWrap}><View style={st.icCap}><Icon name={icon} size={18} color="#fff" /></View></View>
       </View>
     </Tile>
   );
@@ -77,12 +77,15 @@ function MediaCard() {
         </>
       ) : (
         <View style={{ gap: 14 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <View style={{ position: "absolute", top: 12, right: 12, width: 30, height: 30, borderRadius: 15, backgroundColor: "rgba(0,0,0,.25)", alignItems: "center", justifyContent: "center" }}><Icon name="airplay" size={14} color="rgba(255,255,255,.75)" /></View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingRight: 36 }}>
             <View style={st.art}><Icon name="music" size={22} /></View>
             <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600", opacity: .8 }}>Not playing</Text>
           </View>
-          <View style={{ flexDirection: "row", justifyContent: "space-evenly", opacity: .9 }}>
-            <Icon name="skipBack" size={20} /><Icon name="play" size={20} /><Icon name="skipForward" size={20} />
+          <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
+            <View style={st.tb}><Icon name="skipBack" size={16} /></View>
+            <View style={st.tb}><Icon name="play" size={18} /></View>
+            <View style={st.tb}><Icon name="skipForward" size={16} /></View>
           </View>
         </View>
       )}
@@ -127,8 +130,8 @@ export function ControlCenter() {
   return (
     <View style={st.root}>
       <View style={st.top}>
-        <Pressable><View {...lg} style={[st.corner, glassStyle(0.05) as object]}><Icon name="squarePen" size={16} color="rgba(255,255,255,.85)" /></View></Pressable>
-        <Pressable><View {...lg} style={[st.corner, glassStyle(0.05) as object]}><Icon name="settings" size={16} color="rgba(255,255,255,.85)" /></View></Pressable>
+        <Pressable><View {...lg} style={[st.corner, {backgroundColor:"rgba(16,22,40,.48)"} as object]}><Icon name="squarePen" size={16} color="rgba(255,255,255,.85)" /></View></Pressable>
+        <Pressable><View {...lg} style={[st.corner, {backgroundColor:"rgba(16,22,40,.48)"} as object]}><Icon name="settings" size={16} color="rgba(255,255,255,.85)" /></View></Pressable>
       </View>
 
       <View style={st.r1}>
@@ -157,7 +160,7 @@ export function ControlCenter() {
 }
 
 const st = StyleSheet.create({
-  root: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, paddingTop: 56, paddingHorizontal: 16, gap: 14 },
+  root: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, paddingTop: 56, paddingHorizontal: 16, gap: 14, backgroundColor: "rgba(6,9,18,.38)" },
   tile: { position: "relative", overflow: "hidden" },
   top: { flexDirection: "row", justifyContent: "space-between", marginBottom: -4 },
   corner: { width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center" },
@@ -171,11 +174,13 @@ const st = StyleSheet.create({
   fill: { position: "absolute", left: 0, top: 0, bottom: 0 } as object,
   glowG: { boxShadow: "0 0 24px rgba(34,197,94,.45)" } as object,
   glowO: { boxShadow: "0 0 24px rgba(249,115,22,.45)" } as object,
-  icWrap: { position: "absolute", left: 14, top: 0, bottom: 0, justifyContent: "center" },
+  icCap: { width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(0,0,0,.28)", alignItems: "center", justifyContent: "center" },
+  icWrap: { position: "absolute", left: 10, top: 0, bottom: 0, justifyContent: "center", width: 44 },
+  tb: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,.07)", alignItems: "center", justifyContent: "center" },
   art: { width: 56, height: 56, borderRadius: 14, backgroundColor: "rgba(255,255,255,.08)", alignItems: "center", justifyContent: "center" },
   grid: { flexDirection: "row", flexWrap: "wrap", rowGap: 16, paddingHorizontal: 2, marginTop: 4 },
   cell: { width: "25%", alignItems: "center", gap: 7 },
   dot: { width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
-  dotOff: { backgroundColor: "rgba(255,255,255,.07)", borderWidth: 1, borderColor: "rgba(255,255,255,.06)" },
+  dotOff: { backgroundColor: "rgba(16,22,40,.55)" },
   lb: { color: "rgba(255,255,255,.75)", fontSize: 10.5, lineHeight: 12, textAlign: "center", maxWidth: 74 },
 });
