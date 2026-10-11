@@ -90,9 +90,12 @@ const s = StyleSheet.create({
     paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, marginTop: "auto", marginBottom: 12,
   },
   searchTx: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  // capsule élargie (margin -8) + space-between : les icônes tombent sous
+  // les colonnes de la grille, espacement identique au springboard.
   dock: {
-    flexDirection: "row", justifyContent: "space-around", alignItems: "center", padding: 16,
-    borderRadius: 40, marginBottom: 32,
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    paddingVertical: 16, paddingHorizontal: 10,
+    borderRadius: 40, marginBottom: 32, marginHorizontal: -10,
   },
   homebar: {
     position: "absolute", left: "50%", bottom: 10, width: 134, height: 5,
