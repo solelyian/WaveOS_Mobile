@@ -1,14 +1,16 @@
 // StatusBar.tsx — heure à gauche, signal/wifi/batterie à droite (mêmes métriques).
 import * as React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { fmtTime } from "../system/state";
+import { useSys } from "./sys";
 import { Icon } from "./Icon";
 
 export function StatusBar({ light = true }: { light?: boolean }) {
+  const s = useSys();
+  if (s.locked) return null;
   const color = light ? "#fff" : "#111";
   return (
     <View style={st.bar} pointerEvents="none">
-      <Text style={[st.time, { color }]}>{fmtTime()}</Text>
+      <Text style={[st.time, { color }]}>9:41</Text>
       <View style={st.icons}>
         <Icon name="signal" size={15} color={color} />
         <Icon name="wifi" size={15} color={color} />

@@ -91,6 +91,7 @@ export function SuperDevice() {
         <Text style={{ fontSize: 14, color: "rgba(255,255,255,.6)", marginTop: 4 }}>Drag a device to the center to connect</Text>
       </View>
       <View style={sd.stage}>
+        <View style={sd.ring} pointerEvents="none" />
         {DEVICES.map((d, i) => {
           const h = home(i, DEVICES.length);
           const on = docked.includes(d.id);
@@ -186,6 +187,7 @@ function Actions({ dev, onDisconnect }: { dev: typeof DEVICES[number]; onDisconn
 }
 
 const sd = StyleSheet.create({
+  ring: { position: "absolute", left: 200 - 130, top: 300 - 130, width: 260, height: 260, borderRadius: 130, borderWidth: 1, borderColor: "rgba(255,255,255,.14)" } as object,
   stage: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } as object,
   dev: {
     position: "absolute", width: BUB, height: BUB, borderRadius: 31, alignItems: "center", justifyContent: "center",

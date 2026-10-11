@@ -21,7 +21,7 @@ function Tile({ id, inDock, onOpen }: { id: AppId; inDock?: boolean; onOpen: (id
       <View ref={tileRef} nativeID={inDock ? `dock-${id}` : `icon-${id}`} style={s.tile}>
         <Icon name={a.icon} size={30} color="#fff" />
       </View>
-      {!inDock && <Text style={s.nm} numberOfLines={1}>{a.name}</Text>}
+      <Text style={[s.nm, inDock && s.nmDock]} numberOfLines={1}>{a.name}</Text>
     </Pressable>
   );
 }
@@ -33,7 +33,7 @@ export function HomeGrid({ onOpen, onSpot }: { onOpen: (id: AppId) => void; onSp
         <View style={[s.wdg, glassStyle(0.14) as object]}>
           <View style={s.wt}>
             <Text style={s.wtTx}>SAN FRANCISCO</Text>
-            <Icon name="mapPin" size={12} color="rgba(255,255,255,.85)" />
+            <Icon name="sun" size={14} color="rgba(255,255,255,.85)" />
           </View>
           <View>
             <Text style={s.wdgTemp}>72°</Text>
@@ -84,6 +84,7 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,.2)",
     boxShadow: "inset 0 1px 1px rgba(255,255,255,.5), 0 8px 16px rgba(0,0,0,.2)",
   } as object,
+  nmDock: { fontSize: 10, marginTop: 4 },
   nm: { fontSize: 12, fontWeight: "600", color: "#fff", letterSpacing: 0.24 },
   search: {
     alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 6,

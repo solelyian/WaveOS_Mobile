@@ -7,10 +7,11 @@ import { Icon } from "./Icon";
 import { glassStyle } from "./fx";
 
 const NOTIFS: { app: string; icon: string; color: string; title: string; body: string; time: string }[] = [
-  { app: "Messages", icon: "messageCircle", color: "#22c55e", title: "Alex Morgan", body: "Look at this — new build is live", time: "now" },
-  { app: "Mail", icon: "mail", color: "#2563eb", title: "Nyne Team", body: "Your weekly digest is ready", time: "2m" },
-  { app: "Calendar", icon: "calendar", color: "#ef4444", title: "Reminder", body: "Design Review at 10:00", time: "1h" },
-  { app: "Nyne Store", icon: "store", color: "#8b5cf6", title: "Nyne Store", body: "3 apps updated automatically", time: "3h" },
+  { app: "Sarah Connor", icon: "messageCircle", color: "#22c55e", title: "Sarah Connor", body: "The future is not set. There is no fate but what we make for ourselves.", time: "2m ago" },
+  { app: "Nyne ID", icon: "mail", color: "#3b82f6", title: "Nyne ID", body: "New login detected on MacBook Pro.", time: "15m ago" },
+  { app: "Security", icon: "lock", color: "#f97316", title: "Security", body: "Front door motion detected.", time: "1h ago" },
+  { app: "Up Next", icon: "calendar", color: "#ef4444", title: "Up Next", body: "Design Review in 30 mins.", time: "1h ago" },
+  { app: "Music", icon: "music", color: "#ec4899", title: "Music", body: "Your daily mix is ready.", time: "3h ago" },
 ];
 
 export function NotificationCenter({ onClear }: { onClear?: () => void }) {

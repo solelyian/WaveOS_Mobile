@@ -58,6 +58,7 @@ export function LockScreen() {
       </View>
       <View ref={bar} style={st.barWrap}>
         <Text style={st.swipe}>SWIPE UP</Text>
+        <View style={st.swipeBar} />
       </View>
       <View style={st.row}>
         <RoundBtn icon="flashlight" />
@@ -72,6 +73,7 @@ const st = StyleSheet.create({
   clockWrap: { marginTop: 30, alignItems: "center", gap: 4 },
   date: { color: "#fff", fontSize: 20, fontWeight: "500" },
   barWrap: { position: "absolute", bottom: 96, left: 0, right: 0, alignItems: "center" },
+  swipeBar: { width: 144, height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,.9)", marginTop: 8 },
   swipe: {
     color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: "700", letterSpacing: 2,
     paddingVertical: 14, paddingHorizontal: 40,

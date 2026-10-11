@@ -132,7 +132,7 @@ export function ControlCenter() {
           <View style={st.sdIc}><Icon name="cast" size={18} color="#fff" /></View>
           <View style={{ flex: 1 }}>
             <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>Nyne Link</Text>
-            <Text style={{ color: "rgba(255,255,255,.6)", fontSize: 12 }}>4 devices nearby</Text>
+            <Text style={{ color: "rgba(255,255,255,.6)", fontSize: 12 }}>5 devices nearby</Text>
           </View>
           <Icon name="chevronDown" size={16} color="rgba(255,255,255,.5)" />
         </Tile>

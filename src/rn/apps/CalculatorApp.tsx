@@ -61,7 +61,7 @@ export function CalculatorApp() {
 }
 
 const cs = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#1f2937", paddingTop: 64, paddingHorizontal: 20, paddingBottom: 20 },
+  root: { flex: 1, backgroundColor: "#000", paddingTop: 64, paddingHorizontal: 20, paddingBottom: 20 },
   disp: { flex: 1, alignItems: "flex-end", justifyContent: "flex-end", marginBottom: 32, paddingHorizontal: 8 },
   sub: { color: "rgba(255,255,255,.6)", fontSize: 20, fontWeight: "500", marginBottom: 8 },
   big: { fontSize: 72, fontWeight: "200", letterSpacing: -2, color: "#fff" },
