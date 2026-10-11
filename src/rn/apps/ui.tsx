@@ -8,23 +8,23 @@ import { Spring, SPRINGS, domOf, onFrame } from "../fx";
 import { host, onToasts, toasts } from "../host";
 
 /* ---------- GlassHeader : rangée back/action + titre (large ou compact) ---------- */
-export function GlassHeader({ title, large, action, onAction, onBack }: {
-  title: string; large?: boolean; action?: IconName; onAction?: () => void; onBack?: () => void;
+export function GlassHeader({ title, large, action, onAction, onBack, color = "#111" }: {
+  title: string; large?: boolean; action?: IconName; onAction?: () => void; onBack?: () => void; color?: string;
 }) {
   return (
     <View style={uh.hdr} nativeID="ghdr">
       <View style={uh.hdrRow}>
         <Pressable style={uh.gbtn} onPress={() => (onBack ?? host.closeApp)()}>
-          <Icon n="chevronLeft" size={18} color="#111" />
+          <Icon n="chevronLeft" size={18} color={color} />
         </Pressable>
         {action ? (
           <Pressable style={uh.gbtn} onPress={onAction}>
-            <Icon n={action} size={18} color="#111" />
+            <Icon n={action} size={18} color={color} />
           </Pressable>
         ) : <View style={{ width: 34 }} />}
       </View>
-      {large ? <Text style={uh.h1}>{title}</Text> : null}
-      {!large ? <Text style={uh.ttlSm}>{title}</Text> : null}
+      {large ? <Text style={[uh.h1, { color }]}>{title}</Text> : null}
+      {!large ? <Text style={[uh.ttlSm, { color }]}>{title}</Text> : null}
     </View>
   );
 }
@@ -101,7 +101,7 @@ export function PageSlide({ title, children, onClose }: {
     <View ref={el} style={uh.pane}>
       <View style={uh.paneHdr}>
         <Pressable style={uh.gbtn} onPress={onClose}>
-          <Icon n="chevronLeft" size={18} color="#111" />
+          <Icon n="chevronLeft" size={18} color={color} />
         </Pressable>
         <Text style={uh.paneTitle}>{title}</Text>
       </View>
