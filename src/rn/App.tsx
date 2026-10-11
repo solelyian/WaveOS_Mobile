@@ -6,6 +6,8 @@ import { LockScreen } from "./LockScreen";
 import { StatusBar } from "./StatusBar";
 import { DynamicIsland } from "./DynamicIsland";
 import { HomeGrid } from "./HomeGrid";
+import { attachGestures } from "./gestures";
+import { sys } from "../system/state";
 
 function Boot({ onDone }: { onDone: () => void }) {
   const [t, setT] = React.useState(0);
@@ -35,19 +37,23 @@ export default function App() {
   const s = useSys();
   const [booted, setBooted] = React.useState(false);
   const done = React.useCallback(() => setBooted(true), []);
-  // unlock : swipe up sur le lock (router minimal — les gestes complets arrivent avec Home)
-  const drag = React.useRef<{ y: number; dy: number } | null>(null);
+  const root = React.useRef<View>(null);
+  const rootEl = React.useCallback((n: View | null) => {
+    (root as { current: View | null }).current = n;
+    const el = n as unknown as HTMLElement | null;
+    if (el) attachGestures(el, {
+      unlock: () => set("locked", false),
+      openSheet: (x) => set("sheet", x as never),
+      closeSheet: () => set("sheet", null),
+      openSwitcher: () => {},
+      closeApp: () => set("activeApp", null),
+      isLocked: () => sys.locked,
+      hasSheet: () => sys.sheet != null,
+      hasApp: () => sys.activeApp != null,
+    });
+  }, []);
   return (
-    <View
-      style={st.phone}
-      onStartShouldSetResponder={() => true}
-      onResponderGrant={(e) => { drag.current = { y: e.nativeEvent.pageY, dy: 0 }; }}
-      onResponderMove={(e) => {
-        if (!drag.current || !s.locked) return;
-        const dy = e.nativeEvent.pageY - drag.current.y;
-        if (dy < -60) { set("locked", false); drag.current = null; }
-      }}
-    >
+    <View ref={rootEl} style={st.phone}>
       <View style={st.wall} pointerEvents="none" />
       {!s.locked && <HomeGrid onOpen={() => {}} onSpot={() => {}} />}
       {s.locked && <LockScreen />}
