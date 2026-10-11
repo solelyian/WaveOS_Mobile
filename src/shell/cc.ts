@@ -129,11 +129,16 @@ export class ControlCenter {
             h("button", { class: "pp", onClick: () => set("playing", false) }, svgIcon(I.pause)),
             svgIcon(I.skipForward))));
     } else {
-      this.mediaSlot.append(h("div", { class: "none" },
-        h("div", { class: "mrow" },
-          h("div", { style: "width:56px;height:56px;border-radius:14px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex:none" }, svgIcon(I.music, "", 22)),
-          h("span", {}, "Not playing")),
-        h("div", { class: "tr" }, svgIcon(I.skipBack), svgIcon(I.play), svgIcon(I.skipForward))));
+      this.mediaSlot.append(
+        h("div", { class: "cast" }, svgIcon(I.airplay, "", 14)),
+        h("div", { class: "none" },
+          h("div", { class: "mrow" },
+            h("div", { class: "art" }, svgIcon(I.music, "", 22)),
+            h("span", {}, "Not playing")),
+          h("div", { class: "tr" },
+            h("div", { class: "tb" }, svgIcon(I.skipBack, "", 16)),
+            h("div", { class: "tb" }, svgIcon(I.play, "", 18)),
+            h("div", { class: "tb" }, svgIcon(I.skipForward, "", 16)))));
     }
   }
 
