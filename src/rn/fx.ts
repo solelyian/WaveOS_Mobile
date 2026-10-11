@@ -48,13 +48,11 @@ export const SPRINGS = {
 };
 
 // Verre clair — mêmes paramètres que le blur/saturate web.
-export const glassStyle = (alpha = 0.16, extra: Record<string, string> = {}) => ({
+export const glassStyle = (alpha = 0.05, extra: Record<string, string> = {}) => ({
+  // vrai liquid glass : corps quasi incolore, pas de fausse bordure —
+  // le filet spéculaire vient de la carte wg_glass_edge via liquidGlass()
   backgroundColor: `rgba(255,255,255,${alpha})`,
-  borderColor: "rgba(255,255,255,0.28)",
-  borderWidth: 1,
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.14)",
-  backdropFilter: "blur(22px) saturate(180%)",
-  WebkitBackdropFilter: "blur(22px) saturate(180%)",
+  boxShadow: "0 12px 40px rgba(0,0,0,0.12)",
   ...extra,
 } as const);
 

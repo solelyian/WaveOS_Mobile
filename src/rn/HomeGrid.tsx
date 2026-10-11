@@ -30,7 +30,7 @@ export function HomeGrid({ onOpen, onSpot }: { onOpen: (id: AppId, el: HTMLEleme
   return (
     <View style={s.home}>
       <View style={s.wdgRow}>
-        <View {...lg} style={[s.wdg, glassStyle(0.14) as object]}>
+        <View {...lg} style={[s.wdg, glassStyle(0.05) as object]}>
           <View style={s.wt}>
             <Text style={s.wtTx}>SAN FRANCISCO</Text>
             <Icon name="sun" size={14} color="rgba(255,255,255,.85)" />
@@ -40,7 +40,7 @@ export function HomeGrid({ onOpen, onSpot }: { onOpen: (id: AppId, el: HTMLEleme
             <Text style={s.wdgSub}>Mostly Clear</Text>
           </View>
         </View>
-        <View {...lg} style={[s.wdg, glassStyle(0.14) as object]}>
+        <View {...lg} style={[s.wdg, glassStyle(0.05) as object]}>
           <Text style={s.wtTx}>CALENDAR SAT 6</Text>
           <View>
             <Text style={s.wdgEvtT1}>Design{"\n"}Review</Text>
@@ -53,12 +53,12 @@ export function HomeGrid({ onOpen, onSpot }: { onOpen: (id: AppId, el: HTMLEleme
         {APPS.concat(EXTRA_APPS.filter((a) => INSTALLED.has(a.id))).map((a) => <Tile key={a.id} id={a.id} onOpen={onOpen} />)}
       </View>
 
-      <Pressable onPress={onSpot} nativeID="search-capsule" {...lg} style={[s.search, glassStyle(0.18) as object]}>
+      <Pressable onPress={onSpot} nativeID="search-capsule" {...lg} style={[s.search, glassStyle(0.05) as object]}>
         <Icon name="search" size={14} color="rgba(255,255,255,.8)" />
         <Text style={s.searchTx}>Search</Text>
       </Pressable>
 
-      <View {...lg} style={[s.dock, glassStyle(0.16) as object]}>
+      <View {...lg} style={[s.dock, glassStyle(0.05) as object]}>
         {DOCK.map((id) => <Tile key={id} id={id} inDock onOpen={onOpen} />)}
       </View>
 

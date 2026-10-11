@@ -257,16 +257,18 @@ void wg_glass_render(float ox, float oy, int w, int h, float r,
 EXP("wg_glass_size")
 void wg_glass_size(int *w, int *h) { *w = g_outW; *h = g_outH; }
 
-/* ---------------- displacement map « vrai liquid glass » ----------------
- * wg_glass_disp(w,h,r,amp) → g_out = carte RGBA pour feDisplacementMap +
- * feSpecularLighting :
- *   R/G = direction × amplitude de la réfraction (128 = neutre) — normale
- *         sortante du SDF pondérée par le profil de lentille (max au bord,
- *         décroît vers l'intérieur) ;
- *   B   = profondeur intérieure 0..255 (réserve) ;
- *   A   = silhouette antialiasée (height-field pour l'éclairage spéculaire).
- * amp ∈ [0,1] : force de la lentille normalisée (l'échelle en px est fixée
- * par feDisplacementMap scale côté TS).
+/* ---------------- moteur « vrai liquid glass » (iOS 26) ----------------
+ * Décomposition rétro-ingénierie :
+ *  1) LENTILLE DE BORD : une bande de ~24 px au bord montre le fond des
+ *     ~60 px alentour compressé — le décor « rentre » sous le verre et se
+ *     courbe. Carte de déplacement : direction = normale sortante,
+ *     magnitude m(a)=M·(1-a/D)^1.35 (max pile au bord → 0 à D px).
+ *     R/G = offset (128 neutre), A = silhouette AA.
+ *  2) LISE ́ SPÉCULAIRE : filet lumineux ~1.5 px pile sur le contour, le plus
+ *     vif en haut-gauche (lumière fixe), + halo interne doux ~7 px, ombre
+ *     interne bas-droite, filet de caustique là où la lentille s'arrête.
+ *     Rendu en overlay PNG séparé — pas de feSpecularLighting (trop mou).
+ *  3) CORPS : quasi incolore (léger blur+saturate dans le filtre).
  */
 EXP("wg_glass_disp")
 void wg_glass_disp(int w, int h, float r, float amp) {
@@ -274,7 +276,7 @@ void wg_glass_disp(int w, int h, float r, float amp) {
   if (h > GLASS_MAXH) h = GLASS_MAXH;
   g_outW = w; g_outH = h;
   const float hw = w * 0.5f, hh = h * 0.5f;
-  const float DEPTH = 26.f;            // bande de réfraction (px)
+  const float DEPTH = 30.f;            // bande de lentille (px)
   for (int y = 0; y < h; y++) {
     for (int x = 0; x < w; x++) {
       float px = x + 0.5f, py = y + 0.5f;
@@ -283,20 +285,64 @@ void wg_glass_disp(int w, int h, float r, float amp) {
       float cov = wv_clampf(0.5f - d / 1.4f, 0.f, 1.f); // AA silhouette
       if (cov <= 0.f) { q[0] = 128; q[1] = 128; q[2] = 0; q[3] = 0; continue; }
       float inside = wv_max(-d, 0.f);
-      // normale sortante
       float nx, ny; drectGrad(px, py, hw, hh, hw, hh, r, &nx, &ny);
-      // profil de lentille : max au bord → 0 à DEPTH px (verre plat au centre)
+      // lentille : le bord compresse le décor (tiré vers l'extérieur)
       float t = wv_clampf(inside / DEPTH, 0.f, 1.f);
-      float wt = (1.f - t) * (1.f - t);
-      // creux léger : les 2 premiers px tirent un peu moins (bord net)
-      wt *= 0.55f + 0.45f * wv_clampf(inside / 2.f, 0.f, 1.f);
-      wt *= amp;
+      float u = 1.f - t;
+      float wt = wv_pow(u, 1.35f) * amp;
       int rr = (int)(128.f + nx * wt * 127.f);
       int gg = (int)(128.f + ny * wt * 127.f);
       q[0] = (unsigned char)wv_clampf((float)rr, 0.f, 255.f);
       q[1] = (unsigned char)wv_clampf((float)gg, 0.f, 255.f);
-      q[2] = (unsigned char)wv_clampf(t * 255.f, 0.f, 255.f);
+      q[2] = (unsigned char)wv_clampf(u * 255.f, 0.f, 255.f); // profondeur bord
       q[3] = (unsigned char)(cov * 255.f);
+    }
+  }
+}
+
+/* wg_glass_edge(w,h,r) → g_out = PNG RGBA d'habillage de bord :
+ *   filet spéculaire directionnel + halo + ombre interne + caustique.
+ * Lumière fixe haut-gauche (même convention que l'ancien moteur). */
+EXP("wg_glass_edge")
+void wg_glass_edge(int w, int h, float r) {
+  if (w > GLASS_MAXW) w = GLASS_MAXW;
+  if (h > GLASS_MAXH) h = GLASS_MAXH;
+  g_outW = w; g_outH = h;
+  const float hw = w * 0.5f, hh = h * 0.5f;
+  const float lx = -0.62f, ly = -0.79f;  // lumière haut-gauche (normée)
+  const float DEPTH = 30.f;
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      float px = x + 0.5f, py = y + 0.5f;
+      float d = drect(px, py, hw, hh, hw, hh, r);
+      unsigned char *q = g_out + (y * w + x) * 4;
+      q[0] = q[1] = q[2] = q[3] = 0;
+      if (d > 2.f) continue;                       // rien hors silhouette
+      float inside = wv_max(-d, 0.f);
+      float nx, ny; drectGrad(px, py, hw, hh, hw, hh, r, &nx, &ny);
+      // composante lumineuse : 1 face à la lumière → 0 à l'opposé (wrap)
+      float lit = wv_clampf(nx * lx + ny * ly * 0.5f + 0.55f, 0.f, 1.f);
+      // 1) filet spéculaire net ~1.6 px centré sur le contour
+      float rim = wv_clampf(1.f - wv_fabs(d + 0.2f) / 0.9f, 0.f, 1.f);
+      float rimI = rim * (0.05f + 0.80f * lit);   // filet fin, haut-gauche vif
+      // 2) halo interne doux sous le filet (~7 px, côté lumière)
+      float glow = wv_exp(-(inside * inside) / (2.f * 3.4f * 3.4f));
+      float glowI = glow * lit * 0.17f;
+      // 3) filet de caustique : là où la lentille retombe (a≈DEPTH)
+      float dc = wv_fabs(inside - DEPTH);
+      float caus = wv_clampf(1.f - dc / 1.1f, 0.f, 1.f) * 0.07f;
+      // 4) ombre interne bas-droite (~8 px)
+      float sh = wv_exp(-(inside * inside) / (2.f * 4.5f * 4.5f));
+      float shI = sh * (1.f - lit) * 0.13f;
+      // compose : blancs (rim+glow+caustique) puis noir (ombre)
+      float wa = wv_clampf(rimI + glowI + caus, 0.f, 1.f);
+      float ba = wv_clampf(shI * (1.f - wa), 0.f, 1.f);
+      // mélange blanc/noir en alpha, sortie non-prémultipliée
+      float a = wv_clampf(wa + ba, 0.f, 1.f);
+      if (a <= 0.f) continue;
+      float lr = wa / (wa + ba);                    // part de blanc
+      unsigned char v = (unsigned char)(lr * 255.f);
+      q[0] = v; q[1] = v; q[2] = v; q[3] = (unsigned char)(a * 255.f);
     }
   }
 }

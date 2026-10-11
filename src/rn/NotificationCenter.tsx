@@ -24,7 +24,7 @@ export function NotificationCenter({ onClear }: { onClear?: () => void }) {
       </View>
       <View style={st.list} nativeID="app-scroll">
         {items.map((n, i) => (
-          <View key={i} {...lg} style={[st.card, glassStyle(0.16) as object]} nativeID="nc-card">
+          <View key={i} {...lg} style={[st.card, glassStyle(0.05) as object]} nativeID="nc-card">
             <View style={[st.ic, { backgroundColor: n.color }]}>
               <Icon name={n.icon} size={16} color="#fff" />
             </View>
@@ -40,7 +40,7 @@ export function NotificationCenter({ onClear }: { onClear?: () => void }) {
         ))}
       </View>
       {items.length > 0 && (
-        <Pressable onPress={() => { setItems([]); onClear?.(); }} {...lg} style={[st.clear, glassStyle(0.18) as object]}>
+        <Pressable onPress={() => { setItems([]); onClear?.(); }} {...lg} style={[st.clear, glassStyle(0.05) as object]}>
           <Text style={st.clearTx}>Clear All</Text>
         </Pressable>
       )}

@@ -66,7 +66,7 @@ export function GlassClock({ size = 96 }: { size?: number }) {
 
 function RoundBtn({ icon }: { icon: string }) {
   return (
-    <View {...lg} style={[st.round, glassStyle(0.18) as object]}>
+    <View {...lg} style={[st.round, glassStyle(0.05) as object]}>
       <Icon name={icon} size={22} color="#fff" />
     </View>
   );
