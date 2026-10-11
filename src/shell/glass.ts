@@ -53,6 +53,23 @@ function dispMap(w: number, h: number, r: number, amp: number): string {
   return url;
 }
 
+/** Habillage de bord (filet spéculaire + halo + ombre + caustique) → dataURL. */
+function edgeMap(w: number, h: number, r: number): string {
+  const key = `e${w}-${h}-${r.toFixed(1)}`;
+  const hit = mapCache.get(key);
+  if (hit) return hit;
+  const api = W();
+  api.wg_glass_edge(w, h, r);
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const cx = c.getContext("2d")!;
+  cx.putImageData(
+    new ImageData(new Uint8ClampedArray(api.memory.buffer, api.wg_out_ptr(), w * h * 4), w, h), 0, 0);
+  const url = c.toDataURL("image/png");
+  mapCache.set(key, url);
+  return url;
+}
+
 export interface LGOpts {
   /** rayon des coins en px (défaut : border-radius calculé de l'élément) */
   radius?: number;
@@ -74,14 +91,13 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
   const w = Math.min(512, Math.max(8, Math.round(r.width)));
   const h = Math.min(640, Math.max(8, Math.round(r.height)));
   const rad = o.radius ?? (parseFloat(getComputedStyle(el).borderTopLeftRadius) || 20);
-  const amp = o.amp ?? 0.8;
-  const scale = o.scale ?? 18;
-  const blur = o.blur ?? 6;
-  const sat = o.saturate ?? 1.5;
-  const spec = o.spec ?? 0.85;
+  const amp = o.amp ?? 1.0;
+  const scale = o.scale ?? 100;         // lentille : ~2.8× de compression au bord
+  const blur = o.blur ?? 3;            // corps à peine givré
+  const sat = o.saturate ?? 1.15;      // légère saturation (verre Apple)
 
   const map = dispMap(w, h, rad, amp);
-  const fid = `lg-${w}x${h}-${rad.toFixed(1)}-${amp.toFixed(2)}-${scale}-${blur}-${sat.toFixed(2)}-${spec.toFixed(2)}`;
+  const fid = `lg-${w}x${h}-${rad.toFixed(1)}-${amp.toFixed(2)}-${scale}-${blur}-${sat.toFixed(2)}`;
   if (!filterCache.has(fid)) {
     const d = ensureDefs();
     const f = document.createElementNS(SVGNS, "filter");
@@ -94,20 +110,23 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
       `<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}" result="b"/>` +
       `<feImage href="${map}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" result="m"/>` +
       `<feDisplacementMap in="b" in2="m" scale="${scale}" xChannelSelector="R" yChannelSelector="G" result="refr"/>` +
-      `<feColorMatrix in="refr" type="saturate" values="${sat}" result="sat"/>` +
-      `<feGaussianBlur in="m" stdDeviation="2.6" result="mb"/>` +
-      `<feSpecularLighting in="mb" surfaceScale="2.6" specularConstant="${spec.toFixed(2)}" ` +
-        `specularExponent="16" lighting-color="#ffffff" result="spec">` +
-        `<feDistantLight azimuth="235" elevation="46"/>` +
-      `</feSpecularLighting>` +
-      `<feComposite in="spec" in2="m" operator="in" result="specIn"/>` +
-      `<feComposite in="sat" in2="specIn" operator="arithmetic" k1="0" k2="1" k3="0.9" k4="0"/>`;
+      `<feColorMatrix in="refr" type="saturate" values="${sat}"/>`;
     d.appendChild(f);
     filterCache.add(fid);
   }
   const bf = `url(#${fid})`;
   el.style.backdropFilter = bf;
   (el.style as CSSStyleDeclaration & { webkitBackdropFilter?: string }).webkitBackdropFilter = bf;
+  // habillage de bord : filet spéculaire fin, halo haut, ombre bas, caustique
+  if (!el.querySelector(":scope > .lg-edge")) {
+    const edge = document.createElement("i");
+    edge.className = "lg-edge";
+    edge.style.cssText = `position:absolute;inset:0;border-radius:inherit;` +
+      `pointer-events:none;background-image:url("${edgeMap(w, h, rad)}");` +
+      `background-size:100% 100%;z-index:0;`;
+    if (getComputedStyle(el).position === "static") el.style.position = "relative";
+    el.prepend(edge);
+  }
   el.dataset.lgDone = "1";
 }
 
