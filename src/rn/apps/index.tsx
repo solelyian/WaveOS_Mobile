@@ -18,6 +18,7 @@ import { CalendarApp } from "./CalendarApp";
 import { PhotosApp } from "./PhotosApp";
 import { MapsApp } from "./MapsApp";
 import { StoreApp } from "./StoreApp";
+import { NotesApp, FilesApp, ClockApp, ArcadeApp } from "./ExtrasApp";
 
 export function appMeta(id: AppId): AppMeta {
   return APPS.find((a) => a.id === id) ?? EXTRA_APPS.find((a) => a.id === id)!;
@@ -54,6 +55,10 @@ export function renderApp(id: AppId): React.ReactNode {
     case "photos": return <PhotosApp />;
     case "maps": return <MapsApp />;
     case "store": return <StoreApp />;
+    case "notes": return <NotesApp />;
+    case "files": return <FilesApp />;
+    case "clock": return <ClockApp />;
+    case "arcade": return <ArcadeApp />;
     default: return <StubApp id={id} />;
   }
 }
