@@ -8,6 +8,13 @@ import { ControlCenter } from "./ControlCenter";
 
 const H = 850;
 
+// Contrôle externe (gestures) : tracking live + previews.
+export const sheetCtl: {
+  preview(which: "nc" | "cc", dy: number): void;
+  previewEnd(commit: boolean): void;
+  track(dy: number): void;
+} = { preview: () => {}, previewEnd: () => {}, track: () => {} };
+
 export function SheetHost() {
   const s = useSys();
   const wrap = React.useRef<View>(null);
@@ -15,8 +22,17 @@ export function SheetHost() {
   const last = React.useRef<"nc" | "cc" | null>(null);
   if (s.sheet === "nc" || s.sheet === "cc") last.current = s.sheet;
 
-  const active = s.sheet === "nc" || s.sheet === "cc" ? s.sheet : last.current;
-  React.useEffect(() => { sp.to(s.sheet ? 0 : -H); }, [s.sheet, sp]);
+  const [preview, setPreview] = React.useState<"nc" | "cc" | null>(null);
+  const active = s.sheet === "nc" || s.sheet === "cc" ? s.sheet : preview ?? last.current;
+  React.useEffect(() => { if (!preview) sp.to(s.sheet ? 0 : -H); }, [s.sheet, sp, preview]);
+  React.useEffect(() => {
+    sheetCtl.preview = (which, dy) => { setPreview(which); sp.set(Math.min(0, -H + Math.max(0, dy))); };
+    sheetCtl.previewEnd = (commit) => { setPreview(null); if (!commit) sp.to(-H); };
+    sheetCtl.track = (dy) => {
+      if (isNaN(dy)) { sp.to(0); return; } // rouvrir après relâchement court
+      sp.set(Math.min(0, dy));
+    };
+  }, [sp]);
   // backdrop-filter n'est pas un style RNW — on l'applique au DOM.
   React.useEffect(() => {
     const el = domOf(wrap);

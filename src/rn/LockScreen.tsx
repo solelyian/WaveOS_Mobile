@@ -4,7 +4,7 @@ import * as React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { fmtDate, fmtTime } from "../system/state";
 import { Icon } from "./Icon";
-import { glassStyle } from "./fx";
+import { glassStyle, domOf } from "./fx";
 
 export function GlassClock({ size = 96 }: { size?: number }) {
   // horloge « verre » : gradient texte + halo de blur — calque du rendu web.
@@ -29,15 +29,36 @@ function RoundBtn({ icon }: { icon: string }) {
   );
 }
 
+// Contrôle externe (gestures) : barre + fade/blur pendant le drag.
+export const lockCtl: { drag(dy: number): void; reset(): void } = { drag: () => {}, reset: () => {} };
+
 export function LockScreen() {
+  const root = React.useRef<View>(null);
+  const bar = React.useRef<View>(null);
+  React.useEffect(() => {
+    lockCtl.drag = (dy) => {
+      const v = Math.min(0, dy);
+      const bel = domOf(bar); if (bel) bel.style.transform = `translateY(${v}px)`;
+      const p = Math.min(1, -v / 200);
+      const el = domOf(root);
+      if (el) { el.style.opacity = `${1 - p}`; el.style.filter = `blur(${p * 10}px)`; }
+    };
+    lockCtl.reset = () => {
+      const bel = domOf(bar); if (bel) bel.style.transform = "";
+      const el = domOf(root);
+      if (el) { el.style.opacity = "1"; el.style.filter = "none"; }
+    };
+  }, []);
   return (
-    <View style={st.root}>
+    <View ref={root} style={st.root}>
       <Icon name="lock" size={16} color="rgba(255,255,255,.85)" style={{ marginTop: 56, alignSelf: "center" }} />
       <View style={st.clockWrap}>
         <Text style={st.date}>{fmtDate()}</Text>
         <GlassClock />
       </View>
-      <Text style={st.swipe}>SWIPE UP</Text>
+      <View ref={bar} style={st.barWrap}>
+        <Text style={st.swipe}>SWIPE UP</Text>
+      </View>
       <View style={st.row}>
         <RoundBtn icon="flashlight" />
         <RoundBtn icon="camera" />
@@ -50,9 +71,10 @@ const st = StyleSheet.create({
   root: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 30 },
   clockWrap: { marginTop: 30, alignItems: "center", gap: 4 },
   date: { color: "#fff", fontSize: 20, fontWeight: "500" },
+  barWrap: { position: "absolute", bottom: 96, left: 0, right: 0, alignItems: "center" },
   swipe: {
-    position: "absolute", bottom: 110, left: 0, right: 0, textAlign: "center",
     color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: "700", letterSpacing: 2,
+    paddingVertical: 14, paddingHorizontal: 40,
   },
   row: {
     position: "absolute", bottom: 40, left: 0, right: 0,

@@ -3,14 +3,14 @@
 import * as React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useSys, set } from "./sys";
-import { LockScreen } from "./LockScreen";
+import { LockScreen, lockCtl } from "./LockScreen";
 import { StatusBar } from "./StatusBar";
 import { DynamicIsland } from "./DynamicIsland";
 import { HomeGrid } from "./HomeGrid";
 import { attachGestures } from "./gestures";
 import { sys } from "../system/state";
 import type { AppId } from "../system/state";
-import { SheetHost } from "./SheetHost";
+import { SheetHost, sheetCtl } from "./SheetHost";
 import { AppWindow, appwinCtl } from "./AppWindow";
 import { Recents } from "./Recents";
 import { host, pushRecent, type AppRect } from "./host";
@@ -77,6 +77,13 @@ export default function App() {
     }
     if (el) attachGestures(el, {
       unlock: () => set("locked", false),
+      lockDrag: (dy) => lockCtl.drag(dy),
+      lockReset: () => lockCtl.reset(),
+      sheetDrag: (dy) => sheetCtl.track(dy),
+      sheetPreview: (w, dy) => sheetCtl.preview(w, dy),
+      sheetPreviewEnd: (commit) => sheetCtl.previewEnd(commit),
+      closeSwitcher: () => set("switcherOpen", false),
+      hasSwitcher: () => sys.switcherOpen,
       openSheet: (x) => set("sheet", x as never),
       closeSheet: () => set("sheet", null),
       openSwitcher: () => { if (sys.recents.length) set("switcherOpen", true); },
