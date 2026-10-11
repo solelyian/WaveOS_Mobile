@@ -1,7 +1,7 @@
 // App.tsx — coquille téléphone : wallpaper, boot NYNE, lockscreen, statusbar,
 // DI, sheets, fenêtre d'app (morph) et switcher de recents.
 import * as React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { useSys, set } from "./sys";
 import { LockScreen, lockCtl } from "./LockScreen";
 import { StatusBar } from "./StatusBar";
@@ -16,29 +16,17 @@ import { Recents } from "./Recents";
 import { Spotlight } from "./Spotlight";
 import { liquidGlassAll } from "./glass";
 import { host, pushRecent, type AppRect } from "./host";
+import { mountBoot } from "../system/bootAnimation";
+import { domOf } from "./fx";
 
 function Boot({ onDone }: { onDone: () => void }) {
-  const [t, setT] = React.useState(0);
-  React.useEffect(() => {
-    const t0 = performance.now();
-    let raf = 0;
-    const step = (now: number) => {
-      const k = (now - t0) / 2600;
-      setT(Math.min(1, k));
-      if (k < 1) raf = requestAnimationFrame(step); else onDone();
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
+  const ref = React.useRef<View>(null);
+  React.useLayoutEffect(() => {
+    const el = domOf(ref);
+    if (el) return mountBoot(el, onDone);
+    return undefined;
   }, [onDone]);
-  return (
-    <View style={st.boot} onStartShouldSetResponder={() => { onDone(); return true; }}>
-      <View style={{ flexDirection: "row" }}>
-        {"NYNE".split("").map((l, i) => (
-          <Text key={i} style={[st.bootL, { opacity: Math.max(0, Math.min(1, (t - i * 0.12) / 0.3)) }]}>{l}</Text>
-        ))}
-      </View>
-    </View>
-  );
+  return <View ref={ref} nativeID="boot" style={st.boot} />;
 }
 
 /** Rect écran → espace téléphone 400×850 (origine du morph). */
@@ -154,8 +142,7 @@ const st = StyleSheet.create({
     backgroundPosition: "center",
   } as object,
   boot: {
-    position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99,
-    backgroundColor: "#050505", alignItems: "center", justifyContent: "center",
+    position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000,
+    backgroundColor: "#000", overflow: "hidden",
   },
-  bootL: { color: "#fff", fontSize: 44, fontWeight: "200", letterSpacing: 18 },
 });
