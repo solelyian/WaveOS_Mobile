@@ -169,7 +169,11 @@ export function FloatingTabBar({ tabs, active, onTab, dark }: {
   const idx = Math.max(0, tabs.findIndex((t) => t.id === active));
   React.useEffect(() => {
     const el = domOf(inRef);
-    if (el) w.current = el.getBoundingClientRect().width;
+    if (el) {
+      w.current = el.getBoundingClientRect().width;
+      el.style.backdropFilter = "blur(22px) saturate(160%)";
+      (el.style as unknown as Record<string, string>).WebkitBackdropFilter = "blur(22px) saturate(160%)";
+    }
     const c = (idx + 0.5) * (w.current / tabs.length);
     sx.to(c);
     const off = onFrame((dt) => {
@@ -257,7 +261,7 @@ const uh = StyleSheet.create({
   cap: { fontSize: 12, fontWeight: "700", color: "#9ca3af", textTransform: "uppercase", letterSpacing: 0.7, marginHorizontal: 4, marginBottom: 6 },
   pane: {
     position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: "#f4f4f5", zIndex: 30,
+    backgroundColor: "#f4f4f5", zIndex: 85,
   } as object,
   paneHdr: { flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 60, paddingHorizontal: 16, paddingBottom: 10 },
   paneTitle: { fontSize: 17, fontWeight: "700", color: "#111" },
