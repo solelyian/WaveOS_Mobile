@@ -15,6 +15,7 @@ import { MailApp } from "./MailApp";
 import { WeatherApp } from "./WeatherApp";
 import { SafariApp } from "./SafariApp";
 import { CalendarApp } from "./CalendarApp";
+import { PhotosApp } from "./PhotosApp";
 
 export function appMeta(id: AppId): AppMeta {
   return APPS.find((a) => a.id === id) ?? EXTRA_APPS.find((a) => a.id === id)!;
@@ -48,6 +49,7 @@ export function renderApp(id: AppId): React.ReactNode {
     case "weather": return <WeatherApp />;
     case "safari": return <SafariApp />;
     case "calendar": return <CalendarApp />;
+    case "photos": return <PhotosApp />;
     default: return <StubApp id={id} />;
   }
 }
