@@ -23,6 +23,20 @@ export interface SysState {
   airplane: boolean;
   cellular: boolean;
   darkMode: boolean;
+  focus: boolean;
+  flashlight: boolean;
+  nfc: boolean;
+  share: boolean;
+  hotspot: boolean;
+  nearlink: boolean;
+  screencast: boolean;
+  sound: boolean;
+  location: boolean;
+  screenshot: boolean;
+  scan: boolean;
+  remote: boolean;
+  orientationLock: boolean;
+  recorder: boolean;
 }
 
 export const sys: SysState = {
@@ -41,6 +55,20 @@ export const sys: SysState = {
   airplane: false,
   cellular: true,
   darkMode: false,
+  focus: false,
+  flashlight: false,
+  nfc: false,
+  share: true,
+  hotspot: false,
+  nearlink: false,
+  screencast: false,
+  sound: true,
+  location: true,
+  screenshot: false,
+  scan: false,
+  remote: false,
+  orientationLock: false,
+  recorder: false,
 };
 
 type Listener = (key: keyof SysState) => void;

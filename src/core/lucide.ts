@@ -104,6 +104,10 @@ import headphones from "lucide-static/icons/headphones.svg?raw";
 import tv from "lucide-static/icons/tv.svg?raw";
 import fileUp from "lucide-static/icons/file-up.svg?raw";
 import airplay from "lucide-static/icons/airplay.svg?raw";
+import nfc from "lucide-static/icons/nfc.svg?raw";
+import scanLine from "lucide-static/icons/scan-line.svg?raw";
+import zap from "lucide-static/icons/zap.svg?raw";
+import scissors from "lucide-static/icons/scissors.svg?raw";
 
 export const I = {
   wifi, wifiOff, battery, signal, search, camera, flashlight, music,
@@ -121,6 +125,7 @@ export const I = {
   users, micOff, moonStar, link, shuffle, repeat, repeat1, flag,
   delete: deleteIcon,
   laptop, tablet, watch, headphones, tv, fileUp, airplay,
+  nfc, scanLine, zap, scissors,
 } as const;
 
 export type IconName = keyof typeof I;

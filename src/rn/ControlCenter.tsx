@@ -1,5 +1,5 @@
-// ControlCenter.tsx — toggles 2×2, sliders verticaux brightness/volume, carte média,
-// Zen/Cast, rangée utilitaires, tuile Nyne Link — métriques identiques à main.
+// ControlCenter.tsx — HarmonyOS layout: media card + WiFi/BT pills,
+// Nyne Link / Zen pills beside tinted horizontal sliders, 4xN labeled dot grid.
 import * as React from "react";
 import { View, Pressable, Text, StyleSheet } from "react-native";
 import { useSys, set } from "./sys";
@@ -8,44 +8,50 @@ import { Icon } from "./Icon";
 import { glassStyle, domOf, lg } from "./fx";
 import type { SysState } from "../system/state";
 
-function Tile({ children, style, r = 28, onPress }: { children: React.ReactNode; style?: object; r?: number; onPress?: () => void }) {
+function Tile({ children, style, r = 26, onPress }: { children: React.ReactNode; style?: object; r?: number; onPress?: () => void }) {
   const inner = <View {...lg} style={[st.tile, { borderRadius: r }, glassStyle(0.05) as object, style]}>{children}</View>;
   return onPress ? <Pressable onPress={onPress}>{inner}</Pressable> : inner;
 }
 
-function Toggle({ k, on, off }: { k: keyof SysState; on: string; off?: string }) {
+function Pill({ k, icon, offIcon, name, sub, tint, onPress }: {
+  k?: keyof SysState; icon: string; offIcon?: string; name: string; sub?: string; tint: string; onPress?: () => void;
+}) {
   const s = useSys();
-  const active = !!s[k];
-  const bg = k === "airplane" ? "#f97316" : k === "cellular" ? "#22c55e" : "#3b82f6";
+  const on = k ? !!s[k] : true;
+  const piColor = on ? tint : "rgba(255,255,255,.08)";
+  const icColor = on ? "#fff" : "rgba(255,255,255,.55)";
   return (
-    <Pressable onPress={() => set(k, !s[k] as never)}>
-      <View style={[st.tg, active ? { backgroundColor: bg } : st.tgOff]}>
-        <Icon name={active || !off ? on : off} size={22} color="#fff" />
+    <Tile style={st.pill} r={26} onPress={onPress ?? (k ? () => set(k, !s[k] as never) : undefined)}>
+      <View style={[st.pi, { backgroundColor: piColor }]}>
+        <Icon name={!on && offIcon ? offIcon : icon} size={18} color={icColor} />
       </View>
-    </Pressable>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text numberOfLines={2} style={st.pillNm}>{name}</Text>
+        {sub ? <Text numberOfLines={1} style={st.pillSub}>{sub}</Text> : null}
+      </View>
+    </Tile>
   );
 }
 
-function Slider({ icon, k }: { icon: string; k: "brightness" | "volume" }) {
+function HSlider({ icon, k, tint }: { icon: string; k: "brightness" | "volume"; tint: string }) {
   const s = useSys();
   const ref = React.useRef<View>(null);
-  const setFromY = (pageY: number) => {
+  const setFromX = (pageX: number) => {
     const el = domOf(ref); if (!el) return;
     const r = el.getBoundingClientRect();
-    set(k, Math.max(0, Math.min(100, Math.round(100 - ((pageY - r.top) / r.height) * 100))));
+    set(k, Math.max(0, Math.min(100, Math.round(((pageX - r.left) / r.width) * 100))));
   };
   return (
-    <Tile style={{ flex: 1, overflow: "hidden" }} r={34}>
+    <Tile style={{ flex: 1, overflow: "hidden" }} r={26}>
       <View
         ref={ref}
-        nativeID="cc-slider"
         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
         onStartShouldSetResponder={() => true}
-        onResponderGrant={(e) => setFromY(e.nativeEvent.pageY)}
-        onResponderMove={(e) => setFromY(e.nativeEvent.pageY)}
+        onResponderGrant={(e) => setFromX(e.nativeEvent.pageX)}
+        onResponderMove={(e) => setFromX(e.nativeEvent.pageX)}
       >
-        <View style={[st.fill, { height: `${s[k]}%` }]} />
-        <View style={st.icWrap}><Icon name={icon} size={22} color="#000" /></View>
+        <View style={[st.fill, { width: `${s[k]}%`, backgroundColor: tint }, tint === "#22c55e" ? st.glowG : st.glowO]} />
+        <View style={st.icWrap}><Icon name={icon} size={18} color="#fff" /></View>
       </View>
     </Tile>
   );
@@ -55,7 +61,7 @@ function MediaCard() {
   const s = useSys();
   const tr = cur();
   return (
-    <Tile style={{ flex: 2, padding: 14, justifyContent: "center" }}>
+    <Tile style={{ flex: 1, padding: 14, justifyContent: "center" }}>
       {s.playing ? (
         <>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -70,25 +76,49 @@ function MediaCard() {
           </View>
         </>
       ) : (
-        <View style={{ alignItems: "center", gap: 8, opacity: 0.4 }}>
-          <Icon name="music" size={26} />
-          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700", letterSpacing: 2 }}>NOT PLAYING</Text>
+        <View style={{ gap: 14 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <View style={st.art}><Icon name="music" size={22} /></View>
+            <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600", opacity: .8 }}>Not playing</Text>
+          </View>
+          <View style={{ flexDirection: "row", justifyContent: "space-evenly", opacity: .9 }}>
+            <Icon name="skipBack" size={20} /><Icon name="play" size={20} /><Icon name="skipForward" size={20} />
+          </View>
         </View>
       )}
     </Tile>
   );
 }
 
-function SquareBtn({ icon, label, onPress, active }: { icon: string; label: string; onPress?: () => void; active?: boolean }) {
+const GRID: [keyof SysState, string, string, string][] = [
+  ["cellular", "signal", "Mobile data", "#3b82f6"],
+  ["orientationLock", "rotateCcw", "Orientation lock", ""],
+  ["recorder", "video", "Screen recorder", ""],
+  ["flashlight", "flashlight", "Flashlight", "#22c55e"],
+  ["nfc", "nfc", "NFC", ""],
+  ["share", "share", "Nyne Share", "#3b82f6"],
+  ["hotspot", "globe", "Personal hotspot", "#3b82f6"],
+  ["nearlink", "zap", "NearLink", "#ef4444"],
+  ["screencast", "screenShare", "ScreenCast", "#22c55e"],
+  ["sound", "bell", "Sound", "#3b82f6"],
+  ["location", "mapPin", "Location", "#3b82f6"],
+  ["darkMode", "moonStar", "Dark mode", "#3b82f6"],
+  ["airplane", "plane", "Airplane mode", "#3b82f6"],
+  ["screenshot", "scissors", "Screenshot", ""],
+  ["scan", "scanLine", "Scan", ""],
+  ["remote", "tv", "Smart Remote", ""],
+];
+
+function Cell({ k, icon, label, tint }: { k: keyof SysState; icon: string; label: string; tint: string }) {
+  const s = useSys();
+  const on = !!s[k];
   return (
-    <View style={{ alignItems: "center", gap: 4 }}>
-      <Pressable onPress={onPress}>
-        <View {...lg} style={[st.sqBtn, glassStyle(active ? 0.35 : 0.05) as object]}>
-          <Icon name={icon} size={22} color="#fff" />
-        </View>
-      </Pressable>
-      <Text style={{ color: "rgba(255,255,255,.7)", fontSize: 11 }}>{label}</Text>
-    </View>
+    <Pressable style={st.cell} onPress={() => set(k, !s[k] as never)}>
+      <View {...lg} style={[st.dot, on ? { backgroundColor: tint || "rgba(255,255,255,.07)", boxShadow: tint ? `0 4px 18px ${tint}73` : "none" } : st.dotOff]}>
+        <Icon name={icon} size={20} color={on && tint ? "#fff" : "rgba(255,255,255,.6)"} />
+      </View>
+      <Text numberOfLines={2} style={st.lb}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -96,79 +126,56 @@ export function ControlCenter() {
   const s = useSys();
   return (
     <View style={st.root}>
+      <View style={st.top}>
+        <Pressable><View {...lg} style={[st.corner, glassStyle(0.05) as object]}><Icon name="squarePen" size={16} color="rgba(255,255,255,.85)" /></View></Pressable>
+        <Pressable><View {...lg} style={[st.corner, glassStyle(0.05) as object]}><Icon name="settings" size={16} color="rgba(255,255,255,.85)" /></View></Pressable>
+      </View>
+
       <View style={st.r1}>
-        <Tile style={{ flex: 2, padding: 14 }}>
-          <View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-            <Toggle k="wifi" on="wifi" off="wifiOff" />
-            <Toggle k="bluetooth" on="bluetooth" off="bluetoothOff" />
-            <Toggle k="cellular" on="signal" />
-            <Toggle k="airplane" on="plane" />
-          </View>
-        </Tile>
-        <View style={{ flex: 1, flexDirection: "row", gap: 16 }}>
-          <Slider icon="sun" k="brightness" />
-          <Slider icon="volume2" k="volume" />
+        <MediaCard />
+        <View style={st.conn}>
+          <Pill k="wifi" icon="wifi" offIcon="wifiOff" name="WiFi" sub="WAVE-5G" tint="#3b82f6" />
+          <Pill k="bluetooth" icon="bluetooth" offIcon="bluetoothOff" name="Bluetooth" sub="Nyne Watch" tint="#3b82f6" />
         </View>
       </View>
 
       <View style={st.r2}>
-        <MediaCard />
-        <View style={{ flex: 1, gap: 12, justifyContent: "center" }}>
-          <SquareBtn icon="moon" label="Zen" active={s.darkMode} onPress={() => set("darkMode", !s.darkMode)} />
-          <SquareBtn icon="screenShare" label="Cast" />
-        </View>
+        <Pill icon="link" name="Nyne Link" sub="5 devices nearby" tint="rgba(255,255,255,.08)" onPress={() => set("sheet", "sd")} />
+        <HSlider icon="sun" k="brightness" tint="#22c55e" />
       </View>
 
-      <View style={st.r3}>
-        {(["flashlight", "clock", "camera", "calculator"] as const).map((ic) => (
-          <Tile key={ic} style={{ flex: 1, aspectRatio: 1, alignItems: "center", justifyContent: "center" }} r={999}>
-            <Icon name={ic} size={22} color="#fff" />
-          </Tile>
-        ))}
+      <View style={st.r2}>
+        <Pill k="focus" icon="moon" name="Zen Mode" tint="#6366f1" />
+        <HSlider icon="volume2" k="volume" tint="#f97316" />
       </View>
 
-      <View style={st.sdWrap}>
-        <Tile style={st.sd} r={24} onPress={() => set("sheet", "sd")}>
-          <View style={st.sdIc}><Icon name="cast" size={18} color="#fff" /></View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>Nyne Link</Text>
-            <Text style={{ color: "rgba(255,255,255,.6)", fontSize: 12 }}>5 devices nearby</Text>
-          </View>
-          <Icon name="chevronDown" size={16} color="rgba(255,255,255,.5)" />
-        </Tile>
+      <View style={st.grid}>
+        {GRID.map(([k, icon, label, tint]) => <Cell key={k} k={k} icon={icon} label={label} tint={tint} />)}
       </View>
-
-      <Tile style={st.home} r={24}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <View style={st.sdIc}><Icon name="home" size={18} color="#fff" /></View>
-          <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>Home</Text>
-        </View>
-        <Text style={{ color: "rgba(255,255,255,.6)", fontSize: 12 }}>3 Scenes Active</Text>
-      </Tile>
     </View>
   );
 }
 
 const st = StyleSheet.create({
-  root: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, paddingTop: 58, paddingHorizontal: 16, gap: 14 },
+  root: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, paddingTop: 56, paddingHorizontal: 16, gap: 14 },
   tile: { position: "relative", overflow: "hidden" },
+  top: { flexDirection: "row", justifyContent: "space-between", marginBottom: -4 },
+  corner: { width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center" },
   r1: { flexDirection: "row", gap: 14, height: 168 },
-  r2: { flexDirection: "row", gap: 14, height: 150 },
-  r3: { flexDirection: "row", gap: 14, height: 72 },
-  tg: { width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center" },
-  tgOff: { backgroundColor: "rgba(255,255,255,.12)", borderWidth: 1, borderColor: "rgba(255,255,255,.12)" },
-  fill: {
-    position: "absolute", bottom: 0, left: 0, right: 0,
-    backgroundColor: "rgba(255,255,255,.92)",
-    boxShadow: "inset 0 1px 0 #fff",
-  } as object,
-  icWrap: { position: "absolute", bottom: 0, left: 0, right: 0, alignItems: "center", paddingBottom: 14 },
-  sqBtn: { width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center" },
-  sdWrap: { marginTop: "auto" },
-  home: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 14, marginBottom: 26 },
-  sd: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14 },
-  sdIc: {
-    width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center",
-    backgroundColor: "rgba(96,165,250,.25)",
-  },
+  conn: { flex: 1, gap: 14 },
+  pill: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14 },
+  pi: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
+  pillNm: { color: "#fff", fontSize: 14, fontWeight: "600", lineHeight: 16 },
+  pillSub: { color: "rgba(255,255,255,.55)", fontSize: 11 },
+  r2: { flexDirection: "row", gap: 14, height: 64 },
+  fill: { position: "absolute", left: 0, top: 0, bottom: 0 } as object,
+  glowG: { boxShadow: "0 0 24px rgba(34,197,94,.45)" } as object,
+  glowO: { boxShadow: "0 0 24px rgba(249,115,22,.45)" } as object,
+  icWrap: { position: "absolute", left: 14, top: 0, bottom: 0, justifyContent: "center" },
+  art: { width: 56, height: 56, borderRadius: 14, backgroundColor: "rgba(255,255,255,.08)", alignItems: "center", justifyContent: "center" },
+  grid: { flexDirection: "row", flexWrap: "wrap", rowGap: 16, paddingHorizontal: 2, marginTop: 4 },
+  cell: { width: "25%", alignItems: "center", gap: 7 },
+  dot: { width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
+  dotOff: { backgroundColor: "rgba(255,255,255,.07)", borderWidth: 1, borderColor: "rgba(255,255,255,.06)" },
+  lb: { color: "rgba(255,255,255,.75)", fontSize: 10.5, lineHeight: 12, textAlign: "center", maxWidth: 74 },
 });
