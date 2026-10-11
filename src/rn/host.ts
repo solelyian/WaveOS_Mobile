@@ -1,12 +1,19 @@
 // host.ts — pont entre les apps RN et la coquille (ouverte/fermée, recents, toasts).
 import type { AppId } from "../system/state";
 import { sys, set } from "../system/state";
+import { INSTALLED } from "../apps/registry";
+
+export function installApp(id: AppId) {
+  INSTALLED.add(id);
+  set("recents", [...sys.recents]); // re-render le springboard
+}
 
 export interface AppRect { x: number; y: number; w: number; h: number }
 
 export const host = {
   openApp: (_id: AppId) => {},
   closeApp: () => {},
+  installApp: (_id: AppId) => installApp(_id),
 };
 
 export function pushRecent(id: AppId) {

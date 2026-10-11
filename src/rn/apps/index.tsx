@@ -17,6 +17,7 @@ import { SafariApp } from "./SafariApp";
 import { CalendarApp } from "./CalendarApp";
 import { PhotosApp } from "./PhotosApp";
 import { MapsApp } from "./MapsApp";
+import { StoreApp } from "./StoreApp";
 
 export function appMeta(id: AppId): AppMeta {
   return APPS.find((a) => a.id === id) ?? EXTRA_APPS.find((a) => a.id === id)!;
@@ -52,6 +53,7 @@ export function renderApp(id: AppId): React.ReactNode {
     case "calendar": return <CalendarApp />;
     case "photos": return <PhotosApp />;
     case "maps": return <MapsApp />;
+    case "store": return <StoreApp />;
     default: return <StubApp id={id} />;
   }
 }
