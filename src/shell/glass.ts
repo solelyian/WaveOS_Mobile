@@ -90,7 +90,10 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
   const r = el.getBoundingClientRect();
   const w = Math.min(512, Math.max(8, Math.round(r.width)));
   const h = Math.min(640, Math.max(8, Math.round(r.height)));
-  const rad = o.radius ?? (parseFloat(getComputedStyle(el).borderTopLeftRadius) || 20);
+  const cs = getComputedStyle(el).borderTopLeftRadius;
+  const rad = o.radius ?? (cs.endsWith("%")
+    ? (parseFloat(cs) / 100) * Math.min(w, h)     // 50% → cercle exact
+    : (parseFloat(cs) || 20));
   const amp = o.amp ?? 1.0;
   const scale = o.scale ?? 100;         // lentille : ~2.8× de compression au bord
   const blur = o.blur ?? 3;            // corps à peine givré
@@ -133,9 +136,34 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
 /** Balaie les surfaces « verre » connues sous `root` et applique le moteur.
  *  Idempotent (marqueur dataset.lgDone). À appeler après chaque montage de
  *  panneau contenant du verre (home, sheets, apps). */
+/** Surfaces verre — sélecteur partagé par le balayage et l'observateur. */
+const SEL = ".g-light, .g-btn, .nc-card, .dock-in, .home-search, .lk-util, " +
+  ".tabbar, .wx-card, .rct-clear, .glx-on";
+
+let observer: MutationObserver | null = null;
+/** Les surfaces montées après le premier balayage (écran d'appel, sous-pages)
+ *  reçoivent le moteur automatiquement dès leur insertion dans le DOM. */
+function watch() {
+  if (observer) return;
+  observer = new MutationObserver((muts) => {
+    for (const m of muts) {
+      m.addedNodes.forEach((n) => {
+        if (!(n instanceof HTMLElement)) return;
+        const targets: HTMLElement[] = [];
+        if (n.matches(SEL)) targets.push(n);
+        n.querySelectorAll<HTMLElement>(SEL).forEach((e) => targets.push(e));
+        for (const el of targets) {
+          if (!el.dataset.lgDone && el.getBoundingClientRect().width >= 8) liquidGlass(el);
+        }
+      });
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
 export async function liquidGlassAll(root: ParentNode = document): Promise<void> {
-  const sel = ".g-light, .g-btn, .nc-card, .dock-in, .home-search, .lk-util, " +
-    ".tabbar, .wx-card, .rct-clear, .glx-on";
+  watch();
+  const sel = SEL;
   const els = root.querySelectorAll<HTMLElement>(sel);
   const jobs: Promise<void>[] = [];
   els.forEach((el) => {

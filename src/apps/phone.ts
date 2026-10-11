@@ -62,10 +62,10 @@ export function PhoneApp() {
         const d = h("div", { style: { position: "absolute", inset: "0", zIndex: "90", background: "rgba(10,10,12,.96)", display: "flex", flexDirection: "column", alignItems: "center", padding: "90px 28px 60px", transform: "translateY(100%)", transition: "transform .3s cubic-bezier(.32,.72,.35,1)" } },
           h("div", { style: { fontSize: "22px", fontWeight: "600", color: "#fff", marginBottom: "26px" } }, name),
           h("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,72px)", gap: "12px", justifyContent: "center" } },
-            ...KEYS.map(([n, s]) => h("button", { class: "pk-key", style: { background: "rgba(255,255,255,.1)", color: "#fff" }, onClick: (e) => { (e.currentTarget as HTMLElement).animate([{ transform: "scale(.88)" }, { transform: "scale(1)" }], { duration: 140 }); } },
+            ...KEYS.map(([n, s]) => h("button", { class: "pk-key g-btn", style: { color: "#fff" }, onClick: (e) => { (e.currentTarget as HTMLElement).animate([{ transform: "scale(.88)" }, { transform: "scale(1)" }], { duration: 140 }); } },
               h("span", { class: "n" }, n), h("span", { class: "s", style: { color: "rgba(255,255,255,.4)" } }, s || " ")))),
           h("div", { style: { flex: "1" } }),
-          h("button", { class: "pressable", style: { padding: "12px 34px", borderRadius: "999px", background: "rgba(255,255,255,.14)", color: "#fff", fontWeight: "600", fontSize: "15px" },
+          h("button", { class: "pressable g-btn", style: { padding: "12px 34px", borderRadius: "999px", color: "#fff", fontWeight: "600", fontSize: "15px" },
             onClick: () => { d.style.transform = "translateY(100%)"; setTimeout(() => d.remove(), 300); } }, "Hide"));
         wrap.append(d);
         requestAnimationFrame(() => d.style.transform = "none");
@@ -102,7 +102,7 @@ export function PhoneApp() {
           h("div", { style: { fontSize: "13px", color: "rgba(255,255,255,.6)", marginTop: "3px" } }, "mobile"),
           h("div", { style: { marginTop: "2px" } }, st),
           h("div", { style: { flex: "1" } }),
-          h("div", { style: { width: "100%", padding: "22px 18px 24px", borderRadius: "40px", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.14)", backdropFilter: "blur(24px) saturate(160%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.16), 0 18px 40px rgba(0,0,0,.35)" } },
+          h("div", { class: "call-card g-light", style: { width: "100%", padding: "22px 18px 24px", borderRadius: "40px" } },
             h("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "20px 8px" } },
               btn("volume2", "speaker"),
               btn("video", "Nyne Vision", () => toast(root, "Switching to Nyne Vision…")),
