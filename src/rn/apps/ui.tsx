@@ -101,7 +101,7 @@ export function PageSlide({ title, children, onClose }: {
     <View ref={el} style={uh.pane}>
       <View style={uh.paneHdr}>
         <Pressable style={uh.gbtn} onPress={onClose}>
-          <Icon n="chevronLeft" size={18} color={color} />
+          <Icon n="chevronLeft" size={18} color="#111" />
         </Pressable>
         <Text style={uh.paneTitle}>{title}</Text>
       </View>
