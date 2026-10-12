@@ -416,6 +416,7 @@ int wg_aqua_edge(int w, int h, float r, float depth) {
 static unsigned char g_glyph_mask[GLYPH_MAXW * GLYPH_MAXH];
 static unsigned char g_glyph_edge[GLYPH_MAXW * GLYPH_MAXH * 4];
 static float g_glyph_distance[GLYPH_MAXW * GLYPH_MAXH];
+static float g_glyph_smooth[GLYPH_MAXW * GLYPH_MAXH];
 static float g_edt_input[GLYPH_MAXW], g_edt_output[GLYPH_MAXW], g_edt_bounds[GLYPH_MAXW + 1];
 static int g_edt_sites[GLYPH_MAXW];
 
@@ -454,6 +455,26 @@ static void glyphEuclideanDistance(int w, int h) {
     for (int y = 0; y < h; y++) g_edt_input[y] = g_glyph_distance[y * w + x];
     distanceLine(h);
     for (int y = 0; y < h; y++) g_glyph_distance[y * w + x] = wv_sqrt(g_edt_output[y]);
+  }
+  static const float weights[9] = {1.f, 8.f, 28.f, 56.f, 70.f, 56.f, 28.f, 8.f, 1.f};
+  for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) {
+    float value = 0.f;
+    for (int j = -4; j <= 4; j++) {
+      const int xx = x + j;
+      if (xx >= 0 && xx < w) value += g_glyph_distance[y * w + xx] * weights[j + 4];
+    }
+    g_glyph_smooth[y * w + x] = value / 256.f;
+  }
+  for (int x = 0; x < w; x++) {
+    for (int y = 0; y < h; y++) {
+      float value = 0.f;
+      for (int j = -4; j <= 4; j++) {
+        const int yy = y + j;
+        if (yy >= 0 && yy < h) value += g_glyph_smooth[yy * w + x] * weights[j + 4];
+      }
+      g_edt_output[y] = value / 256.f;
+    }
+    for (int y = 0; y < h; y++) g_glyph_smooth[y * w + x] = g_edt_output[y];
   }
 }
 
@@ -509,27 +530,24 @@ static int renderGlyph(int w, int h, float depth, float pixelRatio, bool aqua) {
     for (int x = 0; x < w; x++) {
       int i = y * w + x;
       unsigned char *q = g_out + i * 4, *e = g_glyph_edge + i * 4;
-      q[0] = q[1] = 128; q[2] = 0; q[3] = g_glyph_mask[i];
+      q[0] = q[1] = 128; q[2] = 0; q[3] = aqua ? 255 : g_glyph_mask[i];
       e[0] = e[1] = e[2] = e[3] = 0;
       if (!g_glyph_mask[i]) continue;
-      float nx = (x > 0 ? g_glyph_distance[i - 1] : 0.f)
-               - (x < w - 1 ? g_glyph_distance[i + 1] : 0.f);
-      float ny = (y > 0 ? g_glyph_distance[i - w] : 0.f)
-               - (y < h - 1 ? g_glyph_distance[i + w] : 0.f);
+      const float *normalField = aqua ? g_glyph_smooth : g_glyph_distance;
+      float nx = (x > 0 ? normalField[i - 1] : 0.f)
+               - (x < w - 1 ? normalField[i + 1] : 0.f);
+      float ny = (y > 0 ? normalField[i - w] : 0.f)
+               - (y < h - 1 ? normalField[i + w] : 0.f);
       float length = wv_sqrt(nx * nx + ny * ny);
-      if (length > 0.001f) { nx /= length; ny /= length; }
+      if (aqua) { nx *= 0.5f; ny *= 0.5f; }
+      else if (length > 0.001f) { nx /= length; ny /= length; }
       float inside = wv_max(0.f, g_glyph_distance[i] - 0.5f);
       float u = wv_clampf(1.f - inside / bevel, 0.f, 1.f);
       float lens = u * u * (3.f - 2.f * u);
       float dx = nx * lens, dy = ny * lens;
       if (aqua) {
-        int left = x, right = x, top = y, bottom = y;
-        while (left > 0 && g_glyph_mask[y * w + left - 1] >= 128) left--;
-        while (right < w - 1 && g_glyph_mask[y * w + right + 1] >= 128) right++;
-        while (top > 0 && g_glyph_mask[(top - 1) * w + x] >= 128) top--;
-        while (bottom < h - 1 && g_glyph_mask[(bottom + 1) * w + x] >= 128) bottom++;
-        dx = -nx * lens * 0.60f - ((float)x - (left + right) * 0.5f) * 0.006f / ratio;
-        dy = -ny * lens * 0.60f - ((float)y - (top + bottom) * 0.5f) * 0.006f / ratio;
+        dx = -nx * (0.08f + lens * 0.52f);
+        dy = -ny * (0.08f + lens * 0.52f);
       }
       q[0] = (unsigned char)wv_clampf(128.f + dx * 127.f, 0.f, 255.f);
       q[1] = (unsigned char)wv_clampf(128.f + dy * 127.f, 0.f, 255.f);

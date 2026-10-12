@@ -44,7 +44,10 @@ test("invalid Aqua dimensions leave existing output untouched", () => {
   for (const [w, h] of [[0, 64], [64, 0], [-1, 64], [513, 64], [64, 641]]) {
     assert.equal(api.wg_aqua_disp(w, h, 32, 10, 1.12), 0);
     assert.equal(api.wg_aqua_edge(w, h, 32, 10), 0);
-    if (w !== 513) assert.equal(api.wg_aqua_glyph_render(w, h, 8, 2), 0);
+    assert.deepEqual(copy(64, 64), valid);
+  }
+  for (const [w, h] of [[0, 64], [64, 0], [-1, 64], [1025, 64], [64, 641]]) {
+    assert.equal(api.wg_aqua_glyph_render(w, h, 8, 2), 0);
     assert.deepEqual(copy(64, 64), valid);
   }
 });
@@ -71,9 +74,31 @@ test("Aqua glyphs retain counters and refract their tubular bodies", () => {
   }
   assert.equal(api.wg_aqua_glyph_render(w, h, 8, 2), 1);
   const map = copy(w, h), edge = copy(w, h, api.wg_glyph_edge_ptr());
-  assert.deepEqual(pixel(map, w, 32, 32), [128, 128, 0, 0]);
+  assert.deepEqual(pixel(map, w, 32, 32), [128, 128, 0, 255]);
   assert.deepEqual(pixel(edge, w, 32, 32), [0, 0, 0, 0]);
   assert(pixel(map, w, 32, 13)[1] > 128);
   assert(pixel(map, w, 32, 21)[1] < 128);
   assert(pixel(edge, w, 32, 13)[3] > pixel(edge, w, 32, 51)[3]);
+});
+
+test("glyph displacement remains continuous across curved stroke medial seams", () => {
+  const w = 128, h = 128;
+  const mask = new Uint8Array(api.memory.buffer, api.wg_glyph_mask_ptr(), w * h);
+  mask.fill(0);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const r = Math.hypot(x - 64, y - 64);
+    if (r > 34 && r < 48) mask[y * w + x] = 255;
+  }
+  assert.equal(api.wg_aqua_glyph_render(w, h, 14, 2), 1);
+  const map = copy(w, h);
+  let maxStep = 0;
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+    if (!mask[y * w + x]) continue;
+    for (const [xx, yy] of [[x + 1, y], [x, y + 1]]) {
+      if (!mask[yy * w + xx]) continue;
+      const a = pixel(map, w, x, y), b = pixel(map, w, xx, yy);
+      maxStep = Math.max(maxStep, Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]));
+    }
+  }
+  assert(maxStep < 30, `adjacent displacement jump: ${maxStep}/255`);
 });
