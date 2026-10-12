@@ -2,7 +2,7 @@
 import * as React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { fmtDate } from "../system/state";
-import { GlassClock } from "./LockScreen";
+import { GlassClock } from "./GlassClock";
 import { Icon } from "./Icon";
 import { glassStyle, lg } from "./fx";
 
@@ -19,8 +19,8 @@ export function NotificationCenter({ onClear }: { onClear?: () => void }) {
   return (
     <View style={st.root}>
       <View style={st.clock}>
-        <GlassClock size={74} />
         <Text style={st.date}>{fmtDate()}</Text>
+        <GlassClock size={74} />
       </View>
       <View style={st.list} nativeID="app-scroll">
         {items.map((n, i) => (
@@ -51,7 +51,7 @@ export function NotificationCenter({ onClear }: { onClear?: () => void }) {
 const st = StyleSheet.create({
   root: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
   clock: { alignItems: "center", marginTop: 64, gap: 6 },
-  date: { color: "rgba(255,255,255,.7)", fontSize: 13 },
+  date: { color: "rgba(255,255,255,.9)", fontSize: 19, fontWeight: "500" },
   list: { flex: 1, marginTop: 18, paddingHorizontal: 16, gap: 10 },
   card: { flexDirection: "row", gap: 10, padding: 14, borderRadius: 18 },
   ic: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
