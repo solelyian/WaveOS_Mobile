@@ -91,19 +91,20 @@ export interface LGOpts {
 export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void> {
   await loadWasm();
   const control = !!el.closest("#cc");
+  const notification = el.dataset.lgKind === "notification";
   const slider = el.dataset.lgKind === "slider";
   const r = el.getBoundingClientRect();
-  const w = Math.min(512, Math.max(8, Math.round(control ? el.offsetWidth : r.width)));
-  const h = Math.min(640, Math.max(8, Math.round(control ? el.offsetHeight : r.height)));
+  const w = Math.min(512, Math.max(8, Math.round(control || notification ? el.offsetWidth : r.width)));
+  const h = Math.min(640, Math.max(8, Math.round(control || notification ? el.offsetHeight : r.height)));
   const cs = getComputedStyle(el).borderTopLeftRadius;
-  const rad = o.radius ?? (cs.endsWith("%")
+  const rad = o.radius ?? (notification ? 34 : cs.endsWith("%")
     ? (parseFloat(cs) / 100) * Math.min(w, h)
     : (parseFloat(cs) || 20));
   const amp = o.amp ?? 1.0;
   const size = Math.min(w, h);
   const depth = o.depth ?? (control ? Math.min(16, Math.max(4, size * .12)) : 30);
-  const scale = o.scale ?? (control ? Math.min(44, Math.max(22, size * .5)) : 100);
-  const blur = o.blur ?? (control ? 1.2 : 3);
+  const scale = o.scale ?? (notification ? 16 : control ? Math.min(44, Math.max(22, size * .5)) : 100);
+  const blur = o.blur ?? (notification ? 5 : control ? 1.2 : 3);
   const sat = o.saturate ?? (slider ? 0 : control ? 1.3 : 1.15);
 
   const map = dispMap(w, h, rad, amp, depth);

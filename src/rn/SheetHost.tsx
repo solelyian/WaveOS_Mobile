@@ -45,10 +45,12 @@ export function SheetHost() {
     const el = domOf(wrap);
     const f = el?.querySelector<HTMLElement>("#sheet-frost");
     if (f) {
-      const filter = active === "cc" ? "none" : "blur(30px) saturate(160%)";
+      const filter = active === "cc" ? "none" : active === "nc"
+        ? "blur(38px) saturate(115%) brightness(.6)" : "blur(30px) saturate(160%)";
       f.style.backdropFilter = filter;
       (f.style as unknown as Record<string, string>).webkitBackdropFilter = filter;
-      f.style.backgroundColor = active === "cc" ? "transparent" : "rgba(10,10,14,.45)";
+      f.style.backgroundColor = active === "cc" ? "transparent" : active === "nc"
+        ? "rgba(0,0,0,.05)" : "rgba(10,10,14,.45)";
     }
     const home = document.getElementById("home");
     if (home) {
