@@ -8,6 +8,8 @@
 
 #define GLASS_MAXW 512
 #define GLASS_MAXH 640
+#define GLYPH_MAXW 1024
+#define GLYPH_MAXH 640
 
 static const int MAP_W = 480, MAP_H = 850;
 static unsigned char g_map[480 * 850 * 4];
@@ -114,7 +116,7 @@ void wg_map_render(void) {
  */
 static unsigned char g_bg[GLASS_MAXW * GLASS_MAXH * 4];
 static unsigned char g_bg2[GLASS_MAXW * GLASS_MAXH * 4]; // copie floutée
-static unsigned char g_out[GLASS_MAXW * GLASS_MAXH * 4];
+static unsigned char g_out[GLYPH_MAXW * GLYPH_MAXH * 4];
 static int g_bgW = 0, g_bgH = 0;
 static int g_outW = 0, g_outH = 0;
 
@@ -366,7 +368,7 @@ int wg_aqua_disp(int w, int h, float r, float depth, float zoom) {
       if (d > 0.5f) continue;
       const float inside = wv_max(-d, 0.f);
       const float t = wv_clampf(1.f - inside / band, 0.f, 1.f);
-      const float meniscus = t * t * (3.f - 2.f * t) * wv_min(5.f, band * 0.5f);
+      const float meniscus = t * t * (3.f - 2.f * t) * wv_min(3.6f, band * 0.36f);
       float nx, ny;
       drectGrad(px, py, hw, hh, hw, hh, r, &nx, &ny);
       const float dx = -(px - hw) * shrink - nx * meniscus;
@@ -397,9 +399,9 @@ int wg_aqua_edge(int w, int h, float r, float depth) {
       drectGrad(px, py, hw, hh, hw, hh, r, &nx, &ny);
       const float face = wv_clampf(0.54f - 0.38f * nx - 0.45f * ny, 0.f, 1.f);
       const float outer = wv_exp(-(d * d) / 0.55f) * (0.16f + 0.65f * face);
-      const float inner = wv_exp(-((d + 2.7f) * (d + 2.7f)) / 1.7f) * (0.08f + 0.30f * face);
-      const float shoulder = wv_exp(-((d + depth * 0.6f) * (d + depth * 0.6f)) / 23.f) * face * 0.06f;
-      const float shade = wv_exp(-((d + 1.3f) * (d + 1.3f)) / 13.f) * (1.f - face) * 0.20f;
+      const float inner = wv_exp(-((d + 2.7f) * (d + 2.7f)) / 1.7f) * (0.02f + 0.12f * face);
+      const float shoulder = wv_exp(-((d + depth * 0.6f) * (d + depth * 0.6f)) / 23.f) * face * 0.02f;
+      const float shade = wv_exp(-((d + 1.3f) * (d + 1.3f)) / 5.f) * (1.f - face) * 0.08f;
       const float white = outer + inner + shoulder;
       const float alpha = wv_clampf(white + shade, 0.f, 1.f);
       if (alpha < 0.001f) continue;
@@ -411,9 +413,49 @@ int wg_aqua_edge(int w, int h, float r, float depth) {
   return 1;
 }
 
-static unsigned char g_glyph_mask[GLASS_MAXW * GLASS_MAXH];
-static unsigned char g_glyph_edge[GLASS_MAXW * GLASS_MAXH * 4];
-static float g_glyph_distance[GLASS_MAXW * GLASS_MAXH];
+static unsigned char g_glyph_mask[GLYPH_MAXW * GLYPH_MAXH];
+static unsigned char g_glyph_edge[GLYPH_MAXW * GLYPH_MAXH * 4];
+static float g_glyph_distance[GLYPH_MAXW * GLYPH_MAXH];
+static float g_edt_input[GLYPH_MAXW], g_edt_output[GLYPH_MAXW], g_edt_bounds[GLYPH_MAXW + 1];
+static int g_edt_sites[GLYPH_MAXW];
+
+/* Lower envelope of squared-distance parabolas, allocation-free O(n). */
+static void distanceLine(int n) {
+  int k = 0;
+  g_edt_sites[0] = 0; g_edt_bounds[0] = -1e12f; g_edt_bounds[1] = 1e12f;
+  for (int q = 1; q < n; q++) {
+    float intersection;
+    do {
+      const int p = g_edt_sites[k];
+      intersection = ((g_edt_input[q] + q * q) - (g_edt_input[p] + p * p)) / (2.f * (q - p));
+      if (intersection > g_edt_bounds[k] || k == 0) break;
+      k--;
+    } while (true);
+    k++;
+    g_edt_sites[k] = q; g_edt_bounds[k] = intersection; g_edt_bounds[k + 1] = 1e12f;
+  }
+  k = 0;
+  for (int q = 0; q < n; q++) {
+    while (g_edt_bounds[k + 1] < q) k++;
+    const int delta = q - g_edt_sites[k];
+    g_edt_output[q] = delta * delta + g_edt_input[g_edt_sites[k]];
+  }
+}
+
+static void glyphEuclideanDistance(int w, int h) {
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      g_edt_input[x] = g_glyph_mask[y * w + x] < 128 || x == 0 || y == 0 || x == w - 1 || y == h - 1 ? 0.f : 1e9f;
+    }
+    distanceLine(w);
+    for (int x = 0; x < w; x++) g_glyph_distance[y * w + x] = g_edt_output[x];
+  }
+  for (int x = 0; x < w; x++) {
+    for (int y = 0; y < h; y++) g_edt_input[y] = g_glyph_distance[y * w + x];
+    distanceLine(h);
+    for (int y = 0; y < h; y++) g_glyph_distance[y * w + x] = wv_sqrt(g_edt_output[y]);
+  }
+}
 
 EXP("wg_glyph_mask_ptr")
 int wg_glyph_mask_ptr(void) { return (int)(unsigned long)g_glyph_mask; }
@@ -424,7 +466,7 @@ int wg_glyph_edge_ptr(void) { return (int)(unsigned long)g_glyph_edge; }
 /* The distance field follows the rasterized glyph, including its counters.
  * Two chamfer passes keep this bounded and allocation-free. */
 static int renderGlyph(int w, int h, float depth, float pixelRatio, bool aqua) {
-  if (w < 1 || h < 1 || w > GLASS_MAXW || h > GLASS_MAXH) return 0;
+  if (w < 1 || h < 1 || w > (aqua ? GLYPH_MAXW : GLASS_MAXW) || h > GLYPH_MAXH) return 0;
   const float bevel = wv_max(1.f, depth);
   const float ratio = wv_max(0.5f, pixelRatio);
   const float diagonal = 1.41421356f;
@@ -461,6 +503,7 @@ static int renderGlyph(int w, int h, float depth, float pixelRatio, bool aqua) {
       g_glyph_distance[i] = d;
     }
   }
+  if (aqua) glyphEuclideanDistance(w, h);
   g_outW = w; g_outH = h;
   for (int y = 0; y < h; y++) {
     for (int x = 0; x < w; x++) {
@@ -499,9 +542,9 @@ static int renderGlyph(int w, int h, float depth, float pixelRatio, bool aqua) {
       if (aqua) {
         const float inset = inside - wv_min(bevel * 0.46f, ratio * 3.f);
         const float innerRim = wv_exp(-(inset * inset) / (0.9f * ratio * ratio));
-        wa = rim * (0.20f + lit * 0.76f) + innerRim * (0.04f + lit * 0.27f)
-           + shoulder * lit * 0.09f;
-        ba = shoulder * (1.f - lit) * 0.20f * (1.f - wv_clampf(wa, 0.f, 1.f));
+        wa = rim * (0.12f + lit * 0.60f) + innerRim * (0.012f + lit * 0.05f)
+           + shoulder * lit * 0.04f;
+        ba = shoulder * (1.f - lit) * 0.08f * (1.f - wv_clampf(wa, 0.f, 1.f));
       }
       float a = wv_clampf(wa + ba, 0.f, 1.f);
       if (a > 0.f) {

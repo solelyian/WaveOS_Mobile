@@ -15,9 +15,9 @@ function installStyles() {
       mask-repeat:no-repeat; mask-position:center; mask-size:100% 100%;
       -webkit-mask-repeat:no-repeat; -webkit-mask-position:center; -webkit-mask-size:100% 100%;
     }
-    .glass-clock > .clk-shadow { background:rgba(0,0,0,.10); transform:translateY(1.25px); filter:blur(.8px); }
+    .glass-clock > .clk-shadow { background:rgba(0,0,0,.025); transform:translateY(.6px); filter:blur(.8px); }
     .glass-clock > .clk-g {
-      background:linear-gradient(115deg,rgba(255,255,255,.025),rgba(26,31,29,.16) 42%,rgba(11,22,21,.09) 76%,rgba(255,255,255,.02));
+      background:linear-gradient(115deg,rgba(255,255,255,.025),rgba(26,31,29,.09) 42%,rgba(11,22,21,.045) 76%,rgba(255,255,255,.02));
     }
     .glass-clock > .clk-e { background:transparent; background-size:100% 100%; background-repeat:no-repeat; }
     .glass-clock.clock-ready { color:transparent; }
@@ -110,7 +110,7 @@ export function glassClock(el: HTMLElement, time: string, size = parseFloat(getC
     instances.set(el, state);
   }
   const w = el.offsetWidth, h = el.offsetHeight;
-  const ratio = Math.min(Math.max(window.devicePixelRatio || 1, 2), 512 / w, 640 / h);
+  const ratio = Math.min(Math.max(window.devicePixelRatio || 1, 3), 1024 / w, 640 / h);
   const key = `${time}|${size}|${w}x${h}|${ratio}`;
   if (state.key === key) return;
   state.key = key;

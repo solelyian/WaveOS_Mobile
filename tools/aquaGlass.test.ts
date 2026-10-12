@@ -44,9 +44,21 @@ test("invalid Aqua dimensions leave existing output untouched", () => {
   for (const [w, h] of [[0, 64], [64, 0], [-1, 64], [513, 64], [64, 641]]) {
     assert.equal(api.wg_aqua_disp(w, h, 32, 10, 1.12), 0);
     assert.equal(api.wg_aqua_edge(w, h, 32, 10), 0);
-    assert.equal(api.wg_aqua_glyph_render(w, h, 8, 2), 0);
+    if (w !== 513) assert.equal(api.wg_aqua_glyph_render(w, h, 8, 2), 0);
     assert.deepEqual(copy(64, 64), valid);
   }
+});
+
+test("Aqua glyphs support triple-resolution masks without changing legacy bounds", () => {
+  const w = 1024, h = 588;
+  const mask = new Uint8Array(api.memory.buffer, api.wg_glyph_mask_ptr(), w * h);
+  mask.fill(0);
+  for (let y = 12; y < 90; y++) for (let x = 12; x < 60; x++) mask[y * w + x] = 255;
+  assert.equal(api.wg_aqua_glyph_render(w, h, 18, 3), 1);
+  assert.equal(pixel(copy(w, h), w, 40, 40)[3], 255);
+  const valid = copy(w, h);
+  assert.equal(api.wg_aqua_glyph_render(1025, h, 18, 3), 0);
+  assert.deepEqual(copy(w, h), valid);
 });
 
 test("Aqua glyphs retain counters and refract their tubular bodies", () => {
