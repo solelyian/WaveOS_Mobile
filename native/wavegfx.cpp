@@ -346,3 +346,89 @@ void wg_glass_edge(int w, int h, float r, float depth) {
     }
   }
 }
+
+static unsigned char g_glyph_mask[GLASS_MAXW * GLASS_MAXH];
+static unsigned char g_glyph_edge[GLASS_MAXW * GLASS_MAXH * 4];
+static float g_glyph_distance[GLASS_MAXW * GLASS_MAXH];
+
+EXP("wg_glyph_mask_ptr")
+int wg_glyph_mask_ptr(void) { return (int)(unsigned long)g_glyph_mask; }
+
+EXP("wg_glyph_edge_ptr")
+int wg_glyph_edge_ptr(void) { return (int)(unsigned long)g_glyph_edge; }
+
+/* The distance field follows the rasterized glyph, including its counters.
+ * Two chamfer passes keep this bounded and allocation-free. */
+EXP("wg_glyph_render")
+int wg_glyph_render(int w, int h, float depth, float pixelRatio) {
+  if (w < 1 || h < 1 || w > GLASS_MAXW || h > GLASS_MAXH) return 0;
+  const float bevel = wv_max(1.f, depth);
+  const float ratio = wv_max(0.5f, pixelRatio);
+  const float diagonal = 1.41421356f;
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      int i = y * w + x;
+      g_glyph_distance[i] = g_glyph_mask[i] < 128 ? 0.f
+        : x == 0 || y == 0 || x == w - 1 || y == h - 1 ? 1.f : (float)(w + h);
+    }
+  }
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      int i = y * w + x;
+      float d = g_glyph_distance[i];
+      if (x > 0) d = wv_min(d, g_glyph_distance[i - 1] + 1.f);
+      if (y > 0) {
+        d = wv_min(d, g_glyph_distance[i - w] + 1.f);
+        if (x > 0) d = wv_min(d, g_glyph_distance[i - w - 1] + diagonal);
+        if (x < w - 1) d = wv_min(d, g_glyph_distance[i - w + 1] + diagonal);
+      }
+      g_glyph_distance[i] = d;
+    }
+  }
+  for (int y = h - 1; y >= 0; y--) {
+    for (int x = w - 1; x >= 0; x--) {
+      int i = y * w + x;
+      float d = g_glyph_distance[i];
+      if (x < w - 1) d = wv_min(d, g_glyph_distance[i + 1] + 1.f);
+      if (y < h - 1) {
+        d = wv_min(d, g_glyph_distance[i + w] + 1.f);
+        if (x > 0) d = wv_min(d, g_glyph_distance[i + w - 1] + diagonal);
+        if (x < w - 1) d = wv_min(d, g_glyph_distance[i + w + 1] + diagonal);
+      }
+      g_glyph_distance[i] = d;
+    }
+  }
+  g_outW = w; g_outH = h;
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      int i = y * w + x;
+      unsigned char *q = g_out + i * 4, *e = g_glyph_edge + i * 4;
+      q[0] = q[1] = 128; q[2] = 0; q[3] = g_glyph_mask[i];
+      e[0] = e[1] = e[2] = e[3] = 0;
+      if (!g_glyph_mask[i]) continue;
+      float nx = (x > 0 ? g_glyph_distance[i - 1] : 0.f)
+               - (x < w - 1 ? g_glyph_distance[i + 1] : 0.f);
+      float ny = (y > 0 ? g_glyph_distance[i - w] : 0.f)
+               - (y < h - 1 ? g_glyph_distance[i + w] : 0.f);
+      float length = wv_sqrt(nx * nx + ny * ny);
+      if (length > 0.001f) { nx /= length; ny /= length; }
+      float inside = wv_max(0.f, g_glyph_distance[i] - 0.5f);
+      float u = wv_clampf(1.f - inside / bevel, 0.f, 1.f);
+      float lens = u * u * (3.f - 2.f * u);
+      q[0] = (unsigned char)wv_clampf(128.f + nx * lens * 127.f, 0.f, 255.f);
+      q[1] = (unsigned char)wv_clampf(128.f + ny * lens * 127.f, 0.f, 255.f);
+      q[2] = (unsigned char)(u * 255.f);
+      float lit = wv_clampf(0.5f + 0.5f * (nx * -0.6f + ny * -0.8f), 0.f, 1.f);
+      float rim = wv_exp(-inside * inside / (0.7f * ratio * ratio));
+      float shoulder = wv_exp(-inside * inside / (0.5f * bevel * bevel));
+      float wa = rim * (0.16f + lit * 0.64f) + shoulder * lit * 0.14f;
+      float ba = shoulder * (1.f - lit) * 0.26f * (1.f - wa);
+      float a = wv_clampf(wa + ba, 0.f, 1.f);
+      if (a > 0.f) {
+        e[0] = e[1] = e[2] = (unsigned char)(255.f * wa / (wa + ba));
+        e[3] = (unsigned char)(a * g_glyph_mask[i]);
+      }
+    }
+  }
+  return 1;
+}
