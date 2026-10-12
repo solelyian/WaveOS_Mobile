@@ -8,6 +8,10 @@ const api = instance.exports as unknown as {
   wg_out_ptr(): number;
   wg_aqua_disp(w: number, h: number, r: number, depth: number, zoom: number): number;
   wg_aqua_edge(w: number, h: number, r: number, depth: number): number;
+  wg_aqua_lens(w: number, h: number, r: number, depth: number, thickness: number,
+              ior: number, zoom: number, padding: number): number;
+  wg_aqua_reflection_ptr(): number;
+  wg_aqua_relief_ptr(): number;
   wg_glyph_mask_ptr(): number;
   wg_glyph_edge_ptr(): number;
   wg_aqua_glyph_render(w: number, h: number, depth: number, pixelRatio: number): number;
@@ -101,4 +105,57 @@ test("glyph displacement remains continuous across curved stroke medial seams", 
     }
   }
   assert(maxStep < 30, `adjacent displacement jump: ${maxStep}/255`);
+});
+
+test("volume lens separates transmission, reflection and Fresnel weighting", () => {
+  const w = 80, h = 54, padding = 49, mw = w + padding * 2, mh = h + padding * 2;
+  assert.equal(api.wg_aqua_lens(w, h, 27, 19, 9, 1.46, 1.18, padding), 1);
+  const transmission = copy(mw, mh);
+  const reflection = copy(mw, mh, api.wg_aqua_reflection_ptr());
+  const relief = copy(mw, mh, api.wg_aqua_relief_ptr());
+  const at = (map: Uint8Array, x: number, y: number) => pixel(map, mw, x + padding, y + padding);
+  assert(at(transmission, 24, 27)[0] > 128);
+  assert(at(transmission, 56, 27)[0] < 128);
+  assert(at(transmission, 40, 3)[1] > 128);
+  assert(at(reflection, 40, 3)[1] < 128);
+  assert(at(reflection, 40, 50)[1] > 128);
+  assert(at(transmission, 40, 0)[2] > at(transmission, 40, 27)[2]);
+  assert(at(transmission, 40, 27)[2] > 0);
+  assert(at(relief, 40, 50)[3] > at(relief, 40, 27)[3]);
+  for (const map of [transmission, reflection]) {
+    assert.deepEqual(pixel(map, mw, 0, 0), [128, 128, 0, 255]);
+    assert.deepEqual(pixel(map, mw, mw - 1, mh - 1), [128, 128, 0, 255]);
+  }
+  assert.deepEqual(pixel(relief, mw, 0, 0), [0, 0, 0, 0]);
+});
+
+test("index-matched lens has no bending, reflection or interface lighting", () => {
+  const w = 80, h = 54, padding = 49, mw = w + padding * 2, mh = h + padding * 2;
+  assert.equal(api.wg_aqua_lens(w, h, 27, 19, 9, 1, 1, padding), 1);
+  const map = copy(mw, mh), relief = copy(mw, mh, api.wg_aqua_relief_ptr());
+  for (let i = 0; i < map.length; i += 4) {
+    assert.deepEqual([...map.subarray(i, i + 4)], [128, 128, 0, 255]);
+    assert.equal(relief[i + 3], 0);
+  }
+});
+
+test("invalid volume dimensions or optical parameters leave all fields intact", () => {
+  assert.equal(api.wg_aqua_lens(80, 54, 27, 19, 9, 1.46, 1.18, 49), 1);
+  const pointers = [api.wg_out_ptr(), api.wg_aqua_reflection_ptr(), api.wg_aqua_relief_ptr()];
+  const saved = pointers.map(ptr => copy(178, 152, ptr));
+  const invalid = [
+    [0, 54, 27, 19, 9, 1.46, 1.18, 49],
+    [1025, 54, 27, 19, 9, 1.46, 1.18, 0],
+    [80, 641, 27, 19, 9, 1.46, 1.18, 0],
+    [80, 54, 27, 19, 9, 1.46, 1.18, -1],
+    [80, 54, 27, 19, 9, 1.46, 1.18, 257],
+    [80, 54, 27, 19, 9, NaN, 1.18, 49],
+    [80, 54, 27, 19, Infinity, 1.46, 1.18, 49],
+    [80, 54, -1, 19, 9, 1.46, 1.18, 49],
+    [80, 54, 27, 0, 9, 1.46, 1.18, 49]
+  ];
+  for (const [w, h, r, depth, thickness, ior, zoom, padding] of invalid) {
+    assert.equal(api.wg_aqua_lens(w, h, r, depth, thickness, ior, zoom, padding), 0);
+    pointers.forEach((ptr, i) => assert.deepEqual(copy(178, 152, ptr), saved[i]));
+  }
 });
