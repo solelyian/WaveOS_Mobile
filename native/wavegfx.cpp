@@ -8,6 +8,8 @@
 
 #define GLASS_MAXW 512
 #define GLASS_MAXH 640
+#define GLYPH_MAXW 1024
+#define GLYPH_MAXH 640
 
 static const int MAP_W = 480, MAP_H = 850;
 static unsigned char g_map[480 * 850 * 4];
@@ -114,7 +116,9 @@ void wg_map_render(void) {
  */
 static unsigned char g_bg[GLASS_MAXW * GLASS_MAXH * 4];
 static unsigned char g_bg2[GLASS_MAXW * GLASS_MAXH * 4]; // copie floutée
-static unsigned char g_out[GLASS_MAXW * GLASS_MAXH * 4];
+static unsigned char g_out[GLYPH_MAXW * GLYPH_MAXH * 4];
+static unsigned char g_aqua_reflection[GLYPH_MAXW * GLYPH_MAXH * 4];
+static unsigned char g_aqua_relief[GLYPH_MAXW * GLYPH_MAXH * 4];
 static int g_bgW = 0, g_bgH = 0;
 static int g_outW = 0, g_outH = 0;
 
@@ -345,4 +349,325 @@ void wg_glass_edge(int w, int h, float r, float depth) {
       q[0] = v; q[1] = v; q[2] = v; q[3] = (unsigned char)(a * 255.f);
     }
   }
+}
+
+EXP("wg_aqua_reflection_ptr")
+int wg_aqua_reflection_ptr() { return (int)(unsigned long)g_aqua_reflection; }
+
+EXP("wg_aqua_relief_ptr")
+int wg_aqua_relief_ptr() { return (int)(unsigned long)g_aqua_relief; }
+
+/* Transmission and reflection RG both use scale=256.
+ * Transmission B carries Fresnel reflectance, A is an opaque carrier.
+ * Reflection B carries directional grazing light for the edge mask.
+ * Padding preserves the surrounding scene until the element clips the result. */
+EXP("wg_aqua_lens")
+int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
+                 float ior, float zoom, int padding) {
+  if (w < 1 || h < 1 || padding < 0 || padding > 256
+      || w > GLYPH_MAXW - padding * 2 || h > GLYPH_MAXH - padding * 2
+      || !(r >= 0.f && r <= 1024.f) || !(depth >= 1.f && depth <= 640.f)
+      || !(thickness >= 0.f && thickness <= 128.f)
+      || !(ior >= 1.f && ior <= 2.5f) || !(zoom >= 1.f && zoom <= 2.f)) return 0;
+  const int mw = w + padding * 2, mh = h + padding * 2;
+  const float hw = w * 0.5f, hh = h * 0.5f;
+  r = wv_min(r, wv_min(hw, hh));
+  depth = wv_min(depth, wv_min(hw, hh));
+  const float shrink = 1.f - 1.f / zoom;
+  const float eta = 1.f / ior;
+  const float probe = wv_min((float)padding, wv_min(hw, hh) * 1.8f);
+  g_outW = mw; g_outH = mh;
+  for (int y = 0; y < mh; y++) {
+    for (int x = 0; x < mw; x++) {
+      const int offset = (y * mw + x) * 4;
+      unsigned char *q = g_out + offset, *reflection = g_aqua_reflection + offset;
+      unsigned char *relief = g_aqua_relief + offset;
+      q[0] = q[1] = reflection[0] = reflection[1] = 128;
+      q[2] = reflection[2] = 0; q[3] = reflection[3] = 255;
+      relief[0] = relief[1] = relief[2] = relief[3] = 0;
+      const float px = x + 0.5f - padding, py = y + 0.5f - padding;
+      const float d = drect(px, py, hw, hh, hw, hh, r);
+      if (d > 0.5f) continue;
+      const float coverage = wv_clampf(0.5f - d, 0.f, 1.f);
+      const float inside = wv_max(-d, 0.f);
+      const float u = wv_clampf(1.f - inside / depth, 0.f, 0.999f);
+      const float profile = wv_sqrt(wv_max(1.f - u * u, 0.001f));
+      const float height = thickness * profile;
+      const float slope = thickness / depth * u / profile;
+      const float nz = 1.f / wv_sqrt(1.f + slope * slope);
+      float nx, ny;
+      drectGrad(px, py, hw, hh, hw, hh, r, &nx, &ny);
+      const float ux = nx, uy = ny;
+      nx *= slope * nz; ny *= slope * nz;
+      const float transmittedZ = wv_sqrt(wv_max(1.f - eta * eta * (1.f - nz * nz), 0.f));
+      const float bend = ior == 1.f ? 0.f : transmittedZ - eta * nz;
+      const float travel = (height + thickness * 3.f) / wv_max(transmittedZ, 0.05f);
+      float dx = -(px - hw) * shrink - nx * bend * travel;
+      float dy = -(py - hh) * shrink - ny * bend * travel;
+      const float reach = wv_min(120.f, wv_min(hw, hh) * 1.1f), magnitude = wv_sqrt(dx * dx + dy * dy);
+      const float soft = 1.f / wv_sqrt(1.f + (magnitude / reach) * (magnitude / reach));
+      dx *= soft; dy *= soft;
+      q[0] = (unsigned char)wv_clampf(128.5f + dx * (255.f / 256.f), 0.f, 255.f);
+      q[1] = (unsigned char)wv_clampf(128.5f + dy * (255.f / 256.f), 0.f, 255.f);
+      const float rs = (nz - ior * transmittedZ) / wv_max(nz + ior * transmittedZ, .0001f);
+      const float rp = (ior * nz - transmittedZ) / wv_max(ior * nz + transmittedZ, .0001f);
+      const float fresnel = (ior == 1.f ? 0.f : (rs * rs + rp * rp) * .5f) * coverage;
+      q[2] = (unsigned char)wv_clampf(fresnel * 255.f, 0.f, 255.f);
+      reflection[0] = (unsigned char)wv_clampf(128.5f + 2.f * nx * nz * probe * (255.f / 256.f), 0.f, 255.f);
+      reflection[1] = (unsigned char)wv_clampf(128.5f + 2.f * ny * nz * probe * (255.f / 256.f), 0.f, 255.f);
+      const float interface = wv_clampf((ior - 1.f) / .46f, 0.f, 1.f);
+      const float rimWidth = wv_max(thickness * .14f, .5f);
+      const float rimLight = wv_exp(-inside * inside / (rimWidth * rimWidth))
+        * wv_clampf(1.04f + ux * .34f - uy * .6f, .1f, 1.f);
+      reflection[2] = (unsigned char)(rimLight * interface * coverage * 255.f);
+      const float lower = wv_max(ny, 0.f);
+      const float facing = wv_clampf(-nx * .4f - ny * .75f, 0.f, 1.f);
+      const float front = wv_exp(-inside * inside / .45f) * facing * .32f;
+      const float bounce = lower * lower * .52f;
+      const float shadow = wv_max(nx * .65f + ny * .25f, 0.f) * slope * nz * .055f;
+      const float shoulderWidth = wv_max(thickness * .4f, 1.f);
+      const float shoulderOffset = inside - thickness * .25f;
+      const float shoulder = wv_exp(-shoulderOffset * shoulderOffset / (shoulderWidth * shoulderWidth));
+      const float focal = shoulder * wv_max(-ux, 0.f) * wv_fabs(uy) * 1.65f;
+      const float illumination = (front + bounce + focal - shadow) * interface;
+      relief[0] = relief[1] = relief[2] = illumination >= 0.f ? 255 : 0;
+      relief[3] = (unsigned char)(wv_clampf(wv_fabs(illumination), 0.f, 1.f) * coverage * 255.f);
+    }
+  }
+  return 1;
+}
+
+/* Aqua Glass: continuous central magnification plus a shallow edge meniscus.
+ * RG displacement is encoded for an SVG feDisplacementMap with scale=32. */
+EXP("wg_aqua_disp")
+int wg_aqua_disp(int w, int h, float r, float depth, float zoom) {
+  if (w < 1 || h < 1 || w > GLASS_MAXW || h > GLASS_MAXH) return 0;
+  const float hw = w * 0.5f, hh = h * 0.5f;
+  r = wv_clampf(r, 0.f, wv_min(hw, hh));
+  const float band = wv_max(depth, 1.f);
+  const float shrink = 1.f - 1.f / wv_max(zoom, 1.f);
+  g_outW = w; g_outH = h;
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      const float px = x + 0.5f, py = y + 0.5f;
+      const float d = drect(px, py, hw, hh, hw, hh, r);
+      unsigned char *q = g_out + (y * w + x) * 4;
+      q[0] = q[1] = 128; q[2] = 0; q[3] = 255;
+      if (d > 0.5f) continue;
+      const float inside = wv_max(-d, 0.f);
+      const float t = wv_clampf(1.f - inside / band, 0.f, 1.f);
+      const float meniscus = t * t * (3.f - 2.f * t) * wv_min(3.6f, band * 0.36f);
+      float nx, ny;
+      drectGrad(px, py, hw, hh, hw, hh, r, &nx, &ny);
+      const float dx = -(px - hw) * shrink - nx * meniscus;
+      const float dy = -(py - hh) * shrink - ny * meniscus;
+      q[0] = (unsigned char)wv_clampf(128.f + dx * (255.f / 32.f), 0.f, 255.f);
+      q[1] = (unsigned char)wv_clampf(128.f + dy * (255.f / 32.f), 0.f, 255.f);
+      q[2] = 0;
+      q[3] = 255;
+    }
+  }
+  return 1;
+}
+
+EXP("wg_aqua_edge")
+int wg_aqua_edge(int w, int h, float r, float depth) {
+  if (w < 1 || h < 1 || w > GLASS_MAXW || h > GLASS_MAXH) return 0;
+  const float hw = w * 0.5f, hh = h * 0.5f;
+  r = wv_clampf(r, 0.f, wv_min(hw, hh));
+  g_outW = w; g_outH = h;
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      const float px = x + 0.5f, py = y + 0.5f;
+      const float d = drect(px, py, hw, hh, hw, hh, r);
+      unsigned char *q = g_out + (y * w + x) * 4;
+      q[0] = q[1] = q[2] = q[3] = 0;
+      if (d > 1.5f) continue;
+      float nx, ny;
+      drectGrad(px, py, hw, hh, hw, hh, r, &nx, &ny);
+      const float face = wv_clampf(0.54f - 0.38f * nx - 0.45f * ny, 0.f, 1.f);
+      const float outer = wv_exp(-(d * d) / 0.55f) * (0.16f + 0.65f * face);
+      const float inner = wv_exp(-((d + 2.7f) * (d + 2.7f)) / 1.7f) * (0.02f + 0.12f * face);
+      const float shoulder = wv_exp(-((d + depth * 0.6f) * (d + depth * 0.6f)) / 23.f) * face * 0.02f;
+      const float shade = wv_exp(-((d + 1.3f) * (d + 1.3f)) / 5.f) * (1.f - face) * 0.08f;
+      const float white = outer + inner + shoulder;
+      const float alpha = wv_clampf(white + shade, 0.f, 1.f);
+      if (alpha < 0.001f) continue;
+      const unsigned char value = (unsigned char)(255.f * white / (white + shade));
+      q[0] = q[1] = q[2] = value;
+      q[3] = (unsigned char)(alpha * 255.f);
+    }
+  }
+  return 1;
+}
+
+static unsigned char g_glyph_mask[GLYPH_MAXW * GLYPH_MAXH];
+static unsigned char g_glyph_edge[GLYPH_MAXW * GLYPH_MAXH * 4];
+static float g_glyph_distance[GLYPH_MAXW * GLYPH_MAXH];
+static float g_glyph_smooth[GLYPH_MAXW * GLYPH_MAXH];
+static float g_edt_input[GLYPH_MAXW], g_edt_output[GLYPH_MAXW], g_edt_bounds[GLYPH_MAXW + 1];
+static int g_edt_sites[GLYPH_MAXW];
+
+/* Lower envelope of squared-distance parabolas, allocation-free O(n). */
+static void distanceLine(int n) {
+  int k = 0;
+  g_edt_sites[0] = 0; g_edt_bounds[0] = -1e12f; g_edt_bounds[1] = 1e12f;
+  for (int q = 1; q < n; q++) {
+    float intersection;
+    do {
+      const int p = g_edt_sites[k];
+      intersection = ((g_edt_input[q] + q * q) - (g_edt_input[p] + p * p)) / (2.f * (q - p));
+      if (intersection > g_edt_bounds[k] || k == 0) break;
+      k--;
+    } while (true);
+    k++;
+    g_edt_sites[k] = q; g_edt_bounds[k] = intersection; g_edt_bounds[k + 1] = 1e12f;
+  }
+  k = 0;
+  for (int q = 0; q < n; q++) {
+    while (g_edt_bounds[k + 1] < q) k++;
+    const int delta = q - g_edt_sites[k];
+    g_edt_output[q] = delta * delta + g_edt_input[g_edt_sites[k]];
+  }
+}
+
+static void glyphEuclideanDistance(int w, int h) {
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      g_edt_input[x] = g_glyph_mask[y * w + x] < 128 || x == 0 || y == 0 || x == w - 1 || y == h - 1 ? 0.f : 1e9f;
+    }
+    distanceLine(w);
+    for (int x = 0; x < w; x++) g_glyph_distance[y * w + x] = g_edt_output[x];
+  }
+  for (int x = 0; x < w; x++) {
+    for (int y = 0; y < h; y++) g_edt_input[y] = g_glyph_distance[y * w + x];
+    distanceLine(h);
+    for (int y = 0; y < h; y++) g_glyph_distance[y * w + x] = wv_sqrt(g_edt_output[y]);
+  }
+  static const float weights[9] = {1.f, 8.f, 28.f, 56.f, 70.f, 56.f, 28.f, 8.f, 1.f};
+  for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) {
+    float value = 0.f;
+    for (int j = -4; j <= 4; j++) {
+      const int xx = x + j;
+      if (xx >= 0 && xx < w) value += g_glyph_distance[y * w + xx] * weights[j + 4];
+    }
+    g_glyph_smooth[y * w + x] = value / 256.f;
+  }
+  for (int x = 0; x < w; x++) {
+    for (int y = 0; y < h; y++) {
+      float value = 0.f;
+      for (int j = -4; j <= 4; j++) {
+        const int yy = y + j;
+        if (yy >= 0 && yy < h) value += g_glyph_smooth[yy * w + x] * weights[j + 4];
+      }
+      g_edt_output[y] = value / 256.f;
+    }
+    for (int y = 0; y < h; y++) g_glyph_smooth[y * w + x] = g_edt_output[y];
+  }
+}
+
+EXP("wg_glyph_mask_ptr")
+int wg_glyph_mask_ptr(void) { return (int)(unsigned long)g_glyph_mask; }
+
+EXP("wg_glyph_edge_ptr")
+int wg_glyph_edge_ptr(void) { return (int)(unsigned long)g_glyph_edge; }
+
+/* The distance field follows the rasterized glyph, including its counters.
+ * Two chamfer passes keep this bounded and allocation-free. */
+static int renderGlyph(int w, int h, float depth, float pixelRatio, bool aqua) {
+  if (w < 1 || h < 1 || w > (aqua ? GLYPH_MAXW : GLASS_MAXW) || h > GLYPH_MAXH) return 0;
+  const float bevel = wv_max(1.f, depth);
+  const float ratio = wv_max(0.5f, pixelRatio);
+  const float diagonal = 1.41421356f;
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      int i = y * w + x;
+      g_glyph_distance[i] = g_glyph_mask[i] < 128 ? 0.f
+        : x == 0 || y == 0 || x == w - 1 || y == h - 1 ? 1.f : (float)(w + h);
+    }
+  }
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      int i = y * w + x;
+      float d = g_glyph_distance[i];
+      if (x > 0) d = wv_min(d, g_glyph_distance[i - 1] + 1.f);
+      if (y > 0) {
+        d = wv_min(d, g_glyph_distance[i - w] + 1.f);
+        if (x > 0) d = wv_min(d, g_glyph_distance[i - w - 1] + diagonal);
+        if (x < w - 1) d = wv_min(d, g_glyph_distance[i - w + 1] + diagonal);
+      }
+      g_glyph_distance[i] = d;
+    }
+  }
+  for (int y = h - 1; y >= 0; y--) {
+    for (int x = w - 1; x >= 0; x--) {
+      int i = y * w + x;
+      float d = g_glyph_distance[i];
+      if (x < w - 1) d = wv_min(d, g_glyph_distance[i + 1] + 1.f);
+      if (y < h - 1) {
+        d = wv_min(d, g_glyph_distance[i + w] + 1.f);
+        if (x > 0) d = wv_min(d, g_glyph_distance[i + w - 1] + diagonal);
+        if (x < w - 1) d = wv_min(d, g_glyph_distance[i + w + 1] + diagonal);
+      }
+      g_glyph_distance[i] = d;
+    }
+  }
+  if (aqua) glyphEuclideanDistance(w, h);
+  g_outW = w; g_outH = h;
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      int i = y * w + x;
+      unsigned char *q = g_out + i * 4, *e = g_glyph_edge + i * 4;
+      q[0] = q[1] = 128; q[2] = 0; q[3] = aqua ? 255 : g_glyph_mask[i];
+      e[0] = e[1] = e[2] = e[3] = 0;
+      if (!g_glyph_mask[i]) continue;
+      const float *normalField = aqua ? g_glyph_smooth : g_glyph_distance;
+      float nx = (x > 0 ? normalField[i - 1] : 0.f)
+               - (x < w - 1 ? normalField[i + 1] : 0.f);
+      float ny = (y > 0 ? normalField[i - w] : 0.f)
+               - (y < h - 1 ? normalField[i + w] : 0.f);
+      float length = wv_sqrt(nx * nx + ny * ny);
+      if (aqua) { nx *= 0.5f; ny *= 0.5f; }
+      else if (length > 0.001f) { nx /= length; ny /= length; }
+      float inside = wv_max(0.f, g_glyph_distance[i] - 0.5f);
+      float u = wv_clampf(1.f - inside / bevel, 0.f, 1.f);
+      float lens = u * u * (3.f - 2.f * u);
+      float dx = nx * lens, dy = ny * lens;
+      if (aqua) {
+        dx = -nx * (0.08f + lens * 0.52f);
+        dy = -ny * (0.08f + lens * 0.52f);
+      }
+      q[0] = (unsigned char)wv_clampf(128.f + dx * 127.f, 0.f, 255.f);
+      q[1] = (unsigned char)wv_clampf(128.f + dy * 127.f, 0.f, 255.f);
+      q[2] = (unsigned char)(u * 255.f);
+      float lit = wv_clampf(0.5f + 0.5f * (nx * -0.6f + ny * -0.8f), 0.f, 1.f);
+      float rim = wv_exp(-inside * inside / (0.7f * ratio * ratio));
+      float shoulder = wv_exp(-inside * inside / (0.5f * bevel * bevel));
+      float wa = rim * (0.16f + lit * 0.64f) + shoulder * lit * 0.14f;
+      float ba = shoulder * (1.f - lit) * 0.26f * (1.f - wa);
+      if (aqua) {
+        const float inset = inside - wv_min(bevel * 0.46f, ratio * 3.f);
+        const float innerRim = wv_exp(-(inset * inset) / (0.9f * ratio * ratio));
+        wa = rim * (0.12f + lit * 0.60f) + innerRim * (0.012f + lit * 0.05f)
+           + shoulder * lit * 0.04f;
+        ba = shoulder * (1.f - lit) * 0.08f * (1.f - wv_clampf(wa, 0.f, 1.f));
+      }
+      float a = wv_clampf(wa + ba, 0.f, 1.f);
+      if (a > 0.f) {
+        e[0] = e[1] = e[2] = (unsigned char)(255.f * wa / (wa + ba));
+        e[3] = (unsigned char)(a * g_glyph_mask[i]);
+      }
+    }
+  }
+  return 1;
+}
+
+EXP("wg_glyph_render")
+int wg_glyph_render(int w, int h, float depth, float pixelRatio) {
+  return renderGlyph(w, h, depth, pixelRatio, false);
+}
+
+EXP("wg_aqua_glyph_render")
+int wg_aqua_glyph_render(int w, int h, float depth, float pixelRatio) {
+  return renderGlyph(w, h, depth, pixelRatio, true);
 }
