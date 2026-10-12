@@ -28,6 +28,9 @@ export interface WasmApi {
   wg_glass_size(w: number, h: number): void;
   wg_glass_disp(w: number, h: number, r: number, amp: number, depth?: number): void;
   wg_glass_edge(w: number, h: number, r: number, depth?: number): void;
+  wg_glyph_mask_ptr(): number;
+  wg_glyph_edge_ptr(): number;
+  wg_glyph_render(w: number, h: number, depth: number, pixelRatio: number): number;
 }
 
 let wasm: WasmApi | null = null;
