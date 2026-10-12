@@ -1,5 +1,6 @@
 // shell.ts — orchestrateur : couches, boucle RAF unique, routage gestes/état.
 import { Wallpaper } from "./wallpaper";
+import { clearGlassClock } from "./glassClock";
 import { StatusBar } from "./statusbar";
 import { Lock } from "./lock";
 import { Home } from "./home";
@@ -327,7 +328,11 @@ export class Shell {
     if (this.spot && this.spot.render()) { this.spot.el.remove(); this.spot = null; }
     if (this.cc && this.cc.render() && sys.sheet !== "cc") { this.cc.el.remove(); this.cc = null; }
     if (this.sd && this.sd.render() && sys.sheet !== "sd") { this.sd.el.remove(); this.sd = null; }
-    if (this.nc) { this.nc.tick(); if (this.nc.render() && sys.sheet !== "nc") { this.nc.el.remove(); this.nc = null; } }
+    if (this.nc) { this.nc.tick(); if (this.nc.render() && sys.sheet !== "nc") {
+      const clock = this.nc.el.querySelector<HTMLElement>(".nc-clock");
+      if (clock) clearGlassClock(clock);
+      this.nc.el.remove(); this.nc = null;
+    } }
     requestAnimationFrame(this.loop);
   };
 }
