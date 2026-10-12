@@ -71,10 +71,6 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
     const width = mw / ratio, height = mh / ratio;
     const transmitScale = 256 / ratio, reflectScale = 256 / ratio;
     const shift = (scale: number) => -scale / 510;
-    const channel = (name: string, scale: number, row: string) =>
-      `<feDisplacementMap in="SourceGraphic" in2="transmissionMap" scale="${scale}" xChannelSelector="R" yChannelSelector="G"/>` +
-      `<feOffset dx="${shift(scale)}" dy="${shift(scale)}"/>` +
-      `<feColorMatrix type="matrix" values="${row} 0 0 0 1 0" result="${name}"/>`;
     const radius = getComputedStyle(el).borderTopLeftRadius;
     optic.style.inset = `${-p}px`;
     optic.style.clipPath = `inset(${p}px round ${radius})`;
@@ -84,16 +80,8 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
       `<feImage href="${transmission}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="transmissionRaw"/>` +
       `<feGaussianBlur in="transmissionRaw" stdDeviation=".3" result="transmissionMap"/>` +
       `<feImage href="${reflection}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="reflectionMap"/>` +
-      channel("red", transmitScale * .985, "1 0 0 0 0 0 0 0 0 0 0 0 0 0 0") +
-      channel("green", transmitScale, "0 0 0 0 0 0 1 0 0 0 0 0 0 0 0") +
-      channel("blue", transmitScale * 1.015, "0 0 0 0 0 0 0 0 0 0 0 0 1 0 0") +
-      `<feComposite in="red" in2="green" operator="arithmetic" k2="1" k3="1" result="redGreen"/>` +
-      `<feComposite in="redGreen" in2="blue" operator="arithmetic" k2="1" k3="1" result="bentLight"/>` +
-      `<feColorMatrix in="bentLight" type="saturate" values="1.9" result="vivid"/>` +
-      `<feColorMatrix in="transmissionMap" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.6 0 0" result="rim"/>` +
-      `<feComposite in="vivid" in2="rim" operator="in" result="rimLight"/>` +
-      `<feComposite in="bentLight" in2="rim" operator="out" result="bodyLight"/>` +
-      `<feComposite in="bodyLight" in2="rimLight" operator="arithmetic" k2="1" k3="1" result="transmission"/>` +
+      `<feDisplacementMap in="SourceGraphic" in2="transmissionMap" scale="${transmitScale}" xChannelSelector="R" yChannelSelector="G" result="bentLight"/>` +
+      `<feOffset in="bentLight" dx="${shift(transmitScale)}" dy="${shift(transmitScale)}" result="transmission"/>` +
       `<feDisplacementMap in="SourceGraphic" in2="reflectionMap" scale="${reflectScale}" xChannelSelector="R" yChannelSelector="G" result="mirror"/>` +
       `<feOffset in="mirror" dx="${shift(reflectScale)}" dy="${shift(reflectScale)}" result="mirrored"/>` +
       `<feGaussianBlur in="SourceGraphic" stdDeviation="${Math.min(w, h) * .32}" result="ambient"/>` +

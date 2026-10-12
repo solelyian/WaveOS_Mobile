@@ -416,9 +416,9 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       reflection[0] = (unsigned char)wv_clampf(128.5f + 2.f * nx * nz * probe * (255.f / 256.f), 0.f, 255.f);
       reflection[1] = (unsigned char)wv_clampf(128.5f + 2.f * ny * nz * probe * (255.f / 256.f), 0.f, 255.f);
       const float interface = wv_clampf((ior - 1.f) / .46f, 0.f, 1.f);
-      const float rimWidth = wv_max(thickness * .06f, .5f);
+      const float rimWidth = wv_max(thickness * .14f, .5f);
       const float rimLight = wv_exp(-inside * inside / (rimWidth * rimWidth))
-        * wv_clampf(.74f - uy * .7f, .04f, 1.f);
+        * wv_clampf(1.04f + ux * .34f - uy * .6f, .1f, 1.f);
       reflection[2] = (unsigned char)(rimLight * interface * coverage * 255.f);
       const float lower = wv_max(ny, 0.f);
       const float facing = wv_clampf(-nx * .4f - ny * .75f, 0.f, 1.f);

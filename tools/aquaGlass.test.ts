@@ -123,6 +123,7 @@ test("volume lens separates transmission, reflection and Fresnel weighting", () 
   assert(at(transmission, 40, 27)[2] > 0);
   assert(at(relief, 40, 50)[3] > at(relief, 40, 27)[3]);
   assert(at(reflection, 40, 0)[2] > at(reflection, 40, 53)[2]);
+  assert(at(reflection, 79, 27)[2] > at(reflection, 0, 27)[2]);
   assert.equal(at(reflection, 40, 27)[2], 0);
   assert(at(relief, 8, 9)[3] > at(relief, 71, 9)[3]);
   for (const map of [transmission, reflection]) {
