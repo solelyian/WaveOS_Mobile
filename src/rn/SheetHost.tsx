@@ -50,12 +50,6 @@ export function SheetHost() {
       (f.style as unknown as Record<string, string>).webkitBackdropFilter = filter;
       f.style.backgroundColor = active === "cc" ? "transparent" : "rgba(10,10,14,.45)";
     }
-    const wallpaper = document.getElementById("wp");
-    if (wallpaper) {
-      wallpaper.style.transition = "transform .5s ease, filter .5s ease";
-      wallpaper.style.transform = s.sheet === "cc" ? "scale(1.1)" : "";
-      wallpaper.style.filter = s.sheet === "cc" ? "blur(10px) brightness(.7) saturate(1.2)" : "";
-    }
     const home = document.getElementById("home");
     if (home) {
       home.style.transition = "transform .5s ease, opacity .5s ease";

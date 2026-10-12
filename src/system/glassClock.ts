@@ -110,7 +110,7 @@ export function glassClock(el: HTMLElement, time: string, size = parseFloat(getC
     instances.set(el, state);
   }
   const w = el.offsetWidth, h = el.offsetHeight;
-  const ratio = Math.min(window.devicePixelRatio || 1, 2, 512 / w, 640 / h);
+  const ratio = Math.min(Math.max(window.devicePixelRatio || 1, 2), 512 / w, 640 / h);
   const key = `${time}|${size}|${w}x${h}|${ratio}`;
   if (state.key === key) return;
   state.key = key;
