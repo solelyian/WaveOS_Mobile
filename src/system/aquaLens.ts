@@ -34,11 +34,14 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
   const relief = document.createElement("span");
   relief.setAttribute("aria-hidden", "true");
   relief.style.cssText = "position:absolute;inset:0;border-radius:inherit;pointer-events:none;background-size:100% 100%";
+  const caustic = document.createElement("span");
+  caustic.setAttribute("aria-hidden", "true");
+  caustic.style.cssText = "position:absolute;inset:0;border-radius:inherit;pointer-events:none";
   const optic = document.createElement("span");
   optic.setAttribute("aria-hidden", "true");
   optic.style.cssText = "position:absolute;pointer-events:none;z-index:-1";
   if (getComputedStyle(el).position === "static") el.style.position = "relative";
-  el.prepend(optic, relief);
+  el.prepend(optic, relief, caustic);
   let enabled = true, last = "";
 
   function render() {
@@ -60,7 +63,7 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
     const edge = image(mw, mh, api.wg_aqua_relief_ptr());
     const p = pad / ratio;
     const width = mw / ratio, height = mh / ratio;
-    const transmitScale = 128 / ratio, reflectScale = 256 / ratio;
+    const transmitScale = 256 / ratio, reflectScale = 256 / ratio;
     const shift = (scale: number) => -scale / 510;
     const channel = (name: string, scale: number, row: string) =>
       `<feDisplacementMap in="SourceGraphic" in2="transmissionMap" scale="${scale}" xChannelSelector="R" yChannelSelector="G"/>` +
@@ -74,13 +77,21 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
     filter.innerHTML =
       `<feImage href="${transmission}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="transmissionMap"/>` +
       `<feImage href="${reflection}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="reflectionMap"/>` +
-      channel("red", transmitScale * .94, "1 0 0 0 0 0 0 0 0 0 0 0 0 0 0") +
+      channel("red", transmitScale * .985, "1 0 0 0 0 0 0 0 0 0 0 0 0 0 0") +
       channel("green", transmitScale, "0 0 0 0 0 0 1 0 0 0 0 0 0 0 0") +
-      channel("blue", transmitScale * 1.07, "0 0 0 0 0 0 0 0 0 0 0 0 1 0 0") +
+      channel("blue", transmitScale * 1.015, "0 0 0 0 0 0 0 0 0 0 0 0 1 0 0") +
       `<feComposite in="red" in2="green" operator="arithmetic" k2="1" k3="1" result="redGreen"/>` +
-      `<feComposite in="redGreen" in2="blue" operator="arithmetic" k2="1" k3="1" result="transmission"/>` +
+      `<feComposite in="redGreen" in2="blue" operator="arithmetic" k2="1" k3="1" result="bentLight"/>` +
+      `<feColorMatrix in="bentLight" type="saturate" values="1.9" result="vivid"/>` +
+      `<feColorMatrix in="transmissionMap" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.6 0 0" result="rim"/>` +
+      `<feComposite in="vivid" in2="rim" operator="in" result="rimLight"/>` +
+      `<feComposite in="bentLight" in2="rim" operator="out" result="bodyLight"/>` +
+      `<feComposite in="bodyLight" in2="rimLight" operator="arithmetic" k2="1" k3="1" result="transmission"/>` +
       `<feDisplacementMap in="SourceGraphic" in2="reflectionMap" scale="${reflectScale}" xChannelSelector="R" yChannelSelector="G" result="mirror"/>` +
-      `<feOffset in="mirror" dx="${shift(reflectScale)}" dy="${shift(reflectScale)}" result="reflection"/>` +
+      `<feOffset in="mirror" dx="${shift(reflectScale)}" dy="${shift(reflectScale)}" result="mirrored"/>` +
+      `<feGaussianBlur in="SourceGraphic" stdDeviation="${Math.min(w, h) * .32}" result="ambient"/>` +
+      `<feColorMatrix in="ambient" type="saturate" values="2.4" result="ambientColor"/>` +
+      `<feComposite in="mirrored" in2="ambientColor" operator="arithmetic" k2=".65" k3=".35" result="reflection"/>` +
       `<feColorMatrix in="transmissionMap" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0" result="fresnel"/>` +
       `<feComposite in="reflection" in2="fresnel" operator="in" result="reflected"/>` +
       `<feComposite in="transmission" in2="fresnel" operator="out" result="transmitted"/>` +
@@ -98,14 +109,29 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
     optic.style.setProperty("-webkit-backdrop-filter", optic.style.backdropFilter);
   }
 
+  function setAmbient(color: string, strength: number) {
+    const channels = color.match(/[\d.]+/g)?.slice(0, 3).map(Number);
+    if (!channels || channels.length !== 3) {
+      caustic.style.background = "";
+      caustic.style.boxShadow = "";
+      return;
+    }
+    const amount = Math.max(0, Math.min(1, strength));
+    const [red, green, blue] = channels;
+    const rim = `rgba(${Math.round(red * .08)},${Math.min(255, Math.round(green * 1.36))},${blue},${(.83 * amount).toFixed(3)})`;
+    const left = `rgba(${red},${green},${blue},${(.62 * amount).toFixed(3)})`;
+    caustic.style.boxShadow = `inset 0 0 0 1px ${rim}, inset 1px 0 3px ${left}, 0 0 1px ${rim}`;
+    caustic.style.background = `radial-gradient(ellipse 28% 84% at 0 50%,${left},transparent 92%)`;
+  }
+
   const observer = new ResizeObserver(render);
   observer.observe(el);
   render();
   return {
-    setEnabled,
+    setEnabled, setAmbient,
     destroy() {
       observer.disconnect();
-      svg.remove(); relief.remove(); optic.remove();
+      svg.remove(); relief.remove(); optic.remove(); caustic.remove();
     }
   };
 }

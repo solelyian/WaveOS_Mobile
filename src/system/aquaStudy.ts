@@ -50,7 +50,7 @@ export function mountAquaStudy() {
     .aqua-study .scene.bands{background:repeating-linear-gradient(90deg,#2577b9 0 14px,#ec8b56 14px 28px,#f3d177 28px 42px,#2b9b8c 42px 56px)}
     .aqua-study .track{position:absolute;left:6.1%;right:6.8%;height:4%;top:49%;border-radius:999px;background:#d9d9d9}
     .aqua-study .fill{position:absolute;inset:0 auto 0 0;width:24.3%;border-radius:inherit;background:#349bf5}
-    .aqua-study .lens{position:absolute;isolation:isolate;width:17.6%;height:17%;left:calc(6.1% + var(--position)*.871%);top:50.85%;transform:translate(-50%,-50%);border-radius:999px;box-shadow:0 10px 22px #3d9ad624,0 2px 6px #0000000a;background:linear-gradient(#ffffff66,#ffffff1f 42%,#ffffff12 58%,#ffffff70);pointer-events:none}
+    .aqua-study .lens{position:absolute;isolation:isolate;width:17.6%;height:17%;left:calc(6.1% + var(--position)*.871%);top:50.85%;transform:translate(-50%,-50%);border-radius:999px;box-shadow:0 10px 22px #3d9ad624,0 2px 6px #0000000a;background:linear-gradient(#ffffff6b,#ffffff0b 42%,#ffffff08 58%,#ffffff70);pointer-events:none}
     .aqua-study .scene.resting .lens{width:12%;height:12%;background:#ffffffd9;box-shadow:0 4px 14px #00000015}
     .aqua-study .position{position:absolute;left:6.1%;width:87.1%;height:28%;top:37%;opacity:0;cursor:ew-resize;z-index:2}
     .aqua-study .scene:has(input:focus-visible){outline:2px solid #1763a1;outline-offset:4px}
@@ -81,7 +81,17 @@ export function mountAquaStudy() {
   const optics = main.querySelector<HTMLInputElement>('[data-control="optics"]')!;
   const background = main.querySelector<HTMLSelectElement>('[data-control="background"]')!;
   const material = aquaLens(el);
-  const move = () => scene.style.setProperty("--position", position.value);
+  const move = () => {
+    scene.style.setProperty("--position", position.value);
+    const fill = main.querySelector<HTMLElement>(".fill")!;
+    const track = fill.parentElement!;
+    const end = track.getBoundingClientRect().left + track.offsetWidth * .243;
+    const center = scene.getBoundingClientRect().left
+      + scene.offsetWidth * (.061 + .871 * Number(position.value) / 100);
+    const near = Math.max(0, Math.min(1, 1 - Math.max(0, center - end) / (el.offsetWidth * .7)));
+    material.setAmbient(getComputedStyle(fill).backgroundColor, near);
+  };
+  move();
   position.addEventListener("input", move);
   const showState = () => scene.classList.toggle("resting", !raised.checked);
   raised.addEventListener("change", showState);

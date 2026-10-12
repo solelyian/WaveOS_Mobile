@@ -357,7 +357,7 @@ int wg_aqua_reflection_ptr() { return (int)(unsigned long)g_aqua_reflection; }
 EXP("wg_aqua_relief_ptr")
 int wg_aqua_relief_ptr() { return (int)(unsigned long)g_aqua_relief; }
 
-/* Transmission RG uses scale=128; reflection RG uses scale=256.
+/* Transmission and reflection RG both use scale=256.
  * Transmission B carries Fresnel reflectance, A is an opaque carrier.
  * Padding preserves the surrounding scene until the element clips the result. */
 EXP("wg_aqua_lens")
@@ -399,14 +399,14 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       nx *= slope * nz; ny *= slope * nz;
       const float transmittedZ = wv_sqrt(wv_max(1.f - eta * eta * (1.f - nz * nz), 0.f));
       const float bend = ior == 1.f ? 0.f : transmittedZ - eta * nz;
-      const float travel = (height + thickness * 2.f) / wv_max(transmittedZ, 0.05f);
+      const float travel = (height + thickness * 3.f) / wv_max(transmittedZ, 0.05f);
       float dx = -(px - hw) * shrink - nx * bend * travel;
       float dy = -(py - hh) * shrink - ny * bend * travel;
-      const float reach = 60.f, magnitude = wv_sqrt(dx * dx + dy * dy);
+      const float reach = wv_min(120.f, wv_min(hw, hh) * 1.1f), magnitude = wv_sqrt(dx * dx + dy * dy);
       const float soft = 1.f / wv_sqrt(1.f + (magnitude / reach) * (magnitude / reach));
       dx *= soft; dy *= soft;
-      q[0] = (unsigned char)wv_clampf(128.5f + dx * (255.f / 128.f), 0.f, 255.f);
-      q[1] = (unsigned char)wv_clampf(128.5f + dy * (255.f / 128.f), 0.f, 255.f);
+      q[0] = (unsigned char)wv_clampf(128.5f + dx * (255.f / 256.f), 0.f, 255.f);
+      q[1] = (unsigned char)wv_clampf(128.5f + dy * (255.f / 256.f), 0.f, 255.f);
       const float rs = (nz - ior * transmittedZ) / wv_max(nz + ior * transmittedZ, .0001f);
       const float rp = (ior * nz - transmittedZ) / wv_max(ior * nz + transmittedZ, .0001f);
       const float fresnel = (ior == 1.f ? 0.f : (rs * rs + rp * rp) * .5f) * coverage;
