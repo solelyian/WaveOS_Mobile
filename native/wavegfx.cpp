@@ -359,6 +359,7 @@ int wg_aqua_relief_ptr() { return (int)(unsigned long)g_aqua_relief; }
 
 /* Transmission and reflection RG both use scale=256.
  * Transmission B carries Fresnel reflectance, A is an opaque carrier.
+ * Reflection B carries directional grazing light for the edge mask.
  * Padding preserves the surrounding scene until the element clips the result. */
 EXP("wg_aqua_lens")
 int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
@@ -396,6 +397,7 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       const float nz = 1.f / wv_sqrt(1.f + slope * slope);
       float nx, ny;
       drectGrad(px, py, hw, hh, hw, hh, r, &nx, &ny);
+      const float ux = nx, uy = ny;
       nx *= slope * nz; ny *= slope * nz;
       const float transmittedZ = wv_sqrt(wv_max(1.f - eta * eta * (1.f - nz * nz), 0.f));
       const float bend = ior == 1.f ? 0.f : transmittedZ - eta * nz;
@@ -413,12 +415,21 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       q[2] = (unsigned char)wv_clampf(fresnel * 255.f, 0.f, 255.f);
       reflection[0] = (unsigned char)wv_clampf(128.5f + 2.f * nx * nz * probe * (255.f / 256.f), 0.f, 255.f);
       reflection[1] = (unsigned char)wv_clampf(128.5f + 2.f * ny * nz * probe * (255.f / 256.f), 0.f, 255.f);
+      const float interface = wv_clampf((ior - 1.f) / .46f, 0.f, 1.f);
+      const float rimWidth = wv_max(thickness * .06f, .5f);
+      const float rimLight = wv_exp(-inside * inside / (rimWidth * rimWidth))
+        * wv_clampf(.74f - uy * .7f, .04f, 1.f);
+      reflection[2] = (unsigned char)(rimLight * interface * coverage * 255.f);
       const float lower = wv_max(ny, 0.f);
       const float facing = wv_clampf(-nx * .4f - ny * .75f, 0.f, 1.f);
       const float front = wv_exp(-inside * inside / .45f) * facing * .32f;
       const float bounce = lower * lower * .52f;
       const float shadow = wv_max(nx * .65f + ny * .25f, 0.f) * slope * nz * .055f;
-      const float illumination = (front + bounce - shadow) * wv_clampf((ior - 1.f) / .46f, 0.f, 1.f);
+      const float shoulderWidth = wv_max(thickness * .4f, 1.f);
+      const float shoulderOffset = inside - thickness * .25f;
+      const float shoulder = wv_exp(-shoulderOffset * shoulderOffset / (shoulderWidth * shoulderWidth));
+      const float focal = shoulder * wv_max(-ux, 0.f) * wv_fabs(uy) * 1.65f;
+      const float illumination = (front + bounce + focal - shadow) * interface;
       relief[0] = relief[1] = relief[2] = illumination >= 0.f ? 255 : 0;
       relief[3] = (unsigned char)(wv_clampf(wv_fabs(illumination), 0.f, 1.f) * coverage * 255.f);
     }

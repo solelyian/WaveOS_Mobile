@@ -122,6 +122,9 @@ test("volume lens separates transmission, reflection and Fresnel weighting", () 
   assert(at(transmission, 40, 0)[2] > at(transmission, 40, 27)[2]);
   assert(at(transmission, 40, 27)[2] > 0);
   assert(at(relief, 40, 50)[3] > at(relief, 40, 27)[3]);
+  assert(at(reflection, 40, 0)[2] > at(reflection, 40, 53)[2]);
+  assert.equal(at(reflection, 40, 27)[2], 0);
+  assert(at(relief, 8, 9)[3] > at(relief, 71, 9)[3]);
   for (const map of [transmission, reflection]) {
     assert.deepEqual(pixel(map, mw, 0, 0), [128, 128, 0, 255]);
     assert.deepEqual(pixel(map, mw, mw - 1, mh - 1), [128, 128, 0, 255]);
@@ -133,9 +136,11 @@ test("index-matched lens has no bending, reflection or interface lighting", () =
   const w = 80, h = 54, padding = 49, mw = w + padding * 2, mh = h + padding * 2;
   assert.equal(api.wg_aqua_lens(w, h, 27, 19, 9, 1, 1, padding), 1);
   const map = copy(mw, mh), relief = copy(mw, mh, api.wg_aqua_relief_ptr());
+  const reflection = copy(mw, mh, api.wg_aqua_reflection_ptr());
   for (let i = 0; i < map.length; i += 4) {
     assert.deepEqual([...map.subarray(i, i + 4)], [128, 128, 0, 255]);
     assert.equal(relief[i + 3], 0);
+    assert.equal(reflection[i + 2], 0);
   }
 });
 

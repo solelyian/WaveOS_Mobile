@@ -80,7 +80,7 @@ export function mountAquaStudy() {
   const raised = main.querySelector<HTMLInputElement>('[data-control="raised"]')!;
   const optics = main.querySelector<HTMLInputElement>('[data-control="optics"]')!;
   const background = main.querySelector<HTMLSelectElement>('[data-control="background"]')!;
-  const material = aquaLens(el);
+  const material = aquaLens(el, { zoom: 1 });
   const move = () => {
     scene.style.setProperty("--position", position.value);
     const fill = main.querySelector<HTMLElement>(".fill")!;
