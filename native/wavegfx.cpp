@@ -347,6 +347,70 @@ void wg_glass_edge(int w, int h, float r, float depth) {
   }
 }
 
+/* Aqua Glass: continuous central magnification plus a shallow edge meniscus.
+ * RG displacement is encoded for an SVG feDisplacementMap with scale=32. */
+EXP("wg_aqua_disp")
+int wg_aqua_disp(int w, int h, float r, float depth, float zoom) {
+  if (w < 1 || h < 1 || w > GLASS_MAXW || h > GLASS_MAXH) return 0;
+  const float hw = w * 0.5f, hh = h * 0.5f;
+  r = wv_clampf(r, 0.f, wv_min(hw, hh));
+  const float band = wv_max(depth, 1.f);
+  const float shrink = 1.f - 1.f / wv_max(zoom, 1.f);
+  g_outW = w; g_outH = h;
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      const float px = x + 0.5f, py = y + 0.5f;
+      const float d = drect(px, py, hw, hh, hw, hh, r);
+      unsigned char *q = g_out + (y * w + x) * 4;
+      q[0] = q[1] = 128; q[2] = 0; q[3] = 255;
+      if (d > 0.5f) continue;
+      const float inside = wv_max(-d, 0.f);
+      const float t = wv_clampf(1.f - inside / band, 0.f, 1.f);
+      const float meniscus = t * t * (3.f - 2.f * t) * wv_min(5.f, band * 0.5f);
+      float nx, ny;
+      drectGrad(px, py, hw, hh, hw, hh, r, &nx, &ny);
+      const float dx = -(px - hw) * shrink - nx * meniscus;
+      const float dy = -(py - hh) * shrink - ny * meniscus;
+      q[0] = (unsigned char)wv_clampf(128.f + dx * (255.f / 32.f), 0.f, 255.f);
+      q[1] = (unsigned char)wv_clampf(128.f + dy * (255.f / 32.f), 0.f, 255.f);
+      q[2] = 0;
+      q[3] = 255;
+    }
+  }
+  return 1;
+}
+
+EXP("wg_aqua_edge")
+int wg_aqua_edge(int w, int h, float r, float depth) {
+  if (w < 1 || h < 1 || w > GLASS_MAXW || h > GLASS_MAXH) return 0;
+  const float hw = w * 0.5f, hh = h * 0.5f;
+  r = wv_clampf(r, 0.f, wv_min(hw, hh));
+  g_outW = w; g_outH = h;
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      const float px = x + 0.5f, py = y + 0.5f;
+      const float d = drect(px, py, hw, hh, hw, hh, r);
+      unsigned char *q = g_out + (y * w + x) * 4;
+      q[0] = q[1] = q[2] = q[3] = 0;
+      if (d > 1.5f) continue;
+      float nx, ny;
+      drectGrad(px, py, hw, hh, hw, hh, r, &nx, &ny);
+      const float face = wv_clampf(0.54f - 0.38f * nx - 0.45f * ny, 0.f, 1.f);
+      const float outer = wv_exp(-(d * d) / 0.55f) * (0.16f + 0.65f * face);
+      const float inner = wv_exp(-((d + 2.7f) * (d + 2.7f)) / 1.7f) * (0.08f + 0.30f * face);
+      const float shoulder = wv_exp(-((d + depth * 0.6f) * (d + depth * 0.6f)) / 23.f) * face * 0.06f;
+      const float shade = wv_exp(-((d + 1.3f) * (d + 1.3f)) / 13.f) * (1.f - face) * 0.20f;
+      const float white = outer + inner + shoulder;
+      const float alpha = wv_clampf(white + shade, 0.f, 1.f);
+      if (alpha < 0.001f) continue;
+      const unsigned char value = (unsigned char)(255.f * white / (white + shade));
+      q[0] = q[1] = q[2] = value;
+      q[3] = (unsigned char)(alpha * 255.f);
+    }
+  }
+  return 1;
+}
+
 static unsigned char g_glyph_mask[GLASS_MAXW * GLASS_MAXH];
 static unsigned char g_glyph_edge[GLASS_MAXW * GLASS_MAXH * 4];
 static float g_glyph_distance[GLASS_MAXW * GLASS_MAXH];
@@ -359,8 +423,7 @@ int wg_glyph_edge_ptr(void) { return (int)(unsigned long)g_glyph_edge; }
 
 /* The distance field follows the rasterized glyph, including its counters.
  * Two chamfer passes keep this bounded and allocation-free. */
-EXP("wg_glyph_render")
-int wg_glyph_render(int w, int h, float depth, float pixelRatio) {
+static int renderGlyph(int w, int h, float depth, float pixelRatio, bool aqua) {
   if (w < 1 || h < 1 || w > GLASS_MAXW || h > GLASS_MAXH) return 0;
   const float bevel = wv_max(1.f, depth);
   const float ratio = wv_max(0.5f, pixelRatio);
@@ -415,14 +478,31 @@ int wg_glyph_render(int w, int h, float depth, float pixelRatio) {
       float inside = wv_max(0.f, g_glyph_distance[i] - 0.5f);
       float u = wv_clampf(1.f - inside / bevel, 0.f, 1.f);
       float lens = u * u * (3.f - 2.f * u);
-      q[0] = (unsigned char)wv_clampf(128.f + nx * lens * 127.f, 0.f, 255.f);
-      q[1] = (unsigned char)wv_clampf(128.f + ny * lens * 127.f, 0.f, 255.f);
+      float dx = nx * lens, dy = ny * lens;
+      if (aqua) {
+        int left = x, right = x, top = y, bottom = y;
+        while (left > 0 && g_glyph_mask[y * w + left - 1] >= 128) left--;
+        while (right < w - 1 && g_glyph_mask[y * w + right + 1] >= 128) right++;
+        while (top > 0 && g_glyph_mask[(top - 1) * w + x] >= 128) top--;
+        while (bottom < h - 1 && g_glyph_mask[(bottom + 1) * w + x] >= 128) bottom++;
+        dx = -nx * lens * 0.60f - ((float)x - (left + right) * 0.5f) * 0.006f / ratio;
+        dy = -ny * lens * 0.60f - ((float)y - (top + bottom) * 0.5f) * 0.006f / ratio;
+      }
+      q[0] = (unsigned char)wv_clampf(128.f + dx * 127.f, 0.f, 255.f);
+      q[1] = (unsigned char)wv_clampf(128.f + dy * 127.f, 0.f, 255.f);
       q[2] = (unsigned char)(u * 255.f);
       float lit = wv_clampf(0.5f + 0.5f * (nx * -0.6f + ny * -0.8f), 0.f, 1.f);
       float rim = wv_exp(-inside * inside / (0.7f * ratio * ratio));
       float shoulder = wv_exp(-inside * inside / (0.5f * bevel * bevel));
       float wa = rim * (0.16f + lit * 0.64f) + shoulder * lit * 0.14f;
       float ba = shoulder * (1.f - lit) * 0.26f * (1.f - wa);
+      if (aqua) {
+        const float inset = inside - wv_min(bevel * 0.46f, ratio * 3.f);
+        const float innerRim = wv_exp(-(inset * inset) / (0.9f * ratio * ratio));
+        wa = rim * (0.20f + lit * 0.76f) + innerRim * (0.04f + lit * 0.27f)
+           + shoulder * lit * 0.09f;
+        ba = shoulder * (1.f - lit) * 0.20f * (1.f - wv_clampf(wa, 0.f, 1.f));
+      }
       float a = wv_clampf(wa + ba, 0.f, 1.f);
       if (a > 0.f) {
         e[0] = e[1] = e[2] = (unsigned char)(255.f * wa / (wa + ba));
@@ -431,4 +511,14 @@ int wg_glyph_render(int w, int h, float depth, float pixelRatio) {
     }
   }
   return 1;
+}
+
+EXP("wg_glyph_render")
+int wg_glyph_render(int w, int h, float depth, float pixelRatio) {
+  return renderGlyph(w, h, depth, pixelRatio, false);
+}
+
+EXP("wg_aqua_glyph_render")
+int wg_aqua_glyph_render(int w, int h, float depth, float pixelRatio) {
+  return renderGlyph(w, h, depth, pixelRatio, true);
 }

@@ -70,6 +70,22 @@ function edgeMap(w: number, h: number, r: number, depth: number): string {
   return url;
 }
 
+function aquaMap(w: number, h: number, r: number, depth: number, edge: boolean): string {
+  const key = `aqua-${edge}-${w}-${h}-${r.toFixed(1)}-${depth.toFixed(2)}`;
+  const hit = mapCache.get(key);
+  if (hit) return hit;
+  const api = W();
+  if (edge) api.wg_aqua_edge(w, h, r, depth);
+  else api.wg_aqua_disp(w, h, r, depth, 1.12);
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  canvas.getContext("2d")!.putImageData(
+    new ImageData(new Uint8ClampedArray(api.memory.buffer, api.wg_out_ptr(), w * h * 4), w, h), 0, 0);
+  const url = canvas.toDataURL();
+  mapCache.set(key, url);
+  return url;
+}
+
 export interface LGOpts {
   /** rayon des coins en px (défaut : border-radius calculé de l'élément) */
   radius?: number;
@@ -89,6 +105,7 @@ export interface LGOpts {
 
 /** Applique le matériau WaveOS à `el` (son backdrop est réfracté). */
 export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void> {
+  const aqua = el.hasAttribute("data-aqua");
   const control = !!el.closest("#cc");
   const notification = el.classList.contains("nc-card");
   const slider = el.classList.contains("cc-hslider");
@@ -101,13 +118,13 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
     : (parseFloat(cs) || 20));
   const amp = o.amp ?? 1.0;
   const size = Math.min(w, h);
-  const depth = o.depth ?? (control ? Math.min(16, Math.max(4, size * .12)) : 30);
-  const scale = o.scale ?? (notification ? 16 : control ? Math.min(44, Math.max(22, size * .5)) : 100);
-  const blur = o.blur ?? (notification ? 5 : control ? 1.2 : 3);
+  const depth = o.depth ?? (aqua ? Math.min(12, size * .16) : control ? Math.min(16, Math.max(4, size * .12)) : 30);
+  const scale = aqua ? 32 : o.scale ?? (notification ? 16 : control ? Math.min(44, Math.max(22, size * .5)) : 100);
+  const blur = o.blur ?? (aqua ? .35 : notification ? 5 : control ? 1.2 : 3);
   const sat = o.saturate ?? (slider ? 0 : control ? 1.3 : 1.15);
 
-  const map = dispMap(w, h, rad, amp, depth);
-  const fid = `lg-${w}x${h}-${rad.toFixed(1)}-${amp.toFixed(2)}-${scale}-${blur}-${sat.toFixed(2)}-${depth.toFixed(2)}`;
+  const map = aqua ? aquaMap(w, h, rad, depth, false) : dispMap(w, h, rad, amp, depth);
+  const fid = `${aqua ? "aqua" : "lg"}-${w}x${h}-${rad.toFixed(1)}-${amp.toFixed(2)}-${scale}-${blur}-${sat.toFixed(2)}-${depth.toFixed(2)}`;
   if (!filterCache.has(fid)) {
     const d = ensureDefs();
     const f = document.createElementNS(SVGNS, "filter");
@@ -132,13 +149,14 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
     const edge = document.createElement("i");
     edge.className = "lg-edge";
     edge.style.cssText = `position:absolute;inset:0;border-radius:inherit;` +
-      `pointer-events:none;background-image:url("${edgeMap(w, h, rad, depth)}");` +
+      `pointer-events:none;` +
       `background-size:100% 100%;z-index:0;`;
     if (getComputedStyle(el).position === "static") el.style.position = "relative";
     el.prepend(edge);
   }
   const edge = el.querySelector<HTMLElement>(":scope > .lg-edge")!;
-  edge.style.opacity = String(o.spec ?? (control ? .65 : 1));
+  edge.style.backgroundImage = `url("${aqua ? aquaMap(w, h, rad, depth, true) : edgeMap(w, h, rad, depth)}")`;
+  edge.style.opacity = String(o.spec ?? (aqua ? 1 : control ? .65 : 1));
   el.dataset.lgDone = "1";
 }
 

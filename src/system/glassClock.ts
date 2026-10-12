@@ -15,9 +15,9 @@ function installStyles() {
       mask-repeat:no-repeat; mask-position:center; mask-size:100% 100%;
       -webkit-mask-repeat:no-repeat; -webkit-mask-position:center; -webkit-mask-size:100% 100%;
     }
-    .glass-clock > .clk-shadow { background:rgba(0,0,0,.20); transform:translateY(2px); filter:blur(2px); }
+    .glass-clock > .clk-shadow { background:rgba(0,0,0,.10); transform:translateY(1.25px); filter:blur(.8px); }
     .glass-clock > .clk-g {
-      background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(11,19,21,.16) 58%,rgba(255,255,255,.025));
+      background:linear-gradient(115deg,rgba(255,255,255,.025),rgba(26,31,29,.16) 42%,rgba(11,22,21,.09) 76%,rgba(255,255,255,.02));
     }
     .glass-clock > .clk-e { background:transparent; background-size:100% 100%; background-repeat:no-repeat; }
     .glass-clock.clock-ready { color:transparent; }
@@ -46,7 +46,7 @@ function makeFilter() {
     "color-interpolation-filters": "sRGB",
   });
   filter.append(
-    svg("feGaussianBlur", { in: "SourceGraphic", stdDeviation: ".35", result: "background" }),
+    svg("feGaussianBlur", { in: "SourceGraphic", stdDeviation: ".15", result: "background" }),
     svg("feImage", { x: "0", y: "0", preserveAspectRatio: "none", result: "lens" }),
     svg("feDisplacementMap", { in: "background", in2: "lens", xChannelSelector: "R", yChannelSelector: "G" }),
   );
@@ -122,7 +122,7 @@ export function glassClock(el: HTMLElement, time: string, size = parseFloat(getC
     const rw = canvas.width, rh = canvas.height;
     const alpha = new Uint8Array(api.memory.buffer, api.wg_glyph_mask_ptr(), rw * rh);
     for (let i = 0; i < alpha.length; i++) alpha[i] = image.data[i * 4 + 3];
-    if (!api.wg_glyph_render(rw, rh, Math.max(2, Math.min(5, size * .025)) * ratio, ratio)) return;
+    if (!api.wg_aqua_glyph_render(rw, rh, Math.max(2, Math.min(9, size * .047)) * ratio, ratio)) return;
     const displacement = png(new Uint8Array(api.memory.buffer, api.wg_out_ptr(), rw * rh * 4), rw, rh);
     const edge = png(new Uint8Array(api.memory.buffer, api.wg_glyph_edge_ptr(), rw * rh * 4), rw, rh);
     const mask = `url("${canvas.toDataURL()}")`;
@@ -139,7 +139,7 @@ export function glassClock(el: HTMLElement, time: string, size = parseFloat(getC
     filter.querySelector("feDisplacementMap")!.setAttribute("scale", `${Math.max(4, Math.min(14, size * .065))}`);
     const body = el.querySelector<HTMLElement>(".clk-g")!;
     body.style.backdropFilter = (body.style as CSSStyleDeclaration & { webkitBackdropFilter: string }).webkitBackdropFilter =
-      `url("#${filter.id}") brightness(.96) saturate(1.06)`;
+      `url("#${filter.id}") brightness(.99) saturate(1.12)`;
     el.querySelector<HTMLElement>(".clk-e")!.style.backgroundImage = `url("${edge}")`;
     el.classList.add("clock-ready");
     el.style.color = "transparent";

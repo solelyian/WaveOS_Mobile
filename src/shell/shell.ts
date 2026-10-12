@@ -67,7 +67,7 @@ export class Shell {
   // ---------- transitions d'état ----------
   private syncTargets() {
     // voile wallpaper : lock|panneau = 2, app = 1, sinon 0
-    this.wp.level = sys.locked || sys.sheet ? 2 : sys.activeApp ? 1 : 0;
+    this.wp.setScene(sys.locked || sys.sheet ? 2 : sys.activeApp ? 1 : 0, sys.locked);
     this.sb.hidden = sys.locked;
     // maquette : le springboard n'existe pas sous le lock
     this.home.el.style.visibility = sys.locked ? "hidden" : "visible";

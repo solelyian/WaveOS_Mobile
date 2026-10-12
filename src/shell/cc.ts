@@ -45,7 +45,7 @@ export class ControlCenter {
 
     // --- ligne 3 : pilule Ne pas déranger | slider volume ---
     const r3 = h("div", { class: "cc-r2" },
-      this.tgs.focus = h("button", { class: "cc-pill", attrs: { "aria-label": "Zen Mode" }, onClick: () => set("focus", !sys.focus) },
+      this.tgs.focus = h("button", { class: "cc-pill", attrs: { "aria-label": "Zen Mode", "data-aqua": "" }, onClick: () => set("focus", !sys.focus) },
         h("div", { class: "pi focus" }, svgIcon(I.moon, "", 18)),
         h("div", { class: "tx" }, h("span", { class: "nm" }, "Zen Mode"))),
       this.slider(this.volFill, I.volume2, "volume"));

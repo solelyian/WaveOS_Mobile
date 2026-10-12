@@ -188,6 +188,18 @@ input { font: inherit; }
 .cc-r2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; height: 66px; }
 .cc-hslider { position: relative; border-radius: 33px; overflow: hidden; background: rgba(20,20,20,.16); touch-action: none; cursor: ew-resize; }
 .cc-pill:active { transform: scale(.97); }
+.cc-pill[data-aqua] {
+  background: linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.025) 58%,rgba(0,0,0,.035));
+  box-shadow: 0 6px 14px rgba(0,0,0,.09), 0 1px 2px rgba(0,0,0,.12);
+  transition: transform .22s cubic-bezier(.2,.8,.2,1), box-shadow .22s ease;
+}
+.cc-pill[data-aqua]:active {
+  transform: scale(.985);
+  box-shadow: 0 2px 5px rgba(0,0,0,.12);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cc-pill[data-aqua] { transition: none; }
+}
 .cc-cell:active .cc-dot { transform: scale(.93); }
 .cc-hslider .track { position: absolute; inset: 8px; border-radius: 25px; overflow: hidden; pointer-events: none; }
 .cc-hslider .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 50%; background: rgba(255,255,255,.18); }
