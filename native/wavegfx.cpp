@@ -408,13 +408,15 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       const float cap = wv_clampf((wv_fabs(px - hw) - (hw - r)) / wv_max(r, 1.f), 0.f, 1.f);
       const float capTaper = wv_clampf(cap * 2.f, 0.f, 1.f);
       const float capWeight = capTaper * capTaper * (3.f - 2.f * capTaper);
-      float dy = (py - hh) * ((1.f + compression) / zoom - 1.f)
+      const float cap2 = (cap / .65f) * (cap / .65f);
+      const float cap6 = cap2 * cap2 * cap2;
+      const float capFocus = cap6 * cap6 * cap2;
+      const float capZoom = 1.f + 4.1f * (ior - 1.f) * thickness / wv_max(r, 1.f)
+        * capFocus / (1.f + capFocus);
+      float dy = (py - hh) * ((1.f + compression) / (zoom * capZoom) - 1.f)
         - ny * bend * travel * u * u * (1.f - capWeight);
-      const float cap2 = cap * cap;
-      const float capZoom = 1.f + 15.f * (ior - 1.f) * thickness / wv_max(r, 1.f) * cap2 * cap2 * cap2;
-      dy += (py - hh) * (1.f / capZoom - 1.f);
-      const float capOffset = (cap - .5f) / .15f;
-      const float shoulderShift = thickness * .1f * wv_exp(-capOffset * capOffset);
+      const float capOffset = (cap - .52f) / .12f;
+      const float shoulderShift = thickness * .137f * wv_exp(-capOffset * capOffset);
       dy += shoulderShift * wv_max(-ux, 0.f) * wv_clampf((ior - 1.f) / .46f, 0.f, 1.f);
       const float reach = wv_min(120.f, wv_min(hw, hh) * 1.1f), magnitude = wv_sqrt(dx * dx + dy * dy);
       const float soft = 1.f / wv_sqrt(1.f + (magnitude / reach) * (magnitude / reach));
@@ -443,12 +445,13 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       const float front = wv_exp(-inside * inside / .45f) * facing * .32f;
       const float bounce = lower * lower * .52f;
       const float shadow = wv_max(nx * .65f + ny * .25f, 0.f) * slope * nz * .055f;
-      const float shoulderWidth = wv_max(depth * .15f, 1.f);
+      const float shoulderWidth = wv_max(depth * .12f, 1.f);
       const float shoulderOffset = inside - depth * .26f;
       const float shoulder = wv_exp(-shoulderOffset * shoulderOffset / (shoulderWidth * shoulderWidth));
-      const float angle = (wv_fabs(uy) - .48f) / .12f;
+      const float angle = wv_clampf((wv_fabs(uy) - .2f) / .6f, 0.f, 1.f);
+      const float angularLight = angle * angle * (3.f - 2.f * angle);
       const float left = wv_max(-ux, 0.f);
-      const float focal = shoulder * wv_exp(-angle * angle) * left * left * .92f;
+      const float focal = shoulder * angularLight * left * left * 1.6f;
       const float vertical = py / h;
       const float upper = wv_clampf(1.f - vertical / .42f, 0.f, 1.f);
       const float lowerFace = wv_clampf((vertical - .62f) / .06f, 0.f, 1.f);
