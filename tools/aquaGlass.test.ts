@@ -184,14 +184,20 @@ test("vertical transmission expands at the rim without inflating the inner face"
   assert.deepEqual(at(106).slice(0, 2), [128, 128]);
 });
 
-test("shoulder rays steer the left cap without shifting the clear center", () => {
+test("rounded caps magnify the track without folding the interior ray field", () => {
   const w = 390, h = 212, padding = 192, mw = w + padding * 2, mh = h + padding * 2;
   assert.equal(api.wg_aqua_lens(w, h, h / 2, h * .36, h * .2, 1.46, 1, padding), 1);
   const map = copy(mw, mh);
   const at = (x: number, y: number) => pixel(map, mw, x + padding, y + padding)[1];
-  assert(at(45, 80) > at(w - 45, 80) + 3);
-  assert(at(45, 132) > at(w - 45, 132) + 1);
+  assert(at(35, 80) > at(195, 80));
+  assert(at(35, 132) < at(195, 132));
+  assert(at(45, 80) > at(w - 45, 80));
+  assert(at(45, 132) > at(w - 45, 132));
   assert.equal(at(195, 106), 128);
+  for (const x of [35, 45, 55, 65, 75, 85, 195]) for (let y = 65; y < 146; y++) {
+    const step = at(x, y + 1) - at(x, y);
+    assert(step >= -1, `folded source sampling at ${x},${y}: ${step}/255`);
+  }
 });
 
 test("invalid volume dimensions or optical parameters leave all fields intact", () => {
