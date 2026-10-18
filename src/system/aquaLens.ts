@@ -74,7 +74,8 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
     const grazing = image(mw, mh, api.wg_aqua_reflection_ptr(), 2);
     const p = pad / ratio;
     const width = mw / ratio, height = mh / ratio;
-    const transmitScale = 256 / ratio, reflectScale = 256 / ratio;
+    const transmitScale = 256 / ratio;
+    const reflectScale = Math.max(1, Math.min(pad, Math.min(rw, rh) * .9)) * 2 / ratio;
     const shift = (scale: number) => -scale / 510;
     const response = Math.max(0, Math.min(1, ((options.ior ?? 1.46) - 1) / .46));
     const curve = `0 .125 .25 .375 .5 .625 .75 ${.875 + .065 * response} 1`;
@@ -87,11 +88,10 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
       `<feImage href="${transmission}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="transmissionRaw"/>` +
       `<feGaussianBlur in="transmissionRaw" stdDeviation=".3" result="transmissionMap"/>` +
       `<feImage href="${reflection}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="reflectionMap"/>` +
-      `<feGaussianBlur in="SourceGraphic" stdDeviation=".4" result="sceneLight"/>` +
-      `<feDisplacementMap in="sceneLight" in2="transmissionMap" scale="${transmitScale}" xChannelSelector="R" yChannelSelector="G" result="bentLight"/>` +
+      `<feDisplacementMap in="SourceGraphic" in2="transmissionMap" scale="${transmitScale}" xChannelSelector="R" yChannelSelector="G" result="bentLight"/>` +
       `<feOffset in="bentLight" dx="${shift(transmitScale)}" dy="${shift(transmitScale)}" result="refracted"/>` +
       `<feComponentTransfer in="refracted" result="transmission"><feFuncR type="table" tableValues="${curve}"/><feFuncG type="table" tableValues="${curve}"/><feFuncB type="table" tableValues="${curve}"/></feComponentTransfer>` +
-      `<feDisplacementMap in="sceneLight" in2="reflectionMap" scale="${reflectScale}" xChannelSelector="R" yChannelSelector="G" result="mirror"/>` +
+      `<feDisplacementMap in="SourceGraphic" in2="reflectionMap" scale="${reflectScale}" xChannelSelector="R" yChannelSelector="G" result="mirror"/>` +
       `<feOffset in="mirror" dx="${shift(reflectScale)}" dy="${shift(reflectScale)}" result="mirrored"/>` +
       `<feGaussianBlur in="SourceGraphic" stdDeviation="${Math.min(w, h) * .32}" result="ambient"/>` +
       `<feColorMatrix in="ambient" type="saturate" values="2.4" result="ambientColor"/>` +

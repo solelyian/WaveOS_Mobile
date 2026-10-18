@@ -158,6 +158,22 @@ test("volume lighting grades the upper face and brightens the lower face", () =>
   assert(at(42)[3] > 0);
 });
 
+test("volume ray fields remain continuous across the tangent boundary", () => {
+  const w = 390, h = 212, padding = 192, mw = w + padding * 2, mh = h + padding * 2;
+  assert.equal(api.wg_aqua_lens(w, h, h / 2, h * .36, h * .2, 1.46, 1, padding), 1);
+  for (const pointer of [api.wg_out_ptr(), api.wg_aqua_reflection_ptr()]) {
+    const map = copy(mw, mh, pointer);
+    let maxStep = 0;
+    for (let y = padding - 1; y < h + padding; y++) for (let x = padding - 1; x < w + padding; x++) {
+      for (const [xx, yy] of [[x + 1, y], [x, y + 1]]) {
+        const a = pixel(map, mw, x, y), b = pixel(map, mw, xx, yy);
+        maxStep = Math.max(maxStep, Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]));
+      }
+    }
+    assert(maxStep < 20, `adjacent ray displacement jump: ${maxStep}/255`);
+  }
+});
+
 test("invalid volume dimensions or optical parameters leave all fields intact", () => {
   assert.equal(api.wg_aqua_lens(80, 54, 27, 19, 9, 1.46, 1.18, 49), 1);
   const pointers = [api.wg_out_ptr(), api.wg_aqua_reflection_ptr(), api.wg_aqua_relief_ptr()];

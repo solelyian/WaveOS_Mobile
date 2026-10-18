@@ -357,7 +357,7 @@ int wg_aqua_reflection_ptr() { return (int)(unsigned long)g_aqua_reflection; }
 EXP("wg_aqua_relief_ptr")
 int wg_aqua_relief_ptr() { return (int)(unsigned long)g_aqua_relief; }
 
-/* Transmission and reflection RG both use scale=256.
+/* Transmission RG uses scale=256; reflection uses twice the probe distance.
  * Transmission B carries Fresnel reflectance, A is an opaque carrier.
  * Reflection B carries directional grazing light for the edge mask.
  * Padding preserves the surrounding scene until the element clips the result. */
@@ -376,6 +376,7 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
   const float shrink = 1.f - 1.f / zoom;
   const float eta = 1.f / ior;
   const float probe = wv_min((float)padding, wv_min(hw, hh) * 1.8f);
+  const float reflectionRange = wv_max(probe, 1.f) * 2.f;
   g_outW = mw; g_outH = mh;
   for (int y = 0; y < mh; y++) {
     for (int x = 0; x < mw; x++) {
@@ -406,15 +407,20 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       float dy = -(py - hh) * shrink - ny * bend * travel;
       const float reach = wv_min(120.f, wv_min(hw, hh) * 1.1f), magnitude = wv_sqrt(dx * dx + dy * dy);
       const float soft = 1.f / wv_sqrt(1.f + (magnitude / reach) * (magnitude / reach));
-      dx *= soft; dy *= soft;
+      // Regularize the tangent singularity before rasterizing either ray field.
+      const float taper = wv_clampf(inside / wv_max(thickness * .22f, 1.f), 0.f, 1.f);
+      const float boundary = taper * taper * (3.f - 2.f * taper);
+      dx *= soft * boundary; dy *= soft * boundary;
       q[0] = (unsigned char)wv_clampf(128.5f + dx * (255.f / 256.f), 0.f, 255.f);
       q[1] = (unsigned char)wv_clampf(128.5f + dy * (255.f / 256.f), 0.f, 255.f);
       const float rs = (nz - ior * transmittedZ) / wv_max(nz + ior * transmittedZ, .0001f);
       const float rp = (ior * nz - transmittedZ) / wv_max(ior * nz + transmittedZ, .0001f);
       const float fresnel = (ior == 1.f ? 0.f : (rs * rs + rp * rp) * .5f) * coverage;
       q[2] = (unsigned char)wv_clampf(fresnel * 255.f, 0.f, 255.f);
-      reflection[0] = (unsigned char)wv_clampf(128.5f + 2.f * nx * nz * probe * (255.f / 256.f), 0.f, 255.f);
-      reflection[1] = (unsigned char)wv_clampf(128.5f + 2.f * ny * nz * probe * (255.f / 256.f), 0.f, 255.f);
+      const float reflectedTaper = wv_clampf(inside / wv_max(thickness * .4f, 1.f), 0.f, 1.f);
+      const float reflectedBoundary = reflectedTaper * reflectedTaper * (3.f - 2.f * reflectedTaper);
+      reflection[0] = (unsigned char)wv_clampf(128.5f + 2.f * nx * nz * probe * reflectedBoundary * (255.f / reflectionRange), 0.f, 255.f);
+      reflection[1] = (unsigned char)wv_clampf(128.5f + 2.f * ny * nz * probe * reflectedBoundary * (255.f / reflectionRange), 0.f, 255.f);
       const float interface = wv_clampf((ior - 1.f) / .46f, 0.f, 1.f);
       const float rimWidth = wv_max(thickness * .12f, .5f);
       const float rimOffset = inside - thickness * .055f;
