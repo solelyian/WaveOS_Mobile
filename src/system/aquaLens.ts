@@ -10,13 +10,15 @@ export interface AquaLensOptions {
   thickness?: number;
 }
 
-function image(w: number, h: number, pointer: number, maskChannel?: number): string {
+function image(w: number, h: number, pointer: number, maskChannel?: number | "displacement"): string {
   const canvas = document.createElement("canvas");
   canvas.width = w; canvas.height = h;
   const pixels = new Uint8ClampedArray(
     new Uint8ClampedArray(W().memory.buffer, pointer, w * h * 4));
   if (maskChannel !== undefined) for (let i = 0; i < pixels.length; i += 4) {
-    pixels[i + 3] = pixels[i + maskChannel];
+    pixels[i + 3] = maskChannel === "displacement"
+      ? Math.min(255, Math.hypot(pixels[i] - 128, pixels[i + 1] - 128) * 64)
+      : pixels[i + maskChannel];
     pixels[i] = pixels[i + 1] = pixels[i + 2] = 255;
   }
   canvas.getContext("2d")!.putImageData(new ImageData(pixels, w, h), 0, 0);
@@ -72,6 +74,7 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
     const reflection = image(mw, mh, api.wg_aqua_reflection_ptr());
     const edge = image(mw, mh, api.wg_aqua_relief_ptr());
     const grazing = image(mw, mh, api.wg_aqua_reflection_ptr(), 2);
+    const warped = image(mw, mh, api.wg_out_ptr(), "displacement");
     const p = pad / ratio;
     const width = mw / ratio, height = mh / ratio;
     const transmitScale = 256 / ratio;
@@ -99,7 +102,12 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
       `<feColorMatrix in="transmissionMap" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0" result="fresnel"/>` +
       `<feComposite in="reflection" in2="fresnel" operator="in" result="reflected"/>` +
       `<feComposite in="transmission" in2="fresnel" operator="out" result="transmitted"/>` +
-      `<feComposite in="transmitted" in2="reflected" operator="arithmetic" k2="1" k3="1"/>`;
+      `<feComposite in="transmitted" in2="reflected" operator="arithmetic" k2="1" k3="1" result="sharp"/>` +
+      `<feGaussianBlur in="sharp" stdDeviation=".65" result="smooth"/>` +
+      `<feImage href="${warped}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="warpMask"/>` +
+      `<feComposite in="smooth" in2="warpMask" operator="in" result="antiAliased"/>` +
+      `<feComposite in="sharp" in2="warpMask" operator="out" result="clearCenter"/>` +
+      `<feComposite in="antiAliased" in2="clearCenter" operator="arithmetic" k2="1" k3="1"/>`;
     relief.style.backgroundImage = `url("${edge}")`;
     relief.style.backgroundSize = `${width}px ${height}px`;
     relief.style.backgroundPosition = `${-p}px ${-p}px`;
