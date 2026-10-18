@@ -451,7 +451,8 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       const float angle = wv_clampf((wv_fabs(uy) - .2f) / .6f, 0.f, 1.f);
       const float angularLight = angle * angle * (3.f - 2.f * angle);
       const float left = wv_max(-ux, 0.f);
-      const float focal = shoulder * angularLight * left * left * 1.6f;
+      const float focalLight = wv_clampf(.65f - uy * .8f, .3f, 1.2f);
+      const float focal = shoulder * angularLight * left * left * focalLight;
       const float vertical = py / h;
       const float upper = wv_clampf(1.f - vertical / .42f, 0.f, 1.f);
       const float lowerFace = wv_clampf((vertical - .62f) / .06f, 0.f, 1.f);
