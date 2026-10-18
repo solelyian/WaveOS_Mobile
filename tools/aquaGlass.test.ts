@@ -125,7 +125,8 @@ test("volume lens separates transmission, reflection and Fresnel weighting", () 
   assert(at(reflection, 40, 0)[2] > at(reflection, 40, 53)[2]);
   assert(at(reflection, 79, 27)[2] > at(reflection, 0, 27)[2]);
   assert.equal(at(reflection, 40, 27)[2], 0);
-  assert(at(relief, 8, 9)[3] > at(relief, 71, 9)[3]);
+  assert(at(relief, 8, 18)[3] > at(relief, 71, 18)[3]);
+  assert(at(relief, 8, 18)[3] > at(relief, 8, 9)[3] * 3);
   for (const map of [transmission, reflection]) {
     assert.deepEqual(pixel(map, mw, 0, 0), [128, 128, 0, 255]);
     assert.deepEqual(pixel(map, mw, mw - 1, mh - 1), [128, 128, 0, 255]);
