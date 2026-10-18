@@ -404,8 +404,9 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       const float bend = ior == 1.f ? 0.f : transmittedZ - eta * nz;
       const float travel = (height + thickness * 3.f) / wv_max(transmittedZ, 0.05f);
       float dx = -(px - hw) * shrink - nx * bend * travel;
-      float dy = -(py - hh) * shrink
-        - ny * bend * travel * wv_clampf(1.7f * u - .66f, -.66f, 1.f);
+      const float compression = (ior - 1.f) * .13f;
+      float dy = (py - hh) * ((1.f + compression) / zoom - 1.f)
+        - ny * bend * travel * u * u;
       const float reach = wv_min(120.f, wv_min(hw, hh) * 1.1f), magnitude = wv_sqrt(dx * dx + dy * dy);
       const float soft = 1.f / wv_sqrt(1.f + (magnitude / reach) * (magnitude / reach));
       // Regularize the tangent singularity before rasterizing either ray field.
@@ -423,8 +424,8 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       reflection[0] = (unsigned char)wv_clampf(128.5f + 2.f * nx * nz * probe * reflectedBoundary * (255.f / reflectionRange), 0.f, 255.f);
       reflection[1] = (unsigned char)wv_clampf(128.5f + 2.f * ny * nz * probe * reflectedBoundary * (255.f / reflectionRange), 0.f, 255.f);
       const float interface = wv_clampf((ior - 1.f) / .46f, 0.f, 1.f);
-      const float rimWidth = wv_max(thickness * .12f, .5f);
-      const float rimOffset = inside - thickness * .055f;
+      const float rimWidth = wv_max(thickness * (.045f + .075f * wv_fabs(ux)), .5f);
+      const float rimOffset = inside - thickness * (.025f + .03f * wv_fabs(ux));
       const float rimLight = wv_exp(-rimOffset * rimOffset / (rimWidth * rimWidth))
         * wv_clampf(1.04f + ux * .34f - uy * .6f, .1f, 1.f);
       reflection[2] = (unsigned char)(rimLight * interface * coverage * 255.f);
@@ -433,10 +434,10 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       const float front = wv_exp(-inside * inside / .45f) * facing * .32f;
       const float bounce = lower * lower * .52f;
       const float shadow = wv_max(nx * .65f + ny * .25f, 0.f) * slope * nz * .055f;
-      const float shoulderWidth = wv_max(depth * .18f, 1.f);
-      const float shoulderOffset = inside - depth * .3f;
+      const float shoulderWidth = wv_max(depth * .24f, 1.f);
+      const float shoulderOffset = inside - depth * .36f;
       const float shoulder = wv_exp(-shoulderOffset * shoulderOffset / (shoulderWidth * shoulderWidth));
-      const float angle = (wv_fabs(uy) - .4f) / .18f;
+      const float angle = (wv_fabs(uy) - .4f) / .22f;
       const float left = wv_max(-ux, 0.f);
       const float focal = shoulder * wv_exp(-angle * angle) * left * left * .92f;
       const float vertical = py / h;

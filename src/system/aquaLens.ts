@@ -81,7 +81,7 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
     const reflectScale = Math.max(1, Math.min(pad, Math.min(rw, rh) * .9)) * 2 / ratio;
     const shift = (scale: number) => scale / 510;
     const response = Math.max(0, Math.min(1, ((options.ior ?? 1.46) - 1) / .46));
-    const curve = `0 .125 .25 .375 .5 .625 .75 ${.875 + .065 * response} 1`;
+    const curve = `0 .125 .25 .375 .5 .625 .75 ${.875 + .055 * response} 1`;
     const radius = getComputedStyle(el).borderTopLeftRadius;
     optic.style.inset = `${-p}px`;
     optic.style.clipPath = `inset(${p}px round ${radius})`;
@@ -93,7 +93,9 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
       `<feImage href="${reflection}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="reflectionMap"/>` +
       `<feDisplacementMap in="SourceGraphic" in2="transmissionMap" scale="${transmitScale}" xChannelSelector="R" yChannelSelector="G" result="bentLight"/>` +
       `<feOffset in="bentLight" dx="${shift(transmitScale)}" dy="${shift(transmitScale)}" result="refracted"/>` +
-      `<feComponentTransfer in="refracted" result="transmission"><feFuncR type="table" tableValues="${curve}"/><feFuncG type="table" tableValues="${curve}"/><feFuncB type="table" tableValues="${curve}"/></feComponentTransfer>` +
+      `<feComponentTransfer in="refracted" result="toned"><feFuncR type="table" tableValues="${curve}"/><feFuncG type="table" tableValues="${curve}"/><feFuncB type="table" tableValues="${curve}"/></feComponentTransfer>` +
+      `<feFlood flood-color="white" flood-opacity="${.1 * response}" result="volumeLight"/>` +
+      `<feComposite in="volumeLight" in2="toned" operator="over" result="transmission"/>` +
       `<feDisplacementMap in="SourceGraphic" in2="reflectionMap" scale="${reflectScale}" xChannelSelector="R" yChannelSelector="G" result="mirror"/>` +
       `<feOffset in="mirror" dx="${shift(reflectScale)}" dy="${shift(reflectScale)}" result="mirrored"/>` +
       `<feGaussianBlur in="SourceGraphic" stdDeviation="${Math.min(w, h) * .32}" result="ambient"/>` +
@@ -103,8 +105,8 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
       `<feComposite in="reflection" in2="fresnel" operator="in" result="reflected"/>` +
       `<feComposite in="transmission" in2="fresnel" operator="out" result="transmitted"/>` +
       `<feComposite in="transmitted" in2="reflected" operator="arithmetic" k2="1" k3="1" result="unfiltered"/>` +
-      `<feGaussianBlur in="unfiltered" stdDeviation=".38" result="sharp"/>` +
-      `<feGaussianBlur in="sharp" stdDeviation=".65" result="smooth"/>` +
+      `<feGaussianBlur in="unfiltered" stdDeviation="${.38 * response}" result="sharp"/>` +
+      `<feGaussianBlur in="sharp" stdDeviation="${.65 * response}" result="smooth"/>` +
       `<feImage href="${warped}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="warpMask"/>` +
       `<feComposite in="smooth" in2="warpMask" operator="in" result="antiAliased"/>` +
       `<feComposite in="sharp" in2="warpMask" operator="out" result="clearCenter"/>` +
