@@ -434,10 +434,10 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       const float front = wv_exp(-inside * inside / .45f) * facing * .32f;
       const float bounce = lower * lower * .52f;
       const float shadow = wv_max(nx * .65f + ny * .25f, 0.f) * slope * nz * .055f;
-      const float shoulderWidth = wv_max(depth * .24f, 1.f);
-      const float shoulderOffset = inside - depth * .36f;
+      const float shoulderWidth = wv_max(depth * .15f, 1.f);
+      const float shoulderOffset = inside - depth * .26f;
       const float shoulder = wv_exp(-shoulderOffset * shoulderOffset / (shoulderWidth * shoulderWidth));
-      const float angle = (wv_fabs(uy) - .4f) / .22f;
+      const float angle = (wv_fabs(uy) - .48f) / .12f;
       const float left = wv_max(-ux, 0.f);
       const float focal = shoulder * wv_exp(-angle * angle) * left * left * .92f;
       const float vertical = py / h;
