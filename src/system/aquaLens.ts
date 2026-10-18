@@ -79,7 +79,7 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
     const width = mw / ratio, height = mh / ratio;
     const transmitScale = 256 / ratio;
     const reflectScale = Math.max(1, Math.min(pad, Math.min(rw, rh) * .9)) * 2 / ratio;
-    const shift = (scale: number) => -scale / 510;
+    const shift = (scale: number) => scale / 510;
     const response = Math.max(0, Math.min(1, ((options.ior ?? 1.46) - 1) / .46));
     const curve = `0 .125 .25 .375 .5 .625 .75 ${.875 + .065 * response} 1`;
     const radius = getComputedStyle(el).borderTopLeftRadius;
@@ -102,7 +102,8 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
       `<feColorMatrix in="transmissionMap" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0" result="fresnel"/>` +
       `<feComposite in="reflection" in2="fresnel" operator="in" result="reflected"/>` +
       `<feComposite in="transmission" in2="fresnel" operator="out" result="transmitted"/>` +
-      `<feComposite in="transmitted" in2="reflected" operator="arithmetic" k2="1" k3="1" result="sharp"/>` +
+      `<feComposite in="transmitted" in2="reflected" operator="arithmetic" k2="1" k3="1" result="unfiltered"/>` +
+      `<feGaussianBlur in="unfiltered" stdDeviation=".38" result="sharp"/>` +
       `<feGaussianBlur in="sharp" stdDeviation=".65" result="smooth"/>` +
       `<feImage href="${warped}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="warpMask"/>` +
       `<feComposite in="smooth" in2="warpMask" operator="in" result="antiAliased"/>` +

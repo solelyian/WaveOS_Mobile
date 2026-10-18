@@ -404,7 +404,8 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       const float bend = ior == 1.f ? 0.f : transmittedZ - eta * nz;
       const float travel = (height + thickness * 3.f) / wv_max(transmittedZ, 0.05f);
       float dx = -(px - hw) * shrink - nx * bend * travel;
-      float dy = -(py - hh) * shrink - ny * bend * travel * (.15f + .85f * u);
+      float dy = -(py - hh) * shrink
+        - ny * bend * travel * wv_clampf(1.7f * u - .66f, -.66f, 1.f);
       const float reach = wv_min(120.f, wv_min(hw, hh) * 1.1f), magnitude = wv_sqrt(dx * dx + dy * dy);
       const float soft = 1.f / wv_sqrt(1.f + (magnitude / reach) * (magnitude / reach));
       // Regularize the tangent singularity before rasterizing either ray field.
