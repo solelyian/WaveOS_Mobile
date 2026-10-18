@@ -405,9 +405,11 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       const float travel = (height + thickness * 3.f) / wv_max(transmittedZ, 0.05f);
       float dx = -(px - hw) * shrink - nx * bend * travel;
       const float compression = (ior - 1.f) * .09f;
-      float dy = (py - hh) * ((1.f + compression) / zoom - 1.f)
-        - ny * bend * travel * u * u;
       const float cap = wv_clampf((wv_fabs(px - hw) - (hw - r)) / wv_max(r, 1.f), 0.f, 1.f);
+      const float capTaper = wv_clampf(cap * 2.f, 0.f, 1.f);
+      const float capWeight = capTaper * capTaper * (3.f - 2.f * capTaper);
+      float dy = (py - hh) * ((1.f + compression) / zoom - 1.f)
+        - ny * bend * travel * u * u * (1.f - capWeight);
       const float cap2 = cap * cap;
       const float capZoom = 1.f + 15.f * (ior - 1.f) * thickness / wv_max(r, 1.f) * cap2 * cap2 * cap2;
       dy += (py - hh) * (1.f / capZoom - 1.f);
