@@ -409,9 +409,18 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
         - ny * bend * travel * u * u;
       const float leftCap = wv_max(-ux, 0.f);
       const float incidence = (wv_fabs(uy) - .46f) / .14f;
+      const float rimDistance = inside / depth;
+      const float rimTaper = wv_clampf((rimDistance - .15f) / .2f, 0.f, 1.f);
+      const float rimWindow = rimTaper * rimTaper * (3.f - 2.f * rimTaper);
       const float shoulderRay = leftCap * leftCap * wv_sqrt(u)
-        * wv_exp(-incidence * incidence);
-      dy += shoulderRay * (9.f - 24.f * uy * u) * wv_clampf((ior - 1.f) / .46f, 0.f, 1.f);
+        * wv_exp(-incidence * incidence) * rimWindow;
+      const float causticDistance = (rimDistance - .4f) / .05f;
+      const float causticFocus = wv_exp(-causticDistance * causticDistance);
+      const float upperCaustic = wv_max(-uy, 0.f) * 14.f;
+      const float lowerCaustic = wv_max(uy, 0.f) * 55.f;
+      dy += shoulderRay * (9.f - 12.f * uy * u
+        + causticFocus * (upperCaustic - lowerCaustic))
+        * wv_clampf((ior - 1.f) / .46f, 0.f, 1.f);
       const float reach = wv_min(120.f, wv_min(hw, hh) * 1.1f), magnitude = wv_sqrt(dx * dx + dy * dy);
       const float soft = 1.f / wv_sqrt(1.f + (magnitude / reach) * (magnitude / reach));
       // Regularize the tangent singularity before rasterizing either ray field.
