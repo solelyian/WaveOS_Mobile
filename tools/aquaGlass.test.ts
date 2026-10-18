@@ -145,6 +145,18 @@ test("index-matched lens has no bending, reflection or interface lighting", () =
   }
 });
 
+test("volume lighting grades the upper face and brightens the lower face", () => {
+  const w = 80, h = 54, padding = 49, mw = w + padding * 2, mh = h + padding * 2;
+  assert.equal(api.wg_aqua_lens(w, h, 27, 19, 9, 1.46, 1, padding), 1);
+  const relief = copy(mw, mh, api.wg_aqua_relief_ptr());
+  const at = (y: number) => pixel(relief, mw, 40 + padding, y + padding);
+  assert.deepEqual(at(3).slice(0, 3), [0, 0, 0]);
+  assert(at(3)[3] > at(15)[3]);
+  assert.equal(at(27)[3], 0);
+  assert.deepEqual(at(42).slice(0, 3), [255, 255, 255]);
+  assert(at(42)[3] > 0);
+});
+
 test("invalid volume dimensions or optical parameters leave all fields intact", () => {
   assert.equal(api.wg_aqua_lens(80, 54, 27, 19, 9, 1.46, 1.18, 49), 1);
   const pointers = [api.wg_out_ptr(), api.wg_aqua_reflection_ptr(), api.wg_aqua_relief_ptr()];

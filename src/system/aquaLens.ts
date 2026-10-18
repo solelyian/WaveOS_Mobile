@@ -50,7 +50,12 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
   let enabled = true, last = "";
 
   function render() {
-    const w = el.offsetWidth, h = el.offsetHeight;
+    const style = getComputedStyle(el);
+    const extra = (names: string[]) => names.reduce((sum, name) => sum + (parseFloat(style.getPropertyValue(name)) || 0), 0);
+    const w = parseFloat(style.width) + (style.boxSizing === "border-box" ? 0
+      : extra(["padding-left", "padding-right", "border-left-width", "border-right-width"]));
+    const h = parseFloat(style.height) + (style.boxSizing === "border-box" ? 0
+      : extra(["padding-top", "padding-bottom", "border-top-width", "border-bottom-width"]));
     if (w < 2 || h < 2) return;
     const padding = Math.ceil(Math.min(w, h) * .9);
     const ratio = Math.min(4, 1022 / (w + padding * 2), 638 / (h + padding * 2));
@@ -71,6 +76,8 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
     const width = mw / ratio, height = mh / ratio;
     const transmitScale = 256 / ratio, reflectScale = 256 / ratio;
     const shift = (scale: number) => -scale / 510;
+    const response = Math.max(0, Math.min(1, ((options.ior ?? 1.46) - 1) / .46));
+    const curve = `0 .125 .25 .375 .5 .625 .75 ${.875 + .065 * response} 1`;
     const radius = getComputedStyle(el).borderTopLeftRadius;
     optic.style.inset = `${-p}px`;
     optic.style.clipPath = `inset(${p}px round ${radius})`;
@@ -81,7 +88,8 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
       `<feGaussianBlur in="transmissionRaw" stdDeviation=".3" result="transmissionMap"/>` +
       `<feImage href="${reflection}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="reflectionMap"/>` +
       `<feDisplacementMap in="SourceGraphic" in2="transmissionMap" scale="${transmitScale}" xChannelSelector="R" yChannelSelector="G" result="bentLight"/>` +
-      `<feOffset in="bentLight" dx="${shift(transmitScale)}" dy="${shift(transmitScale)}" result="transmission"/>` +
+      `<feOffset in="bentLight" dx="${shift(transmitScale)}" dy="${shift(transmitScale)}" result="refracted"/>` +
+      `<feComponentTransfer in="refracted" result="transmission"><feFuncR type="table" tableValues="${curve}"/><feFuncG type="table" tableValues="${curve}"/><feFuncB type="table" tableValues="${curve}"/></feComponentTransfer>` +
       `<feDisplacementMap in="SourceGraphic" in2="reflectionMap" scale="${reflectScale}" xChannelSelector="R" yChannelSelector="G" result="mirror"/>` +
       `<feOffset in="mirror" dx="${shift(reflectScale)}" dy="${shift(reflectScale)}" result="mirrored"/>` +
       `<feGaussianBlur in="SourceGraphic" stdDeviation="${Math.min(w, h) * .32}" result="ambient"/>` +
@@ -119,7 +127,8 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
     const order = channels.map((value, index) => ({ value, index }))
       .sort((a, b) => a.value - b.value);
     light[order[1].index] = Math.min(255, order[1].value + (order[2].value - order[0].value) * .3);
-    caustic.style.background = `rgb(${light.map(Math.round).join(",")})`;
+    const upper = channels.map(value => Math.round(value * .72)).join(",");
+    caustic.style.background = `linear-gradient(rgb(${upper}),rgb(${light.map(Math.round).join(",")}) 45%,rgb(${light.map(Math.round).join(",")}) 65%,white 96%)`;
     caustic.style.opacity = String(amount);
   }
 

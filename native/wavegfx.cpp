@@ -416,8 +416,9 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       reflection[0] = (unsigned char)wv_clampf(128.5f + 2.f * nx * nz * probe * (255.f / 256.f), 0.f, 255.f);
       reflection[1] = (unsigned char)wv_clampf(128.5f + 2.f * ny * nz * probe * (255.f / 256.f), 0.f, 255.f);
       const float interface = wv_clampf((ior - 1.f) / .46f, 0.f, 1.f);
-      const float rimWidth = wv_max(thickness * .14f, .5f);
-      const float rimLight = wv_exp(-inside * inside / (rimWidth * rimWidth))
+      const float rimWidth = wv_max(thickness * .12f, .5f);
+      const float rimOffset = inside - thickness * .055f;
+      const float rimLight = wv_exp(-rimOffset * rimOffset / (rimWidth * rimWidth))
         * wv_clampf(1.04f + ux * .34f - uy * .6f, .1f, 1.f);
       reflection[2] = (unsigned char)(rimLight * interface * coverage * 255.f);
       const float lower = wv_max(ny, 0.f);
@@ -429,7 +430,12 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       const float shoulderOffset = inside - thickness * .25f;
       const float shoulder = wv_exp(-shoulderOffset * shoulderOffset / (shoulderWidth * shoulderWidth));
       const float focal = shoulder * wv_max(-ux, 0.f) * wv_fabs(uy) * 1.65f;
-      const float illumination = (front + bounce + focal - shadow) * interface;
+      const float vertical = py / h;
+      const float upper = wv_clampf(1.f - vertical / .42f, 0.f, 1.f);
+      const float lowerFace = wv_clampf((vertical - .62f) / .06f, 0.f, 1.f);
+      const float environment = lowerFace * lowerFace * (3.f - 2.f * lowerFace) * .26f
+        - upper * wv_sqrt(upper) * .108f;
+      const float illumination = (front + bounce + focal + environment - shadow) * interface;
       relief[0] = relief[1] = relief[2] = illumination >= 0.f ? 255 : 0;
       relief[3] = (unsigned char)(wv_clampf(wv_fabs(illumination), 0.f, 1.f) * coverage * 255.f);
     }
