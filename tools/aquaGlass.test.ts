@@ -184,6 +184,16 @@ test("vertical transmission expands at the rim without inflating the inner face"
   assert.deepEqual(at(106).slice(0, 2), [128, 128]);
 });
 
+test("shoulder rays steer the left cap without shifting the clear center", () => {
+  const w = 390, h = 212, padding = 192, mw = w + padding * 2, mh = h + padding * 2;
+  assert.equal(api.wg_aqua_lens(w, h, h / 2, h * .36, h * .2, 1.46, 1, padding), 1);
+  const map = copy(mw, mh);
+  const at = (x: number, y: number) => pixel(map, mw, x + padding, y + padding)[1];
+  assert(at(45, 80) > at(w - 45, 80) + 3);
+  assert(at(45, 132) > at(w - 45, 132) + 1);
+  assert.equal(at(195, 106), 128);
+});
+
 test("invalid volume dimensions or optical parameters leave all fields intact", () => {
   assert.equal(api.wg_aqua_lens(80, 54, 27, 19, 9, 1.46, 1.18, 49), 1);
   const pointers = [api.wg_out_ptr(), api.wg_aqua_reflection_ptr(), api.wg_aqua_relief_ptr()];

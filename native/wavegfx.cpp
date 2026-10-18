@@ -407,6 +407,11 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       const float compression = (ior - 1.f) * .13f;
       float dy = (py - hh) * ((1.f + compression) / zoom - 1.f)
         - ny * bend * travel * u * u;
+      const float leftCap = wv_max(-ux, 0.f);
+      const float incidence = (wv_fabs(uy) - .46f) / .14f;
+      const float shoulderRay = leftCap * leftCap * wv_sqrt(u)
+        * wv_exp(-incidence * incidence);
+      dy += shoulderRay * (9.f - 24.f * uy * u) * wv_clampf((ior - 1.f) / .46f, 0.f, 1.f);
       const float reach = wv_min(120.f, wv_min(hw, hh) * 1.1f), magnitude = wv_sqrt(dx * dx + dy * dy);
       const float soft = 1.f / wv_sqrt(1.f + (magnitude / reach) * (magnitude / reach));
       // Regularize the tangent singularity before rasterizing either ray field.
