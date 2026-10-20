@@ -14,6 +14,8 @@ export interface AquaLensOptions {
   relief?: number;
   /** Strength of the directional reflected-light band (default 1). */
   reflection?: number;
+  /** Opacity of the thin specular rim highlight (default 0 = off). */
+  rim?: number;
 }
 
 function image(w: number, h: number, pointer: number, maskChannel?: number | "displacement"): string {
@@ -51,13 +53,17 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
   const caustic = document.createElement("span");
   caustic.setAttribute("aria-hidden", "true");
   caustic.style.cssText = "position:absolute;inset:0;border-radius:inherit;pointer-events:none";
+  if (options.rim) {
+    caustic.style.boxShadow = "inset 0 .8px 0 rgba(255,255,255,.6),inset .6px .6px 0 rgba(255,255,255,.25),inset 0 -1px 1px rgba(0,0,0,.14)";
+    caustic.style.opacity = String(options.rim);
+  }
   const optic = document.createElement("span");
   optic.setAttribute("aria-hidden", "true");
   optic.style.cssText = "position:absolute;pointer-events:none;z-index:-1";
   if (getComputedStyle(el).position === "static") el.style.position = "relative";
   el.style.isolation = "isolate";
   el.prepend(optic, relief, caustic);
-  let enabled = true, last = "";
+  let enabled = true, last = "", ambientSet = false;
 
   function render() {
     const style = getComputedStyle(el);
@@ -124,9 +130,17 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
     relief.style.backgroundImage = `url("${edge}")`;
     relief.style.backgroundSize = `${width}px ${height}px`;
     relief.style.backgroundPosition = `${-p}px ${-p}px`;
-    caustic.style.maskImage = `url("${grazing}")`;
-    caustic.style.maskSize = `${width}px ${height}px`;
-    caustic.style.maskPosition = `${-p}px ${-p}px`;
+    if (ambientSet) {
+      caustic.style.maskImage = `url("${grazing}")`;
+      caustic.style.maskSize = `${width}px ${height}px`;
+      caustic.style.maskPosition = `${-p}px ${-p}px`;
+      caustic.style.setProperty("-webkit-mask-image", `url("${grazing}")`);
+      caustic.style.setProperty("-webkit-mask-size", `${width}px ${height}px`);
+      caustic.style.setProperty("-webkit-mask-position", `${-p}px ${-p}px`);
+    } else {
+      caustic.style.maskImage = "";
+      caustic.style.setProperty("-webkit-mask-image", "");
+    }
     last = key;
     setEnabled(enabled);
   }
@@ -140,10 +154,12 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
   function setAmbient(color: string, strength: number) {
     const channels = color.match(/[\d.]+/g)?.slice(0, 3).map(Number);
     if (!channels || channels.length !== 3) {
+      ambientSet = false;
       caustic.style.background = "";
       caustic.style.boxShadow = "";
       return;
     }
+    ambientSet = true;
     const amount = Math.max(0, Math.min(1, strength));
     const light = [...channels];
     const order = channels.map((value, index) => ({ value, index }))
