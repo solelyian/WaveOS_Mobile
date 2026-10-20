@@ -8,6 +8,8 @@ export interface AquaLensOptions {
   ior?: number;
   depth?: number;
   thickness?: number;
+  /** CSS pixel corner radius; defaults to a capsule/circle. */
+  radius?: number;
 }
 
 function image(w: number, h: number, pointer: number, maskChannel?: number | "displacement"): string {
@@ -48,6 +50,7 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
   optic.setAttribute("aria-hidden", "true");
   optic.style.cssText = "position:absolute;pointer-events:none;z-index:-1";
   if (getComputedStyle(el).position === "static") el.style.position = "relative";
+  el.style.isolation = "isolate";
   el.prepend(optic, relief, caustic);
   let enabled = true, last = "";
 
@@ -60,13 +63,14 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
       : extra(["padding-top", "padding-bottom", "border-top-width", "border-bottom-width"]));
     if (w < 2 || h < 2) return;
     const padding = Math.ceil(Math.min(w, h) * .9);
-    const ratio = Math.min(4, 1022 / (w + padding * 2), 638 / (h + padding * 2));
+    const ratio = Math.min(4, 1020 / (w + padding * 2), 636 / (h + padding * 2));
     const rw = Math.round(w * ratio), rh = Math.round(h * ratio), pad = Math.ceil(padding * ratio);
     const mw = rw + pad * 2, mh = rh + pad * 2;
-    const key = `${w}-${h}-${rw}-${rh}-${pad}`;
+    const radius = Math.max(0, Math.min(options.radius ?? Math.min(w, h) / 2, Math.min(w, h) / 2)) * ratio;
+    const key = `${w}-${h}-${rw}-${rh}-${pad}-${radius}`;
     if (key === last) return;
     const api = W();
-    if (!api.wg_aqua_lens(rw, rh, Math.min(rw, rh) / 2,
+    if (!api.wg_aqua_lens(rw, rh, radius,
       (options.depth ?? h * .36) * ratio,
       (options.thickness ?? h * .2) * ratio,
       options.ior ?? 1.46, options.zoom ?? 1.18, pad)) return;
@@ -82,9 +86,9 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
     const shift = (scale: number) => scale / 510;
     const response = Math.max(0, Math.min(1, ((options.ior ?? 1.46) - 1) / .46));
     const curve = `0 .125 .25 .375 .5 .625 .75 ${.875 + .055 * response} 1`;
-    const radius = getComputedStyle(el).borderTopLeftRadius;
+    const corner = getComputedStyle(el).borderTopLeftRadius;
     optic.style.inset = `${-p}px`;
-    optic.style.clipPath = `inset(${p}px round ${radius})`;
+    optic.style.clipPath = `inset(${p}px round ${corner})`;
     filter.setAttribute("x", "0"); filter.setAttribute("y", "0");
     filter.setAttribute("width", String(width)); filter.setAttribute("height", String(height));
     filter.innerHTML =
