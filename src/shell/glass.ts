@@ -103,6 +103,10 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
     ? (parseFloat(cs) / 100) * Math.min(w, h)     // 50% → cercle exact
     : (parseFloat(cs) || 20));
   const size = Math.min(w, h);
+  if (control) {
+    el.dataset.lgDone = "1";
+    return;
+  }
   if (aqua) {
     const capsule = rad >= size / 2 - .5;
     aquaLens(el, {
