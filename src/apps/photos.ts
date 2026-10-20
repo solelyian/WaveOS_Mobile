@@ -181,9 +181,9 @@ export function PhotosApp() {
   render();
 
   const TABS = [
-    { id: "library", icon: "layoutGrid" as const, label: "Library" },
+    { id: "library", icon: "images" as const, label: "Library" },
     { id: "foryou", icon: "heart" as const, label: "For You" },
-    { id: "albums", icon: "image" as const, label: "Albums" },
+    { id: "albums", icon: "squareStack" as const, label: "Albums" },
     { id: "search", icon: "search" as const, label: "Search" },
   ];
   const bar = FloatingTabBar(TABS, tab, (id) => { tab = id; album = null; render(); });

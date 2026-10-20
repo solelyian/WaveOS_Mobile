@@ -108,6 +108,18 @@ import nfc from "lucide-static/icons/nfc.svg?raw";
 import scanLine from "lucide-static/icons/scan-line.svg?raw";
 import zap from "lucide-static/icons/zap.svg?raw";
 import scissors from "lucide-static/icons/scissors.svg?raw";
+import alarmClock from "lucide-static/icons/alarm-clock.svg?raw";
+import timer from "lucide-static/icons/timer.svg?raw";
+import hourglass from "lucide-static/icons/hourglass.svg?raw";
+import grip from "lucide-static/icons/grip.svg?raw";
+import playCircle from "lucide-static/icons/play-circle.svg?raw";
+import radioTower from "lucide-static/icons/radio-tower.svg?raw";
+import inbox from "lucide-static/icons/inbox.svg?raw";
+import fileText from "lucide-static/icons/file-text.svg?raw";
+import newspaper from "lucide-static/icons/newspaper.svg?raw";
+import rocket from "lucide-static/icons/rocket.svg?raw";
+import images from "lucide-static/icons/images.svg?raw";
+import squareStack from "lucide-static/icons/square-stack.svg?raw";
 
 export const I = {
   wifi, wifiOff, battery, signal, search, camera, flashlight, music,
@@ -126,6 +138,8 @@ export const I = {
   delete: deleteIcon,
   laptop, tablet, watch, headphones, tv, fileUp, airplay,
   nfc, scanLine, zap, scissors,
+  alarmClock, timer, hourglass, grip, playCircle, radioTower,
+  inbox, fileText, newspaper, rocket, images, squareStack,
 } as const;
 
 export type IconName = keyof typeof I;

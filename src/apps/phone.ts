@@ -285,7 +285,7 @@ export function PhoneApp() {
     { id: "favorites", icon: "star", label: "Favorites" },
     { id: "recents", icon: "clock", label: "Recents" },
     { id: "contacts", icon: "user", label: "Contacts" },
-    { id: "keypad", icon: "layoutGrid", label: "Keypad" },
+    { id: "keypad", icon: "grip", label: "Keypad" },
     { id: "voicemail", icon: "voicemail", label: "Voicemail" },
   ], "keypad", show);
 
