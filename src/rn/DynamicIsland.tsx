@@ -5,6 +5,7 @@ import { useSys, set } from "./sys";
 import { cur } from "../system/media";
 import { Spring, SPRINGS, lerp, onFrame, domOf, clamp } from "./fx";
 import { Icon } from "./Icon";
+import { nativeDiTop } from "../platform";
 
 // (w, h, r) pour les trois états : idle, mini-player, étendu — calque DK du moteur.
 const DK = [
@@ -51,7 +52,7 @@ export function DynamicIsland() {
   }); return () => { off(); }; }, [sp]);
 
   return (
-    <View style={st.di} pointerEvents="box-none">
+    <View style={[st.di, { top: nativeDiTop() }]} pointerEvents="box-none">
       <Pressable onPress={() => setExpanded(!expanded)} nativeID="di-capsule">
         <View ref={cap} style={st.cap}>
           {/* contenu étendu */}

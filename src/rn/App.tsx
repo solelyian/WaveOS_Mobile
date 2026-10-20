@@ -18,6 +18,7 @@ import { liquidGlassAll } from "./glass";
 import { host, pushRecent, type AppRect } from "./host";
 import { mountBoot } from "../system/bootAnimation";
 import { domOf } from "./fx";
+import { NATIVE } from "../platform";
 
 function Boot({ onDone }: { onDone: () => void }) {
   const ref = React.useRef<View>(null);
@@ -129,7 +130,7 @@ export default function App() {
     wallpaper.style.filter = `blur(${blur}px) brightness(${brightness}) saturate(${saturation})`;
   }, [s.locked, s.sheet, s.activeApp]);
   return (
-    <View ref={rootEl} style={st.phone}>
+    <View ref={rootEl} style={[st.phone, NATIVE && { borderRadius: 0 }]}>
       <View style={st.wall} nativeID="wp" pointerEvents="none" />
       {!s.locked && <HomeGrid onOpen={(id, el) => openApp(id, el)} onSpot={() => setSpot(true)} />}
       {s.locked && <LockScreen />}

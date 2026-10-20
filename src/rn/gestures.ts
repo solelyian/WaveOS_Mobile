@@ -130,14 +130,26 @@ export function attachGestures(root: HTMLElement, h: GestureHandlers) {
     }
   };
 
+  // Android WebView : sans touch-action:none le navigateur réclame le geste
+  // (scroll) et pointercancel casse les drags. On garde le scroll natif dans
+  // les zones #app-scroll/[data-scroll], ailleurs preventDefault bloque la
+  // prise de contrôle et les événements pointer continuent de couler.
+  const touchMove = (e: TouchEvent) => {
+    const t = e.target as HTMLElement | null;
+    if (t?.closest?.("#app-scroll,[data-scroll],input,textarea")) return;
+    e.preventDefault();
+  };
+
   root.addEventListener("pointerdown", down);
   window.addEventListener("pointermove", move);
   window.addEventListener("pointerup", up);
   window.addEventListener("pointercancel", up);
+  document.addEventListener("touchmove", touchMove, { passive: false });
   return () => {
     root.removeEventListener("pointerdown", down);
     window.removeEventListener("pointermove", move);
     window.removeEventListener("pointerup", up);
     window.removeEventListener("pointercancel", up);
+    document.removeEventListener("touchmove", touchMove);
   };
 }

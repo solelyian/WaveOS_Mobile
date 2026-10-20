@@ -16,6 +16,9 @@ export interface AquaLensOptions {
   reflection?: number;
   /** Opacity of the thin specular rim highlight (default 0 = off). */
   rim?: number;
+  /** Rendu allégé (Android WebView) : flou backdrop natif au lieu du filtre
+   *  SVG à 3 displacement maps — le raster url() y est software ou ignoré. */
+  lite?: boolean;
 }
 
 function image(w: number, h: number, pointer: number, maskChannel?: number | "displacement"): string {
@@ -34,6 +37,7 @@ function image(w: number, h: number, pointer: number, maskChannel?: number | "di
 }
 
 export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
+  const lite = !!options.lite;
   const id = `aqua-volume-${++sequence}`;
   const svg = document.createElementNS(NS, "svg");
   svg.setAttribute("width", "0"); svg.setAttribute("height", "0");
@@ -45,7 +49,8 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
   filter.setAttribute("primitiveUnits", "userSpaceOnUse");
   filter.setAttribute("color-interpolation-filters", "sRGB");
   const defs = document.createElementNS(NS, "defs");
-  defs.append(filter); svg.append(defs); document.body.append(svg);
+  defs.append(filter); svg.append(defs);
+  if (!lite) document.body.append(svg);
   const relief = document.createElement("span");
   relief.setAttribute("aria-hidden", "true");
   relief.style.cssText = "position:absolute;inset:0;border-radius:inherit;pointer-events:none;background-size:100% 100%";
@@ -85,11 +90,14 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
       (options.depth ?? h * .36) * ratio,
       (options.thickness ?? h * .2) * ratio,
       options.ior ?? 1.46, options.zoom ?? 1.18, pad)) return;
-    const transmission = image(mw, mh, api.wg_out_ptr());
-    const reflection = image(mw, mh, api.wg_aqua_reflection_ptr());
     const edge = image(mw, mh, api.wg_aqua_relief_ptr());
-    const grazing = image(mw, mh, api.wg_aqua_reflection_ptr(), 2);
-    const warped = image(mw, mh, api.wg_out_ptr(), "displacement");
+    let transmission = "", reflection = "", grazing = "", warped = "";
+    if (!lite) {
+      transmission = image(mw, mh, api.wg_out_ptr());
+      reflection = image(mw, mh, api.wg_aqua_reflection_ptr());
+      grazing = image(mw, mh, api.wg_aqua_reflection_ptr(), 2);
+      warped = image(mw, mh, api.wg_out_ptr(), "displacement");
+    }
     const p = pad / ratio;
     const width = mw / ratio, height = mh / ratio;
     const transmitScale = 256 / ratio;
@@ -102,7 +110,7 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
     optic.style.clipPath = `inset(${p}px round ${corner})`;
     filter.setAttribute("x", "0"); filter.setAttribute("y", "0");
     filter.setAttribute("width", String(width)); filter.setAttribute("height", String(height));
-    filter.innerHTML =
+    if (!lite) filter.innerHTML =
       `<feImage href="${transmission}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="transmissionRaw"/>` +
       `<feGaussianBlur in="transmissionRaw" stdDeviation=".3" result="transmissionMap"/>` +
       `<feImage href="${reflection}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="reflectionMap"/>` +
@@ -147,7 +155,9 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
 
   function setEnabled(value: boolean) {
     enabled = value;
-    optic.style.backdropFilter = value ? `url("#${id}")` : "none";
+    optic.style.backdropFilter = lite
+      ? (value ? "blur(12px) saturate(1.5) brightness(1.04)" : "none")
+      : (value ? `url("#${id}")` : "none");
     optic.style.setProperty("-webkit-backdrop-filter", optic.style.backdropFilter);
   }
 
@@ -177,7 +187,7 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
     setEnabled, setAmbient,
     destroy() {
       observer.disconnect();
-      svg.remove(); relief.remove(); optic.remove(); caustic.remove();
+      if (!lite) svg.remove(); relief.remove(); optic.remove(); caustic.remove();
     }
   };
 }

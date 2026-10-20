@@ -97,7 +97,7 @@ export function FilesApp() {
   return (
     <View style={{ flex: 1, backgroundColor: "#f2f2f7" }}>
       <GlassHeader title="Files" large />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, alignItems: "center", paddingHorizontal: 20, paddingBottom: 0 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} nativeID="app-scroll" contentContainerStyle={{ gap: 6, alignItems: "center", paddingHorizontal: 20, paddingBottom: 0 }}>
         {path.map((n, i) => (
           <Pressable key={i} onPress={() => goto(i)} style={{ flexDirection: "row", alignItems: "center" }}>
             <Text style={{ fontSize: 13, fontWeight: i === path.length - 1 ? "700" : "500", color: i === path.length - 1 ? "#111" : "#3b82f6" }}>{n.name}</Text>

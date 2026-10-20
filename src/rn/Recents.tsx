@@ -115,7 +115,7 @@ export function Recents({ onOpen }: { onOpen: (id: AppId, r: AppRect | null) => 
       <Pressable ref={scrimRef} style={rs.scrim} onPress={close} />
       {ids.length ? (
         <>
-          <ScrollView ref={strip} horizontal style={{ flex: 1 }} contentContainerStyle={rs.strip} showsHorizontalScrollIndicator={false}>
+          <ScrollView ref={strip} horizontal nativeID="app-scroll" style={{ flex: 1 }} contentContainerStyle={rs.strip} showsHorizontalScrollIndicator={false}>
             {ids.map((id) => <Card key={id} id={id} onOpen={onOpen} onKill={killRecent} />)}
           </ScrollView>
           <View style={rs.foot}>

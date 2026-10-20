@@ -18,6 +18,7 @@
 // liquidGlassAll(root) balaie les surfaces glass connues.
 import { W, loadWasm } from "../wasm/bridge";
 import { aquaLens } from "../system/aquaLens";
+import { NATIVE } from "../platform";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 let defs: SVGDefsElement | null = null;
@@ -117,6 +118,7 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
       relief: capsule ? .32 : .22,
       reflection: 0,
       rim: capsule ? .9 : .55,
+      lite: NATIVE, // WebView Android : raster SVG url() trop lent/invisible
     });
     el.dataset.lgDone = "1";
     return;

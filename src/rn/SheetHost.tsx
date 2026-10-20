@@ -7,6 +7,7 @@ import { Spring, SPRINGS, onFrame, domOf } from "./fx";
 import { NotificationCenter } from "./NotificationCenter";
 import { ControlCenter } from "./ControlCenter";
 import { SuperDevice } from "./SuperDevice";
+import { NATIVE } from "../platform";
 
 const H = 850;
 
@@ -45,8 +46,11 @@ export function SheetHost() {
     const el = domOf(wrap);
     const f = el?.querySelector<HTMLElement>("#sheet-frost");
     if (f) {
-      const filter = active === "cc" ? "blur(40px) saturate(65%) brightness(.72)" : active === "nc"
-        ? "blur(38px) saturate(115%) brightness(.6)" : "blur(30px) saturate(160%)";
+      // blur allégé en natif (backdrop-filter plein écran = GPU du WebView saturé)
+      const filter = active === "cc"
+        ? `blur(${NATIVE ? 24 : 40}px) saturate(65%) brightness(.72)` : active === "nc"
+        ? `blur(${NATIVE ? 24 : 38}px) saturate(115%) brightness(.6)`
+        : `blur(${NATIVE ? 20 : 30}px) saturate(160%)`;
       f.style.backdropFilter = filter;
       (f.style as unknown as Record<string, string>).webkitBackdropFilter = filter;
       f.style.backgroundColor = active === "cc" ? "rgba(18,20,24,.30)" : active === "nc"
