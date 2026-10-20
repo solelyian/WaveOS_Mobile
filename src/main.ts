@@ -6,7 +6,8 @@ import { loadWasm } from "./wasm/bridge";
 import { initTheme } from "./rn/theme";
 
 const PHONE_W = 400, PHONE_H = 850;
-const NATIVE = Boolean((window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.());
+const NATIVE = Boolean((window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.())
+  || new URLSearchParams(location.search).has("native");
 
 function layoutStage() {
   const stage = document.getElementById("stage")!;
