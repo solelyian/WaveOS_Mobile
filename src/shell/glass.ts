@@ -111,7 +111,8 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
       ior: capsule ? 1.32 : 1.24,
       depth: o.depth ?? (capsule ? Math.min(9, size * .14) : Math.min(10, size * .1)),
       thickness: capsule ? Math.min(5, size * .08) : Math.min(6, size * .06),
-      relief: capsule ? .48 : .32,
+      relief: capsule ? .32 : .22,
+      reflection: capsule ? .22 : .16,
     });
     el.dataset.lgDone = "1";
     return;
