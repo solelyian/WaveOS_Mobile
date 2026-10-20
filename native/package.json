@@ -1,0 +1,21 @@
+{
+  "name": "waveos-native",
+  "private": true,
+  "version": "0.1.0",
+  "dependencies": {
+    "lucide-react-native": "0.525.0",
+    "react": "18.3.1",
+    "react-native": "0.77.3",
+    "react-native-svg": "^15.12.1"
+  },
+  "devDependencies": {
+    "@react-native-community/cli": "^15.0.1",
+    "@react-native-community/cli-platform-android": "^15.0.1",
+    "@react-native-community/cli-platform-apple": "^15.0.1",
+    "@react-native/babel-preset": "0.77.3",
+    "@react-native/codegen": "^0.77.3",
+    "@react-native/metro-config": "0.77.3",
+    "@types/react": "^18.3.31",
+    "typescript": "^5.9.0"
+  }
+}

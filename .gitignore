@@ -7,3 +7,4 @@ android/build/
 android/app/build/
 android/capacitor-cordova-android-plugins/build/
 waveos-android.apk
+waveos-native.apk
