@@ -169,22 +169,18 @@ export function FloatingTabBar({ tabs, active, onTab, dark }: {
   const inRef = React.useRef<View>(null);
   const pillRef = React.useRef<View>(null);
   const dotRef = React.useRef<View>(null);
-  const w = React.useRef(0);
   const sx = React.useRef(new Spring(0, ...SPRINGS.snap)).current;
   const idx = Math.max(0, tabs.findIndex((t) => t.id === active));
   React.useEffect(() => {
     const el = domOf(inRef);
-    if (el) {
-      w.current = el.getBoundingClientRect().width;
-      liquidGlass(el, { radius: 26, scale: 10, blur: 4 });
-    }
-    const c = (idx + 0.5) * (w.current / tabs.length);
-    sx.to(c);
+    if (el) liquidGlass(el, { radius: 26, scale: 10, blur: 4 });
+    const btn = el?.children?.[idx] as HTMLElement | undefined;
+    sx.to(btn ? btn.offsetLeft + btn.offsetWidth / 2 : 0);
     const off = onFrame((dt) => {
       sx.step(dt);
       const p = domOf(pillRef), d = domOf(dotRef);
-      if (p) p.style.transform = `translateX(${sx.v - 24}px)`;
-      if (d) d.style.transform = `translateX(${sx.v - 2}px)`;
+      if (p) p.style.transform = `translateX(${sx.v - p.offsetWidth / 2}px)`;
+      if (d) d.style.transform = `translateX(${sx.v - d.offsetWidth / 2}px)`;
     });
     return () => { off(); };
   }, [idx, tabs.length]);
