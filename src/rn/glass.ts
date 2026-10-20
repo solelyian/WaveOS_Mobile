@@ -102,6 +102,10 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
     ? (parseFloat(cs) / 100) * Math.min(w, h)
     : (parseFloat(cs) || 20));
   const size = Math.min(w, h);
+  if (control) {
+    el.dataset.lgDone = "1";
+    return;
+  }
   if (!el.hasAttribute("data-glass-legacy")) {
     const capsule = rad >= size / 2 - .5;
     aquaLens(el, {
