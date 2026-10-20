@@ -141,9 +141,9 @@ export function MusicApp() {
         )}
       </ScrollView>
       <FloatingTabBar dark active={tab} onTab={setTab} tabs={[
-        { id: "listen", icon: "play", label: "Listen Now" },
+        { id: "listen", icon: "playCircle", label: "Listen Now" },
         { id: "browse", icon: "layoutGrid", label: "Browse" },
-        { id: "radio", icon: "cast", label: "Radio" },
+        { id: "radio", icon: "radioTower", label: "Radio" },
         { id: "search", icon: "search", label: "Search" },
       ]} />
       {panes.map((p, i) => (

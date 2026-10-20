@@ -142,8 +142,8 @@ export function StoreApp() {
         )}
       </ScrollView>
       <FloatingTabBar active={tab} onTab={setTab} tabs={[
-        { id: "today", icon: "star", label: "Today" },
-        { id: "games", icon: "gamepad2", label: "Games" },
+        { id: "today", icon: "newspaper", label: "Today" },
+        { id: "games", icon: "rocket", label: "Games" },
         { id: "apps", icon: "layoutGrid", label: "Apps" },
         { id: "search", icon: "search", label: "Search" },
       ]} />
