@@ -4,8 +4,16 @@ import * as React from "react";
 import type { View } from "react-native";
 import { StyleSheet } from "react-native";
 
-const px = (v: unknown) =>
-  typeof v === "string" && v.endsWith("px") ? parseFloat(v) : v;
+// RN styles attendent des nombres : strings "12px"/"0.92" → number,
+// "" → undefined (reset vers le style de base), le reste reste string.
+const num = (v: unknown) => {
+  if (typeof v !== "string") return v;
+  if (v.endsWith("px")) return parseFloat(v);
+  const t = v.trim();
+  if (t === "") return undefined;
+  const n = Number(t);
+  return Number.isFinite(n) ? n : v;
+};
 
 // transform CSS → tableau RN ([{translateX}…])
 function cssTransform(v: string) {
@@ -22,15 +30,14 @@ function cssTransform(v: string) {
   return out;
 }
 
-const STRING_PROPS = new Set(["position", "display", "overflow", "transformOrigin", "isolation"]);
-const SKIP = new Set(["filter", "backdropFilter", "webkitBackdropFilter", "clipPath", "maskImage", "webkitMaskImage", "maskSize", "webkitMaskSize", "maskPosition", "webkitMaskPosition", "backgroundImage", "backgroundSize", "backgroundPosition", "boxShadow", "userSelect", "webkitUserSelect", "pointerEvents", "zIndex", "inset", "transition", "background", "backgroundColor:gradient"]);
+const STRING_PROPS = new Set(["position", "display", "overflow", "isolation"]);
+const SKIP = new Set(["filter", "backdropFilter", "webkitBackdropFilter", "clipPath", "maskImage", "webkitMaskImage", "maskSize", "webkitMaskSize", "maskPosition", "webkitMaskPosition", "backgroundImage", "backgroundSize", "backgroundPosition", "boxShadow", "userSelect", "webkitUserSelect", "pointerEvents", "zIndex", "inset", "transition", "background", "backgroundColor:gradient", "visibility", "transformOrigin"]);
 
 function conv(k: string, v: unknown) {
   if (SKIP.has(k)) return [null, null] as const;
   if (k === "transform") return ["transform", cssTransform(String(v))] as const;
-  if (k === "borderTopLeftRadius" || k === "borderRadius") return ["borderRadius", px(v)] as const;
-  if (k === "webkitBackdropFilter") return [null, null] as const;
-  return [k, STRING_PROPS.has(k) ? v : px(v)] as const;
+  if (k === "borderTopLeftRadius" || k === "borderRadius") return ["borderRadius", num(v)] as const;
+  return [k, STRING_PROPS.has(k) ? v : num(v)] as const;
 }
 
 const cache = new WeakMap<object, NativeEl>();
