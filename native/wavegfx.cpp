@@ -408,16 +408,20 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
       const float cap = wv_clampf((wv_fabs(px - hw) - (hw - r)) / wv_max(r, 1.f), 0.f, 1.f);
       const float capTaper = wv_clampf(cap * 2.f, 0.f, 1.f);
       const float capWeight = capTaper * capTaper * (3.f - 2.f * capTaper);
-      const float cap2 = (cap / .65f) * (cap / .65f);
-      const float cap6 = cap2 * cap2 * cap2;
-      const float capFocus = cap6 * cap6 * cap2;
-      const float capZoom = 1.f + 4.1f * (ior - 1.f) * thickness / wv_max(r, 1.f)
-        * capFocus / (1.f + capFocus);
+      const float capOffset = (cap - .78f) / .17f;
+      const float capFocus = wv_exp(-capOffset * capOffset);
+      const float capZoom = 1.f + 2.4f * (ior - 1.f) * thickness / wv_max(r, 1.f)
+        * capFocus;
       float dy = (py - hh) * ((1.f + compression) / (zoom * capZoom) - 1.f)
         - ny * bend * travel * u * u * (1.f - capWeight);
-      const float capOffset = (cap - .52f) / .12f;
-      const float shoulderShift = thickness * .137f * wv_exp(-capOffset * capOffset);
-      dy += shoulderShift * wv_max(-ux, 0.f) * wv_clampf((ior - 1.f) / .46f, 0.f, 1.f);
+      const float shearOffset = (cap - .70f) / .14f;
+      const float pocketOffset = (cap - .48f) / .18f;
+      const float directionalShift = thickness * wv_max(-ux, 0.f)
+        * wv_clampf((ior - 1.f) / .46f, 0.f, 1.f);
+      dy += directionalShift * (
+        .07f * wv_exp(-shearOffset * shearOffset)
+        + .18f * wv_exp(-pocketOffset * pocketOffset)
+      );
       const float reach = wv_min(120.f, wv_min(hw, hh) * 1.1f), magnitude = wv_sqrt(dx * dx + dy * dy);
       const float soft = 1.f / wv_sqrt(1.f + (magnitude / reach) * (magnitude / reach));
       // Regularize the tangent singularity before rasterizing either ray field.
