@@ -34,6 +34,21 @@ global.getComputedStyle = global.getComputedStyle ?? (() => ({ getPropertyValue:
 global.ResizeObserver = global.ResizeObserver ?? class { observe() {} unobserve() {} disconnect() {} };
 global.MutationObserver = global.MutationObserver ?? class { observe() {} disconnect() {} };
 global.ImageData = global.ImageData ?? class { constructor(px, w, h) { this.data = px; this.width = w; this.height = h; } };
+global.addEventListener = global.addEventListener ?? (() => {});
+global.removeEventListener = global.removeEventListener ?? (() => {});
+global.navigator = global.navigator ?? { product: "ReactNative", language: "en", userAgent: "WaveOS" };
+global.devicePixelRatio = global.devicePixelRatio ?? 3;
+const mem = new Map();
+global.localStorage = global.localStorage ?? {
+  getItem: (k) => (mem.has(String(k)) ? mem.get(String(k)) : null),
+  setItem: (k, v) => mem.set(String(k), String(v)),
+  removeItem: (k) => mem.delete(String(k)),
+  clear: () => mem.clear(),
+};
+
+try {
+  global.ErrorUtils?.setGlobalHandler?.((e) => { console.error("WaveOS JS error:", e); });
+} catch (e) { /* noop */ }
 
 const App = require("../src/rn/App.native").default;
 AppRegistry.registerComponent("WaveOS", () => App);

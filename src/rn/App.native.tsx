@@ -1,7 +1,7 @@
 // App.native.tsx — coquille téléphone native : wallpaper, lockscreen,
 // statusbar, DI, sheets, fenêtre d'app (morph) et switcher de recents.
 import * as React from "react";
-import { View, StyleSheet, ImageBackground } from "react-native";
+import { View, StyleSheet, ImageBackground, Text, ScrollView } from "react-native";
 import { useSys, set } from "./sys";
 import { LockScreen, lockCtl } from "./LockScreen";
 import { StatusBar } from "./StatusBar";
@@ -18,7 +18,7 @@ import { host, pushRecent, type AppRect } from "./host";
 
 const wallpaper = require("../../native/assets/wallpaper.jpg");
 
-export default function App() {
+function AppImpl() {
   const s = useSys();
   const [from, setFrom] = React.useState<AppRect | null>(null);
   const [spot, setSpot] = React.useState(false);
@@ -84,3 +84,39 @@ const st = StyleSheet.create({
   phone: { flex: 1, backgroundColor: "#0a0a0c", overflow: "hidden" },
   wall: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
 });
+
+// En release une erreur JS tue le processus sans trace — la boundary la rend
+// visible à l'écran pour le debug du port.
+class ErrBoundary extends React.Component<
+  { children: React.ReactNode },
+  { err: unknown }
+> {
+  state = { err: null as unknown };
+  static getDerivedStateFromError(err: unknown) { return { err }; }
+  render() {
+    if (this.state.err) {
+      const e = this.state.err;
+      return (
+        <View style={{ flex: 1, backgroundColor: "#0a0a0c", padding: 28, paddingTop: 80 }}>
+          <Text style={{ color: "#ff6b6b", fontSize: 15, fontWeight: "600", marginBottom: 12 }}>
+            WaveOS — erreur de rendu
+          </Text>
+          <ScrollView>
+            <Text style={{ color: "#fff", fontSize: 11, fontFamily: "monospace" }}>
+              {String((e as Error)?.stack ?? e)}
+            </Text>
+          </ScrollView>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function App() {
+  return (
+    <ErrBoundary>
+      <AppImpl />
+    </ErrBoundary>
+  );
+}
