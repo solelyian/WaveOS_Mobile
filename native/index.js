@@ -45,6 +45,43 @@ global.localStorage = global.localStorage ?? {
   removeItem: (k) => mem.delete(String(k)),
   clear: () => mem.clear(),
 };
+global.sessionStorage = global.sessionStorage ?? global.localStorage;
+
+// DOM globals manquants sous Hermes — stubs neutres pour instanceof / appels résiduels.
+class FakeEvent { constructor(type, init) { this.type = type; Object.assign(this, init); }
+  preventDefault() {} stopPropagation() {} }
+global.Event = global.Event ?? FakeEvent;
+for (const k of ["CustomEvent", "PointerEvent", "MouseEvent", "TouchEvent", "KeyboardEvent",
+  "WheelEvent", "InputEvent", "FocusEvent", "AnimationEvent", "TransitionEvent"]) {
+  global[k] = global[k] ?? FakeEvent;
+}
+for (const k of ["Node", "Element", "HTMLElement", "SVGElement", "HTMLInputElement",
+  "HTMLCanvasElement", "Comment", "Text", "DocumentFragment"]) {
+  global[k] = global[k] ?? class {};
+}
+global.matchMedia = global.matchMedia ?? ((q) => ({
+  matches: false, media: q, onchange: null,
+  addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {},
+}));
+global.crypto = global.crypto ?? {
+  getRandomValues: (a) => { for (let i = 0; i < a.length; i++) a[i] = Math.floor(Math.random() * 256); return a; },
+  randomUUID: () => "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = Math.floor(Math.random() * 16), v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  }),
+};
+global.document.fonts = global.document.fonts ?? { ready: Promise.resolve(), add() {}, delete() {}, check: () => true };
+global.document.cookie = "";
+global.document.title = "WaveOS";
+global.Image = global.Image ?? class { set src(v) { this._src = v; this.onload?.(); } get src() { return this._src; } };
+global.screen = global.screen ?? { width, height, availWidth: width, availHeight: height, orientation: { type: "portrait-primary", angle: 0 } };
+global.history = global.history ?? { pushState() {}, replaceState() {}, back() {}, forward() {}, go() {}, state: null, length: 1 };
+global.structuredClone = global.structuredClone ?? ((v) => JSON.parse(JSON.stringify(v)));
+global.requestIdleCallback = global.requestIdleCallback ?? ((f) => setTimeout(() => f({ didTimeout: false, timeRemaining: () => 50 }), 1));
+global.IntersectionObserver = global.IntersectionObserver ?? class { observe() {} unobserve() {} disconnect() {} };
+global.alert = global.alert ?? (() => {});
+global.confirm = global.confirm ?? (() => false);
+global.prompt = global.prompt ?? (() => null);
 
 try {
   global.ErrorUtils?.setGlobalHandler?.((e) => { console.error("WaveOS JS error:", e); });
