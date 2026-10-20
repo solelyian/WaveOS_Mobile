@@ -50,6 +50,9 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    if ((findProperty("hermesEnabled")?.toString() ?: "true").toBoolean()) {
+        implementation("com.facebook.react:hermes-android")
+    }
     implementation(project(":react-native-svg"))
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("com.google.android.material:material:1.12.0")
