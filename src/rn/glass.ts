@@ -17,6 +17,7 @@
 // Usage : await liquidGlass(el, { scale: 16 })  — el reçoit le filtre ;
 // liquidGlassAll(root) balaie les surfaces glass connues.
 import { W, loadWasm } from "../wasm/bridge";
+import { aquaLens } from "../system/aquaLens";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 let defs: SVGDefsElement | null = null;
@@ -100,6 +101,17 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
   const rad = o.radius ?? (notification ? 34 : cs.endsWith("%")
     ? (parseFloat(cs) / 100) * Math.min(w, h)
     : (parseFloat(cs) || 20));
+  if (!el.hasAttribute("data-glass-legacy")) {
+    aquaLens(el, {
+      radius: rad,
+      zoom: 1,
+      ior: 1.46,
+      depth: o.depth ?? h * .36,
+      thickness: Math.max(2, h * .2),
+    });
+    el.dataset.lgDone = "1";
+    return;
+  }
   const amp = o.amp ?? 1.0;
   const size = Math.min(w, h);
   const depth = o.depth ?? (control ? Math.min(16, Math.max(4, size * .12)) : 30);

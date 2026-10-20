@@ -31,6 +31,13 @@ export interface WasmApi {
   wg_glyph_mask_ptr(): number;
   wg_glyph_edge_ptr(): number;
   wg_glyph_render(w: number, h: number, depth: number, pixelRatio: number): number;
+  wg_aqua_lens(w: number, h: number, r: number, depth: number,
+               thickness: number, ior: number, zoom: number, padding: number): number;
+  wg_aqua_reflection_ptr(): number;
+  wg_aqua_relief_ptr(): number;
+  wg_aqua_disp(w: number, h: number, r: number, depth: number, zoom: number): void;
+  wg_aqua_edge(w: number, h: number, r: number, depth: number): void;
+  wg_aqua_glyph_render(w: number, h: number, depth: number, pixelRatio: number): number;
 }
 
 let wasm: WasmApi | null = null;
