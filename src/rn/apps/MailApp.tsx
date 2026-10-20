@@ -82,9 +82,9 @@ export function MailApp() {
         </View>
       </ScrollView>
       <FloatingTabBar active={tab} onTab={setTab} tabs={[
-        { id: "inbox", icon: "mail", label: "Inbox" },
+        { id: "inbox", icon: "inbox", label: "Inbox" },
         { id: "sent", icon: "send", label: "Sent" },
-        { id: "drafts", icon: "file", label: "Drafts" },
+        { id: "drafts", icon: "fileText", label: "Drafts" },
         { id: "flag", icon: "flag", label: "Flagged" },
       ]} />
       <Pressable style={[ms.fab, { backgroundColor: ac }]} onPress={() => composer()}>

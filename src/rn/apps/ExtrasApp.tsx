@@ -146,9 +146,9 @@ export function ClockApp() {
       </ScrollView>
       <FloatingTabBar dark active={tab} onTab={setTab} tabs={[
         { id: "world", icon: "globe", label: "World" },
-        { id: "alarms", icon: "bell", label: "Alarms" },
-        { id: "stopwatch", icon: "clock", label: "Stopwatch" },
-        { id: "timer", icon: "list", label: "Timer" },
+        { id: "alarms", icon: "alarmClock", label: "Alarms" },
+        { id: "stopwatch", icon: "timer", label: "Stopwatch" },
+        { id: "timer", icon: "hourglass", label: "Timer" },
       ]} />
     </View>
   );
