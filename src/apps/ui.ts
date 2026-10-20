@@ -38,8 +38,8 @@ export function FloatingTabBar(
   };
   const apply = () => {
     const x = sx.v;
-    pill.style.transform = `translateX(${x - 24}px)`;
-    dot.style.transform = `translateX(${x - 2}px)`;
+    pill.style.transform = `translateX(${x - pill.offsetWidth / 2}px)`;
+    dot.style.transform = `translateX(${x - dot.offsetWidth / 2}px)`;
   };
   const kick = () => {
     if (raf) return;

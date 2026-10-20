@@ -222,9 +222,9 @@ export function MusicApp() {
   };
 
   const tabs = FloatingTabBar([
-    { id: "listen", icon: "play", label: "Listen Now" },
+    { id: "listen", icon: "playCircle", label: "Listen Now" },
     { id: "browse", icon: "layoutGrid", label: "Browse" },
-    { id: "radio", icon: "cast", label: "Radio" },
+    { id: "radio", icon: "radioTower", label: "Radio" },
     { id: "search", icon: "search", label: "Search" },
   ], "listen", show, true);
 

@@ -164,8 +164,8 @@ export function StoreApp() {
   };
 
   const TABS = [
-    { id: "today", icon: "star" as const, label: "Today" },
-    { id: "games", icon: "gamepad2" as const, label: "Games" },
+    { id: "today", icon: "newspaper" as const, label: "Today" },
+    { id: "games", icon: "rocket" as const, label: "Games" },
     { id: "apps", icon: "layoutGrid" as const, label: "Apps" },
     { id: "search", icon: "search" as const, label: "Search" },
   ];
