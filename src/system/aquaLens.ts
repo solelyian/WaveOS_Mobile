@@ -12,6 +12,8 @@ export interface AquaLensOptions {
   radius?: number;
   /** Opacity of the baked relief contour overlay (default 1). */
   relief?: number;
+  /** Strength of the directional reflected-light band (default 1). */
+  reflection?: number;
 }
 
 function image(w: number, h: number, pointer: number, maskChannel?: number | "displacement"): string {
@@ -109,7 +111,8 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
       `<feColorMatrix in="ambient" type="saturate" values="2.4" result="ambientColor"/>` +
       `<feComposite in="mirrored" in2="ambientColor" operator="arithmetic" k2=".65" k3=".35" result="reflection"/>` +
       `<feColorMatrix in="transmissionMap" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0" result="fresnel"/>` +
-      `<feComposite in="reflection" in2="fresnel" operator="in" result="reflected"/>` +
+      `<feComposite in="reflection" in2="fresnel" operator="in" result="reflectedRaw"/>` +
+      `<feComponentTransfer in="reflectedRaw" result="reflected"><feFuncA type="linear" slope="${options.reflection ?? 1}"/></feComponentTransfer>` +
       `<feComposite in="transmission" in2="fresnel" operator="out" result="transmitted"/>` +
       `<feComposite in="transmitted" in2="reflected" operator="arithmetic" k2="1" k3="1" result="unfiltered"/>` +
       `<feGaussianBlur in="unfiltered" stdDeviation="${.38 * response}" result="sharp"/>` +
