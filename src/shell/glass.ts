@@ -102,19 +102,21 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
   const rad = o.radius ?? (notification ? 34 : cs.endsWith("%")
     ? (parseFloat(cs) / 100) * Math.min(w, h)     // 50% → cercle exact
     : (parseFloat(cs) || 20));
+  const size = Math.min(w, h);
   if (aqua) {
+    const capsule = rad >= size / 2 - .5;
     aquaLens(el, {
       radius: rad,
       zoom: 1,
-      ior: 1.46,
-      depth: o.depth ?? h * .36,
-      thickness: Math.max(2, h * .2),
+      ior: capsule ? 1.32 : 1.24,
+      depth: o.depth ?? (capsule ? Math.min(9, size * .14) : Math.min(10, size * .1)),
+      thickness: capsule ? Math.min(5, size * .08) : Math.min(6, size * .06),
+      relief: capsule ? .48 : .32,
     });
     el.dataset.lgDone = "1";
     return;
   }
   const amp = o.amp ?? 1.0;
-  const size = Math.min(w, h);
   const depth = o.depth ?? (control ? Math.min(16, Math.max(4, size * .12)) : 30);
   const scale = o.scale ?? (notification ? 16 : control ? Math.min(44, Math.max(22, size * .5)) : 100);
   const blur = o.blur ?? (notification ? 5 : control ? 1.2 : 3);

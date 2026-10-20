@@ -10,6 +10,8 @@ export interface AquaLensOptions {
   thickness?: number;
   /** CSS pixel corner radius; defaults to a capsule/circle. */
   radius?: number;
+  /** Opacity of the baked relief contour overlay (default 1). */
+  relief?: number;
 }
 
 function image(w: number, h: number, pointer: number, maskChannel?: number | "displacement"): string {
@@ -43,6 +45,7 @@ export function aquaLens(el: HTMLElement, options: AquaLensOptions = {}) {
   const relief = document.createElement("span");
   relief.setAttribute("aria-hidden", "true");
   relief.style.cssText = "position:absolute;inset:0;border-radius:inherit;pointer-events:none;background-size:100% 100%";
+  relief.style.opacity = String(options.relief ?? 1);
   const caustic = document.createElement("span");
   caustic.setAttribute("aria-hidden", "true");
   caustic.style.cssText = "position:absolute;inset:0;border-radius:inherit;pointer-events:none";
