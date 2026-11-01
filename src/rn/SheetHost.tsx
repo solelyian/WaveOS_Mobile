@@ -72,9 +72,14 @@ export function SheetHost() {
     el.style.opacity = `${Math.min(1, (sp.v + H) / (H * 0.6))}`;
   }); return () => { off(); }; }, [sp]);
 
+  // Natif : pas de backdrop-filter → on compense avec un voile plus opaque,
+  // appliqué via le prop style (querySelector DOM n'existe pas en natif).
+  const frostBg = NATIVE
+    ? active === "cc" ? "rgba(16,18,22,.82)" : active === "nc" ? "rgba(7,9,13,.80)" : "rgba(10,10,14,.45)"
+    : active === "cc" ? "rgba(18,20,24,.30)" : active === "nc" ? "rgba(0,0,0,.05)" : "rgba(10,10,14,.45)";
   return (
     <View ref={wrap} style={st.wrap} pointerEvents="box-none">
-      <View style={st.frost} nativeID="sheet-frost" pointerEvents="none" />
+      <View style={[st.frost, { backgroundColor: frostBg }]} nativeID="sheet-frost" pointerEvents="none" />
       {active === "sd" && <SDNavy />}
       {active === "sd" ? <SuperDevice /> : active === "nc" ? <NotificationCenter /> : <ControlCenter />}
     </View>
