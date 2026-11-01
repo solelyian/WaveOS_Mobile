@@ -178,9 +178,9 @@ export function ClockApp() {
 
   const TABS = [
     { id: "world", icon: "globe" as const, label: "World" },
-    { id: "alarms", icon: "bell" as const, label: "Alarms" },
-    { id: "stopwatch", icon: "clock" as const, label: "Stopwatch" },
-    { id: "timer", icon: "list" as const, label: "Timer" },
+    { id: "alarms", icon: "alarmClock" as const, label: "Alarms" },
+    { id: "stopwatch", icon: "timer" as const, label: "Stopwatch" },
+    { id: "timer", icon: "hourglass" as const, label: "Timer" },
   ];
   const alarms = () => h("div", { style: { display: "flex", flexDirection: "column", gap: "10px" } },
     ...([["7:00 AM", "Wake up", true], ["8:30 AM", "Standup", true], ["10:00 PM", "Wind down", false]] as [string, string, boolean][]).map(([t, l, on]) =>

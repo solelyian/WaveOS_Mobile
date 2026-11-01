@@ -6,6 +6,12 @@ import { runBoot } from "./shell/boot";
 import { initTheme } from "./theme";
 
 async function boot() {
+  if (new URLSearchParams(location.search).has("aqua-study")) {
+    await loadWasm();
+    const { mountAquaStudy } = await import("./system/aquaStudy");
+    mountAquaStudy();
+    return;
+  }
   const phone = document.getElementById("phone")!;
   // le téléphone se met à l'échelle pour remplir la fenêtre (desktop redimensionnable)
   // 428×878 = 400×850 du #phone + bezel 14px de chaque côté

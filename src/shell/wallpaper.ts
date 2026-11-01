@@ -13,18 +13,21 @@ const K = [
 export class Wallpaper {
   el = document.createElement("div");
   s = new Spring(0, "shade");
+  private blur = new Spring(0, "shade");
   constructor() {
     this.el.id = "wp";
   }
-  /** 0 = net, 1 = app ouverte, 2 = verrouillé ou panneau CC/NC */
-  set level(v: number) { this.s.to(v); }
+  setScene(v: 0 | 1 | 2, sharp = false) {
+    this.s.to(v);
+    this.blur.to(sharp ? 0 : K[v].b);
+  }
   render() {
     const v = this.s.v;
     const i = v <= 1 ? 0 : 1;
     const t = v <= 1 ? v : v - 1;
     const a = K[i], b = K[i + 1];
     const s = lerp(a.s, b.s, t);
-    const bl = lerp(a.b, b.b, t);
+    const bl = Math.max(0, this.blur.v);
     const br = lerp(a.l, b.l, t);
     const sa = lerp(a.sat, b.sat, t);
     this.el.style.transform = `scale(${s.toFixed(4)})`;

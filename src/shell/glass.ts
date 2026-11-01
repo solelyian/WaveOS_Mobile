@@ -17,6 +17,7 @@
 // Usage : await liquidGlass(el, { scale: 16 })  — el reçoit le filtre ;
 // liquidGlassAll(root) balaie les surfaces glass connues.
 import { W } from "../wasm/bridge";
+import { aquaLens } from "../system/aquaLens";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 let defs: SVGDefsElement | null = null;
@@ -70,6 +71,7 @@ function edgeMap(w: number, h: number, r: number, depth: number): string {
   return url;
 }
 
+
 export interface LGOpts {
   /** rayon des coins en px (défaut : border-radius calculé de l'élément) */
   radius?: number;
@@ -89,20 +91,41 @@ export interface LGOpts {
 
 /** Applique le matériau WaveOS à `el` (son backdrop est réfracté). */
 export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void> {
+  const aqua = !el.hasAttribute("data-glass-legacy");
   const control = !!el.closest("#cc");
+  const notification = el.classList.contains("nc-card");
   const slider = el.classList.contains("cc-hslider");
   const r = el.getBoundingClientRect();
-  const w = Math.min(512, Math.max(8, Math.round(control ? el.offsetWidth : r.width)));
-  const h = Math.min(640, Math.max(8, Math.round(control ? el.offsetHeight : r.height)));
+  const w = Math.min(512, Math.max(8, Math.round(control || notification ? el.offsetWidth : r.width)));
+  const h = Math.min(640, Math.max(8, Math.round(control || notification ? el.offsetHeight : r.height)));
   const cs = getComputedStyle(el).borderTopLeftRadius;
-  const rad = o.radius ?? (cs.endsWith("%")
+  const rad = o.radius ?? (notification ? 34 : cs.endsWith("%")
     ? (parseFloat(cs) / 100) * Math.min(w, h)     // 50% → cercle exact
     : (parseFloat(cs) || 20));
-  const amp = o.amp ?? 1.0;
   const size = Math.min(w, h);
+  if (control) {
+    el.dataset.lgDone = "1";
+    return;
+  }
+  if (aqua) {
+    const capsule = rad >= size / 2 - .5;
+    aquaLens(el, {
+      radius: rad,
+      zoom: 1,
+      ior: capsule ? 1.32 : 1.24,
+      depth: o.depth ?? (capsule ? Math.min(9, size * .14) : Math.min(10, size * .1)),
+      thickness: capsule ? Math.min(5, size * .08) : Math.min(6, size * .06),
+      relief: capsule ? .32 : .22,
+      reflection: 0,
+      rim: capsule ? .9 : .55,
+    });
+    el.dataset.lgDone = "1";
+    return;
+  }
+  const amp = o.amp ?? 1.0;
   const depth = o.depth ?? (control ? Math.min(16, Math.max(4, size * .12)) : 30);
-  const scale = o.scale ?? (control ? Math.min(44, Math.max(22, size * .5)) : 100);
-  const blur = o.blur ?? (control ? 1.2 : 3);
+  const scale = o.scale ?? (notification ? 16 : control ? Math.min(44, Math.max(22, size * .5)) : 100);
+  const blur = o.blur ?? (notification ? 5 : control ? 1.2 : 3);
   const sat = o.saturate ?? (slider ? 0 : control ? 1.3 : 1.15);
 
   const map = dispMap(w, h, rad, amp, depth);
@@ -131,12 +154,13 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
     const edge = document.createElement("i");
     edge.className = "lg-edge";
     edge.style.cssText = `position:absolute;inset:0;border-radius:inherit;` +
-      `pointer-events:none;background-image:url("${edgeMap(w, h, rad, depth)}");` +
+      `pointer-events:none;` +
       `background-size:100% 100%;z-index:0;`;
     if (getComputedStyle(el).position === "static") el.style.position = "relative";
     el.prepend(edge);
   }
   const edge = el.querySelector<HTMLElement>(":scope > .lg-edge")!;
+  edge.style.backgroundImage = `url("${edgeMap(w, h, rad, depth)}")`;
   edge.style.opacity = String(o.spec ?? (control ? .65 : 1));
   el.dataset.lgDone = "1";
 }
