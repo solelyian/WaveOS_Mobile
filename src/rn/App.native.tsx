@@ -1,7 +1,7 @@
 // App.native.tsx — coquille téléphone native : wallpaper, lockscreen,
 // statusbar, DI, sheets, fenêtre d'app (morph) et switcher de recents.
 import * as React from "react";
-import { View, StyleSheet, ImageBackground, Text, ScrollView } from "react-native";
+import { View, StyleSheet, ImageBackground, Text, ScrollView, useWindowDimensions } from "react-native";
 import { useSys, set } from "./sys";
 import { LockScreen, lockCtl } from "./LockScreen";
 import { StatusBar } from "./StatusBar";
@@ -62,20 +62,33 @@ function AppImpl() {
     hasRecents: () => sys.recents.length > 0,
   });
 
+  // Scène fixe 400×850 (comme le web) étirée à la taille réelle de l'écran :
+  // sans ça le bas (homebar, gestes) et la droite sortent de l'écran.
+  const { width: W, height: H } = useWindowDimensions();
+  const stage = {
+    position: "absolute" as const,
+    left: (W - 400) / 2,
+    top: (H - 850) / 2,
+    width: 400,
+    height: 850,
+    transform: [{ scaleX: W / 400 }, { scaleY: H / 850 }],
+  };
   return (
-    <View style={st.phone} {...pan}>
-      <ImageBackground source={wallpaper} style={st.wall} resizeMode="cover" />
-      {!s.locked && <HomeGrid onOpen={(id) => openApp(id)} onSpot={() => setSpot(true)} />}
-      {s.locked && <LockScreen />}
-      {s.activeApp && from && (
-        <AppWindow key={s.activeApp} id={s.activeApp} from={from}
-          onClosed={() => { set("activeApp", null); setFrom(null); }} />
-      )}
-      <SheetHost />
-      {s.switcherOpen && <Recents onOpen={(id) => { set("switcherOpen", false); openApp(id); }} />}
-      {spot && <Spotlight onOpen={(id) => { setSpot(false); openApp(id); }} onClose={() => setSpot(false)} />}
-      <StatusBar />
-      <DynamicIsland />
+    <View style={st.phone}>
+      <View style={stage} {...pan}>
+        <ImageBackground source={wallpaper} style={st.wall} resizeMode="cover" />
+        {!s.locked && <HomeGrid onOpen={(id) => openApp(id)} onSpot={() => setSpot(true)} />}
+        {s.locked && <LockScreen />}
+        {s.activeApp && from && (
+          <AppWindow key={s.activeApp} id={s.activeApp} from={from}
+            onClosed={() => { set("activeApp", null); setFrom(null); }} />
+        )}
+        <SheetHost />
+        {s.switcherOpen && <Recents onOpen={(id) => { set("switcherOpen", false); openApp(id); }} />}
+        {spot && <Spotlight onOpen={(id) => { setSpot(false); openApp(id); }} onClose={() => setSpot(false)} />}
+        <StatusBar />
+        <DynamicIsland />
+      </View>
     </View>
   );
 }

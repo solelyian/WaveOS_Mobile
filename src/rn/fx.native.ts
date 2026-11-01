@@ -31,10 +31,21 @@ function cssTransform(v: string) {
 }
 
 const STRING_PROPS = new Set(["position", "display", "overflow", "isolation"]);
-const SKIP = new Set(["filter", "backdropFilter", "webkitBackdropFilter", "clipPath", "maskImage", "webkitMaskImage", "maskSize", "webkitMaskSize", "maskPosition", "webkitMaskPosition", "backgroundImage", "backgroundSize", "backgroundPosition", "boxShadow", "userSelect", "webkitUserSelect", "pointerEvents", "zIndex", "inset", "transition", "background", "backgroundColor:gradient", "visibility", "transformOrigin"]);
+const SKIP = new Set(["filter", "backdropFilter", "webkitBackdropFilter", "clipPath", "maskImage", "webkitMaskImage", "maskSize", "webkitMaskSize", "maskPosition", "webkitMaskPosition", "backgroundSize", "backgroundPosition", "boxShadow", "userSelect", "webkitUserSelect", "pointerEvents", "zIndex", "inset", "transition", "backgroundColor:gradient", "visibility", "transformOrigin"]);
+
+// Dégradés CSS : RN ne les rend pas → on extrait la première couleur
+// (#hex ou rgb/rgba) comme fond plein de repli.
+const cssColor = (v: unknown) => {
+  const m = String(v).match(/#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)/);
+  return m ? m[0] : null;
+};
 
 function conv(k: string, v: unknown) {
   if (SKIP.has(k)) return [null, null] as const;
+  if (k === "background" || k === "backgroundImage") {
+    const c = cssColor(v);
+    return c ? ["backgroundColor", c] as const : [null, null] as const;
+  }
   if (k === "transform") return ["transform", cssTransform(String(v))] as const;
   if (k === "borderTopLeftRadius" || k === "borderRadius") return ["borderRadius", num(v)] as const;
   return [k, STRING_PROPS.has(k) ? v : num(v)] as const;
