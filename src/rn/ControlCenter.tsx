@@ -28,7 +28,7 @@ function Pill({ k, icon, offIcon, name, tint = "transparent", label = name, onPr
   const piColor = k === "focus" ? `rgba(255,255,255,${on ? ".16" : ".06"})` : on ? tint : "rgba(255,255,255,.06)";
   const icColor = !on && k !== "focus" ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.90)";
   return (
-    <Tile style={on && (k === "wifi" || k === "bluetooth") ? [st.pill, st.activeTile] : st.pill}
+    <Tile style={st.pill}
       r={33} label={label} pressed={k ? on : undefined} onPress={onPress ?? (k ? () => set(k, !s[k] as never) : undefined)}>
       <View style={[st.pi, { backgroundColor: piColor }]}>
         <Icon name={!on && offIcon ? offIcon : icon} size={26} color={icColor} />
@@ -166,11 +166,6 @@ function Cell({ k, icon, label }: { k: keyof SysState; icon: string; label: stri
 export function ControlCenter() {
   React.useEffect(() => {
     if (typeof document === "undefined") return;
-    const root = document.getElementById("cc");
-    if (root) {
-      root.style.backdropFilter = "blur(6px) saturate(115%) brightness(1.18)";
-      (root.style as CSSStyleDeclaration & { webkitBackdropFilter?: string }).webkitBackdropFilter = root.style.backdropFilter;
-    }
     const css = document.createElement("style");
     css.textContent = `
       #cc [role="button"] > [data-lg] { transition: transform .12s, background-color .2s; }
@@ -194,8 +189,8 @@ export function ControlCenter() {
       <View style={st.r1}>
         <MediaCard />
         <View style={st.conn}>
-          <Pill k="wifi" icon="wifi" offIcon="wifiOff" name="WAVE-5G" label="Wi-Fi: WAVE-5G" tint="rgba(0,145,255,.28)" />
-          <Pill k="bluetooth" icon="bluetooth" offIcon="bluetoothOff" name="Nyne Watch" label="Bluetooth: Nyne Watch" tint="rgba(0,145,255,.28)" />
+          <Pill k="wifi" icon="wifi" offIcon="wifiOff" name="WAVE-5G" label="Wi-Fi: WAVE-5G" tint="#307bf6" />
+          <Pill k="bluetooth" icon="bluetooth" offIcon="bluetoothOff" name="Nyne Watch" label="Bluetooth: Nyne Watch" tint="#307bf6" />
         </View>
       </View>
 
@@ -220,12 +215,11 @@ export function ControlCenter() {
 
 const st = StyleSheet.create({
   root: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, paddingTop: 74, paddingHorizontal: 44, paddingBottom: 10, gap: 16,
-    backgroundColor: "rgba(18,20,24,.06)" },
-  tile: { flex: 1, position: "relative", overflow: "hidden", backgroundColor: "rgba(255,255,255,.07)" },
-  sliderGlass: { backgroundColor: "rgba(20,20,20,.16)" },
-  activeTile: { backgroundColor: "rgba(0,135,255,.72)" },
+  },
+  tile: { flex: 1, position: "relative", overflow: "hidden", backgroundColor: "rgba(8,12,18,.54)" },
+  sliderGlass: { backgroundColor: "rgba(8,12,18,.54)" },
   top: { flexDirection: "row", justifyContent: "space-between", height: 40 },
-  corner: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,.07)" },
+  corner: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(8,10,14,.70)" },
   r1: { flexDirection: "row", gap: 16, height: 148 },
   conn: { flex: 1, gap: 16 },
   pill: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, padding: 8 },
@@ -233,7 +227,7 @@ const st = StyleSheet.create({
   pillNm: { color: "#fff", fontSize: 15, fontWeight: "400", lineHeight: 18 },
   r2: { flexDirection: "row", gap: 16, height: 66 },
   track: { position: "absolute", left: 8, top: 8, right: 8, bottom: 8, borderRadius: 25, overflow: "hidden" },
-  fill: { position: "absolute", left: 0, top: 0, bottom: 0, backgroundColor: "rgba(255,255,255,.18)" },
+  fill: { position: "absolute", left: 0, top: 0, bottom: 0, backgroundColor: "rgba(255,255,255,.075)" },
   icWrap: { position: "absolute", left: 8, top: 8, width: 50, height: 50, alignItems: "center", justifyContent: "center" },
   cast: { position: "absolute", top: 12, right: 12, width: 28, height: 28, borderRadius: 14, backgroundColor: "rgba(255,255,255,.04)", alignItems: "center", justifyContent: "center" },
   transport: { position: "absolute", bottom: 10, left: 8, right: 8, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
@@ -244,8 +238,7 @@ const st = StyleSheet.create({
   gridRow: { flexDirection: "row", gap: 16 },
   cell: { flex: 1, minWidth: 0, height: 88, alignItems: "center", gap: 6 },
   dot: { width: 64, height: 64, flexShrink: 0, borderRadius: 32, alignItems: "center", justifyContent: "center" },
-  dotOn: { backgroundColor: "rgba(0,135,255,.72)", borderWidth: 1, borderColor: "rgba(105,235,255,.75)" },
-  dotOff: { backgroundColor: "rgba(255,255,255,.07)" },
-  lb: { color: "#fff", fontSize: 11, fontWeight: "400", lineHeight: 12, textAlign: "center", maxWidth: 70,
-    textShadowColor: "rgba(0,0,0,.55)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
+  dotOn: { backgroundColor: "#307bf6" },
+  dotOff: { backgroundColor: "rgba(8,12,18,.54)" },
+  lb: { color: "rgba(255,255,255,.80)", fontSize: 11, fontWeight: "400", lineHeight: 12, textAlign: "center", maxWidth: 70 },
 });

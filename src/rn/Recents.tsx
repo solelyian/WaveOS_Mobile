@@ -69,13 +69,13 @@ function Card({ id, onOpen, onKill }: {
     <View ref={card} style={rs.card} {...handlers}>
       <View style={rs.name}>
         <View style={[rs.ic, { overflow: "hidden" }]}>
-          <View ref={(n) => { const el = n as unknown as HTMLElement | null; if (el) el.style.background = m.color; }} style={StyleSheet.absoluteFill} />
+          <View ref={(n) => { const el = domOf({ current: n }); if (el) el.style.background = m.color; }} style={StyleSheet.absoluteFill} />
           <Icon n={m.icon} size={16} color="#fff" />
         </View>
         <Text style={rs.nmTxt}>{m.name}</Text>
       </View>
       <View ref={appBox} style={rs.app}>
-        <View ref={(n) => { const el = n as unknown as HTMLElement | null; if (el) { el.style.transform = "scale(.615)"; el.style.transformOrigin = "0 0"; } }}
+        <View ref={(n) => { const el = domOf({ current: n }); if (el) { el.style.transform = "scale(.615)"; el.style.transformOrigin = "0 0"; } }}
           style={{ width: 400, height: 850 }} pointerEvents="none">
           {renderApp(id)}
         </View>
@@ -115,7 +115,7 @@ export function Recents({ onOpen }: { onOpen: (id: AppId, r: AppRect | null) => 
       <Pressable ref={scrimRef} style={rs.scrim} onPress={close} />
       {ids.length ? (
         <>
-          <ScrollView ref={strip} horizontal style={{ flex: 1 }} contentContainerStyle={rs.strip} showsHorizontalScrollIndicator={false}>
+          <ScrollView ref={strip} horizontal nativeID="app-scroll" style={{ flex: 1 }} contentContainerStyle={rs.strip} showsHorizontalScrollIndicator={false}>
             {ids.map((id) => <Card key={id} id={id} onOpen={onOpen} onKill={killRecent} />)}
           </ScrollView>
           <View style={rs.foot}>

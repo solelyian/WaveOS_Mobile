@@ -148,9 +148,9 @@ export function PhotosApp() {
         )}
       </ScrollView>
       <FloatingTabBar active={tab} onTab={(id) => { setTab(id); setAlbum(null); }} tabs={[
-        { id: "library", icon: "layoutGrid", label: "Library" },
+        { id: "library", icon: "images", label: "Library" },
         { id: "foryou", icon: "heart", label: "For You" },
-        { id: "albums", icon: "image", label: "Albums" },
+        { id: "albums", icon: "squareStack", label: "Albums" },
         { id: "search", icon: "search", label: "Search" },
       ]} />
       {viewer !== null && <Viewer start={viewer} onClose={() => setViewer(null)} />}

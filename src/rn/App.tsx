@@ -18,6 +18,7 @@ import { liquidGlassAll } from "./glass";
 import { host, pushRecent, type AppRect } from "./host";
 import { mountBoot } from "../system/bootAnimation";
 import { domOf } from "./fx";
+import { NATIVE } from "../platform";
 
 function Boot({ onDone }: { onDone: () => void }) {
   const ref = React.useRef<View>(null);
@@ -114,8 +115,22 @@ export default function App() {
       liquidGlassAll(document.getElementById("phone") ?? document)));
     return () => cancelAnimationFrame(id);
   }, [s.locked, spot]);
+  React.useEffect(() => {
+    const wallpaper = document.getElementById("wp");
+    if (!wallpaper) return;
+    const level = s.locked || s.sheet ? 2 : s.activeApp ? 1 : 0;
+    const states = [
+      { scale: 1, blur: 0, brightness: 1, saturation: 1 },
+      { scale: 1.05, blur: 4, brightness: .6, saturation: 1 },
+      { scale: 1.1, blur: 10, brightness: .7, saturation: 1.2 },
+    ];
+    const { scale, blur, brightness, saturation } = states[level];
+    wallpaper.style.transition = "transform .5s ease, filter .5s ease";
+    wallpaper.style.transform = `scale(${scale})`;
+    wallpaper.style.filter = `blur(${blur}px) brightness(${brightness}) saturate(${saturation})`;
+  }, [s.locked, s.sheet, s.activeApp]);
   return (
-    <View ref={rootEl} style={st.phone}>
+    <View ref={rootEl} style={[st.phone, NATIVE && { borderRadius: 0 }]}>
       <View style={st.wall} nativeID="wp" pointerEvents="none" />
       {!s.locked && <HomeGrid onOpen={(id, el) => openApp(id, el)} onSpot={() => setSpot(true)} />}
       {s.locked && <LockScreen />}

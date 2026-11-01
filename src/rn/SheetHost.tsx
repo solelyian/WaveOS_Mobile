@@ -7,6 +7,7 @@ import { Spring, SPRINGS, onFrame, domOf } from "./fx";
 import { NotificationCenter } from "./NotificationCenter";
 import { ControlCenter } from "./ControlCenter";
 import { SuperDevice } from "./SuperDevice";
+import { NATIVE } from "../platform";
 
 const H = 850;
 
@@ -45,16 +46,15 @@ export function SheetHost() {
     const el = domOf(wrap);
     const f = el?.querySelector<HTMLElement>("#sheet-frost");
     if (f) {
-      const filter = active === "cc" ? "none" : "blur(30px) saturate(160%)";
+      // blur allégé en natif (backdrop-filter plein écran = GPU du WebView saturé)
+      const filter = active === "cc"
+        ? `blur(${NATIVE ? 24 : 40}px) saturate(65%) brightness(.72)` : active === "nc"
+        ? `blur(${NATIVE ? 24 : 38}px) saturate(115%) brightness(.6)`
+        : `blur(${NATIVE ? 20 : 30}px) saturate(160%)`;
       f.style.backdropFilter = filter;
       (f.style as unknown as Record<string, string>).webkitBackdropFilter = filter;
-      f.style.backgroundColor = active === "cc" ? "transparent" : "rgba(10,10,14,.45)";
-    }
-    const wallpaper = document.getElementById("wp");
-    if (wallpaper) {
-      wallpaper.style.transition = "transform .5s ease, filter .5s ease";
-      wallpaper.style.transform = s.sheet === "cc" ? "scale(1.1)" : "";
-      wallpaper.style.filter = s.sheet === "cc" ? "blur(10px) brightness(.7) saturate(1.2)" : "";
+      f.style.backgroundColor = active === "cc" ? "rgba(18,20,24,.30)" : active === "nc"
+        ? "rgba(0,0,0,.05)" : "rgba(10,10,14,.45)";
     }
     const home = document.getElementById("home");
     if (home) {
