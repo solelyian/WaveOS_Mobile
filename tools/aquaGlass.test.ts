@@ -10,6 +10,8 @@ const api = instance.exports as unknown as {
   wg_aqua_edge(w: number, h: number, r: number, depth: number): number;
   wg_aqua_lens(w: number, h: number, r: number, depth: number, thickness: number,
               ior: number, zoom: number, padding: number): number;
+  wg_aqua_surface(w: number, h: number, r: number, bezel: number, thickness: number,
+                 ior: number, rim: number, padding: number): number;
   wg_aqua_reflection_ptr(): number;
   wg_aqua_relief_ptr(): number;
   wg_glyph_mask_ptr(): number;
@@ -219,4 +221,44 @@ test("invalid volume dimensions or optical parameters leave all fields intact", 
     assert.equal(api.wg_aqua_lens(w, h, r, depth, thickness, ior, zoom, padding), 0);
     pointers.forEach((ptr, i) => assert.deepEqual(copy(178, 152, ptr), saved[i]));
   }
+});
+
+test("Aqua surface bends only the bezel and leaves the body untouched", () => {
+  const w = 148, h = 66, pad = 20, mw = w + pad * 2, mh = h + pad * 2;
+  assert.equal(api.wg_aqua_surface(w, h, 33, 12, 24, 1.5, 1.5, pad), 1);
+  const field = copy(mw, mh), cx = pad + w / 2, cy = pad + h / 2;
+  assert.deepEqual(pixel(field, mw, 0, 0), [128, 128, 0, 255]);
+  assert.deepEqual(pixel(field, mw, cx, cy), [128, 128, 255, 255]);
+  assert(pixel(field, mw, pad + 2, cy)[0] > 128);
+  assert(pixel(field, mw, pad + w - 3, cy)[0] < 128);
+  assert(pixel(field, mw, cx, pad + 2)[1] > 128);
+  assert(pixel(field, mw, cx, pad + h - 3)[1] < 128);
+  assert.equal(pixel(field, mw, pad + 2, cy)[1], 128);
+  // The pull grows toward the edge.
+  assert(pixel(field, mw, cx, pad + 2)[1] > pixel(field, mw, cx, pad + 8)[1]);
+  assert.equal(pixel(field, mw, cx, pad + 13)[1], 128);
+});
+
+test("Aqua surface rim is a thin line, not a fill", () => {
+  const w = 148, h = 66, pad = 20, mw = w + pad * 2, mh = h + pad * 2;
+  assert.equal(api.wg_aqua_surface(w, h, 33, 12, 24, 1.5, 1.5, pad), 1);
+  const light = copy(mw, mh, api.wg_aqua_relief_ptr()), cx = pad + w / 2, cy = pad + h / 2;
+  const alpha = (x: number, y: number) => pixel(light, mw, x, y)[3];
+  assert.equal(alpha(0, 0), 0);
+  assert.equal(alpha(cx, cy), 0);
+  for (const [x, y] of [[cx, pad], [cx, pad + h - 1], [pad, cy], [pad + w - 1, cy]]) assert(alpha(x, y) > 150);
+  for (const [x, y] of [[cx, pad + 6], [cx, pad + h - 7], [pad + 6, cy], [pad + w - 7, cy]]) assert(alpha(x, y) < 24);
+  assert.equal(api.wg_aqua_surface(w, h, 33, 12, 24, 1.5, 0, pad), 1);
+  assert.equal(pixel(copy(mw, mh, api.wg_aqua_relief_ptr()), mw, cx, pad)[3], 0);
+});
+
+test("Aqua surface is flat at unit index and rejects invalid input", () => {
+  assert.equal(api.wg_aqua_surface(64, 64, 32, 10, 20, 1, 1.5, 8), 1);
+  const field = copy(80, 80);
+  for (let i = 0; i < field.length; i += 4) assert(field[i] === 128 && field[i + 1] === 128);
+  assert.equal(api.wg_aqua_surface(64, 64, 32, 10, 20, .9, 1.5, 8), 0);
+  assert.equal(api.wg_aqua_surface(64, 64, 32, 0, 20, 1.5, 1.5, 8), 0);
+  assert.equal(api.wg_aqua_surface(64, 64, 32, 10, 20, 1.5, 1.5, 300), 0);
+  assert.equal(api.wg_aqua_surface(0, 64, 32, 10, 20, 1.5, 1.5, 8), 0);
+  assert.equal(api.wg_aqua_surface(64, 64, 32, 10, 20, 1.5, 1.5, -1), 0);
 });
