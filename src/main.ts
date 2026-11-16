@@ -8,6 +8,11 @@ import { initTheme } from "./theme";
 async function boot() {
   if (new URLSearchParams(location.search).has("aqua-study")) {
     await loadWasm();
+    if (new URLSearchParams(location.search).get("aqua-study") === "controls") {
+      const { mountAquaControlsStudy } = await import("./system/aquaControlsStudy");
+      mountAquaControlsStudy();
+      return;
+    }
     const { mountAquaStudy } = await import("./system/aquaStudy");
     mountAquaStudy();
     return;

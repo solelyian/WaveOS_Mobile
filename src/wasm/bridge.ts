@@ -32,6 +32,8 @@ export interface WasmApi {
   wg_aqua_edge(w: number, h: number, r: number, depth: number): number;
   wg_aqua_lens(w: number, h: number, r: number, depth: number, thickness: number,
                ior: number, zoom: number, padding: number): number;
+  wg_aqua_surface(w: number, h: number, r: number, bezel: number, thickness: number,
+    ior: number, rim: number, padding: number): number;
   wg_aqua_reflection_ptr(): number;
   wg_aqua_relief_ptr(): number;
   wg_glyph_mask_ptr(): number;
