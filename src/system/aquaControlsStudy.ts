@@ -46,7 +46,7 @@ const defaults = { bezel: 20, thickness: 40, blur: 6, rim: .55 };
 const scenery = `<svg viewBox="0 0 778 942" preserveAspectRatio="none" aria-hidden="true">
   <defs>
     <filter id="aqua-scene-soft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="5"/></filter>
-    <linearGradient id="aqua-scene-pole" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f0e8"/><stop offset=".55" stop-color="#e9e5df"/><stop offset=".8" stop-color="#8d8f96"/><stop offset="1" stop-color="#6c6f77"/></linearGradient>
+    <linearGradient id="aqua-scene-pole" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f0e8"/><stop offset=".62" stop-color="#e9e5df"/><stop offset=".8" stop-color="#a59f9a"/><stop offset="1" stop-color="#7b7d84"/></linearGradient>
   </defs>
   <rect width="778" height="942" fill="#2e8bfd"/>
   <g filter="url(#aqua-scene-soft)" fill="none" stroke-linecap="round">
@@ -57,7 +57,10 @@ const scenery = `<svg viewBox="0 0 778 942" preserveAspectRatio="none" aria-hidd
     <path d="M720 140H772L752 620 705 600Z" fill="#b3202c"/>
     <ellipse cx="255" cy="405" rx="95" ry="52" fill="#e06a7c"/>
     <ellipse cx="565" cy="405" rx="85" ry="46" fill="#d9667c"/>
-    <path d="M425 50H492L345 900H200Z" fill="url(#aqua-scene-pole)"/>
+    <path d="M575 85C520 130 470 185 425 255" stroke="#6a2c44" stroke-width="40"/>
+    <path d="M650 185C610 225 570 270 530 330" stroke="#6a2c44" stroke-width="40"/>
+    <path d="M425 50H492L399 590 250 900H110L282 590Z" fill="url(#aqua-scene-pole)"/>
+    <path d="M300 800C340 830 380 870 420 930" stroke="#a51f33" stroke-width="52"/>
     <path d="M-10 470 110 440 122 600-10 640Z" fill="#efeae4"/>
     <path d="M-20 610H70L150 720 200 942H-20Z" fill="#d8141a"/>
     <path d="M-10 800H180L172 950H-10Z" fill="#8a0509"/>
@@ -66,21 +69,21 @@ const scenery = `<svg viewBox="0 0 778 942" preserveAspectRatio="none" aria-hidd
 </svg>`;
 
 const glyphs = {
-  lock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 3v4h-4" /><rect x="8.5" y="11" width="7" height="5.5" rx="1" fill="currentColor"/><path d="M10 11V9.5a2 2 0 0 1 4 0"/></svg>`,
-  windows: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="13" height="10" rx="2" opacity=".45"/><rect x="8" y="9" width="13" height="10" rx="2"/></svg>`,
+  lock: `<svg viewBox="0 0 60 60" style="width:60px;height:60px;overflow:visible" fill="none" stroke-linecap="round" stroke-linejoin="round"><g stroke="#62deff" fill="#62deff"><path d="M42.25 51.2A24.5 24.5 0 1 1 54.5 30" stroke-width="5.6" fill="none"/><path d="M47.4 26.2h14.2L54.5 36.4Z" stroke-width="1.6"/></g><rect x="20.5" y="25.5" width="19" height="17.5" rx="2.6" fill="#fff"/><path d="M24.5 26v-5a5.5 5.5 0 0 1 11 0" stroke="#fff" stroke-width="3.6"/></svg>`,
+  windows: `<svg viewBox="0 0 60 60" style="width:60px;height:60px;overflow:visible" fill="none" stroke="#fff" stroke-linejoin="round"><mask id="aqua-glyph-back"><rect width="60" height="60" fill="#fff"/><rect x="14.7" y="18.8" width="42.5" height="33.7" rx="5.5" fill="#000"/></mask><rect x="6.2" y="10.8" width="38.1" height="29.7" rx="3.5" stroke-width="4" opacity=".5" mask="url(#aqua-glyph-back)"/><rect x="17" y="21.1" width="37.9" height="29.1" rx="3.2" stroke-width="4.6"/></svg>`,
   moon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>`,
-  bell: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a6 6 0 0 0-6 6v4.5L4.5 16v1h15v-1L18 13.5V9a6 6 0 0 0-6-6Z"/><path d="M9.800 18.5a2.2 2.2 0 0 0 4.4 0Z"/></svg>`,
-  layout: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="8" height="5.5" rx="1.5"/><rect x="3" y="13.5" width="8" height="5.5" rx="1.5"/><rect x="14" y="5" width="7" height="14" rx="1.5"/></svg>`,
+  bell: `<svg viewBox="0 0 60 60" style="width:60px;height:60px;overflow:visible" fill="#fff"><path d="M30 6.500c-2.2 0-3.9 1.4-4.3 3.300C20 11.6 16.5 16.5 16.5 22.500v8.200c0 3.2-1.9 5.6-5.2 8.4-1.2 1-2.3 1.9-2.3 3 0 1.2 1 1.9 2.3 1.900h37.400c1.3 0 2.3-.7 2.3-1.9 0-1.1-1.1-2-2.3-3-3.3-2.8-5.2-5.2-5.2-8.400v-8.200c0-6-3.5-10.9-9.2-12.700C33.9 7.9 32.2 6.5 30 6.500Z"/><path d="M22.5 47h15a7.5 6.5 0 0 1-15 0Z"/></svg>`,
+  layout: `<svg viewBox="0 0 60 60" style="width:60px;height:60px;overflow:visible" fill="none" stroke="#fff" stroke-width="3.8" stroke-linejoin="round"><rect x="3.1" y="13.8" width="24.1" height="14.1" rx="3.5"/><rect x="8.1" y="36.3" width="22" height="11.6" rx="3.5"/><rect x="37.6" y="17.1" width="18.6" height="28" rx="3.5"/></svg>`,
   chevrons: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m7 9 5-5 5 5"/><path d="m7 15 5 5 5-5"/></svg>`
 };
 
-type Surface = { className: string; glyph: string; tint?: string; shade?: number; rimColor?: string; capsule?: boolean };
+type Surface = { className: string; glyph: string; tint?: string; shade?: number; rim?: number; rimColor?: string; capsule?: boolean };
 const surfaces: Surface[] = [
-  { className: "a", glyph: glyphs.lock, tint: "rgba(10,166,255,.8)", shade: 0, rimColor: "#86f2ff" },
-  { className: "b", glyph: glyphs.windows },
+  { className: "a", glyph: glyphs.lock, tint: "rgba(10,166,255,.8)", shade: 0, rim: 1.5, rimColor: "#8af4ff" },
+  { className: "b", glyph: glyphs.windows, tint: "rgba(24,116,246,.32)", shade: .08, rim: 1.5, rimColor: "#a4dcff" },
   { className: "capsule", glyph: glyphs.moon, capsule: true },
-  { className: "c", glyph: glyphs.bell, tint: "rgba(104,100,100,.5)", rimColor: "#fff1e6" },
-  { className: "d", glyph: glyphs.layout, tint: "rgba(10,166,255,.8)", shade: 0, rimColor: "#86f2ff" }
+  { className: "c", glyph: glyphs.bell, tint: "rgba(118,110,104,.3)", rim: 1.5, rimColor: "#fff1e6" },
+  { className: "d", glyph: glyphs.layout, tint: "rgba(10,166,255,.8)", shade: 0, rim: 1.5, rimColor: "#8af4ff" }
 ];
 
 export function mountAquaControlsStudy() {
@@ -146,7 +149,7 @@ export function mountAquaControlsStudy() {
     return { bezel: value("bezel"), thickness: value("thickness"), blur: value("blur"), rimOpacity: value("rim") };
   };
   const materials = surfaces.map(surface =>
-    aquaSurface(main.querySelector<HTMLElement>(`.glass.${surface.className}`)!, { ...read(), tint: surface.tint, shade: surface.shade, rimColor: surface.rimColor }));
+    aquaSurface(main.querySelector<HTMLElement>(`.glass.${surface.className}`)!, { ...read(), tint: surface.tint, shade: surface.shade, rim: surface.rim, rimColor: surface.rimColor }));
   const apply = () => {
     ranges.forEach(input => { input.nextElementSibling!.textContent = input.value; });
     materials.forEach(material => material.update(read()));
