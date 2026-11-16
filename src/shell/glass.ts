@@ -17,7 +17,7 @@
 // Usage : await liquidGlass(el, { scale: 16 })  — el reçoit le filtre ;
 // liquidGlassAll(root) balaie les surfaces glass connues.
 import { W } from "../wasm/bridge";
-import { aquaLens } from "../system/aquaLens";
+import { aquaSurface } from "../system/aquaSurface";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 let defs: SVGDefsElement | null = null;
@@ -99,7 +99,7 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
   const w = Math.min(512, Math.max(8, Math.round(control || notification ? el.offsetWidth : r.width)));
   const h = Math.min(640, Math.max(8, Math.round(control || notification ? el.offsetHeight : r.height)));
   const cs = getComputedStyle(el).borderTopLeftRadius;
-  const rad = o.radius ?? (notification ? 34 : cs.endsWith("%")
+  const rad = o.radius ?? (cs.endsWith("%")
     ? (parseFloat(cs) / 100) * Math.min(w, h)     // 50% → cercle exact
     : (parseFloat(cs) || 20));
   const size = Math.min(w, h);
@@ -108,17 +108,13 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
     return;
   }
   if (aqua) {
-    const capsule = rad >= size / 2 - .5;
-    aquaLens(el, {
-      radius: rad,
-      zoom: 1,
-      ior: capsule ? 1.32 : 1.24,
-      depth: o.depth ?? (capsule ? Math.min(9, size * .14) : Math.min(10, size * .1)),
-      thickness: capsule ? Math.min(5, size * .08) : Math.min(6, size * .06),
-      relief: capsule ? .32 : .22,
-      reflection: 0,
-      rim: capsule ? .9 : .55,
-    });
+    if (el.dataset.lgDone) return;
+    // Réglages validés sur le témoin ?aqua-study=controls.
+    const bezel = Math.max(5, Math.min(20, size * .18));
+    el.style.backdropFilter = "none";
+    el.style.setProperty("-webkit-backdrop-filter", "none");
+    el.style.borderColor = "transparent";
+    aquaSurface(el, { radius: rad, bezel, thickness: bezel * 2, blur: 6, rim: 1.5 });
     el.dataset.lgDone = "1";
     return;
   }
@@ -170,7 +166,7 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
  *  panneau contenant du verre (home, sheets, apps). */
 /** Surfaces verre — sélecteur partagé par le balayage et l'observateur. */
 const SEL = ".g-light, .g-btn, .nc-card, .dock-in, .home-search, .lk-util, " +
-  ".tabbar, .wx-card, .rct-clear, .glx-on, .cc-corner, .cc-pill, .cc-dot, .cc-hslider, .cc-media";
+  ".tabbar, .wx-card, .rct-clear, .cc-corner, .cc-pill, .cc-dot, .cc-hslider, .cc-media";
 
 let observer: MutationObserver | null = null;
 /** Les surfaces montées après le premier balayage (écran d'appel, sous-pages)
@@ -204,26 +200,4 @@ export async function liquidGlassAll(root: ParentNode = document): Promise<void>
     jobs.push(liquidGlass(el));
   });
   await Promise.all(jobs);
-}
-
-/* ---- API de compat (ancienne signature `glass()` utilisée par cc.ts) ---- */
-export interface GlassOpts {
-  radius: number;
-  tint?: [number, number, number];
-  alpha?: number;
-  backdropFilter?: string;
-}
-export interface GlassSurface {
-  canvas: HTMLCanvasElement;
-  refresh: () => Promise<void>;
-}
-
-/** Ancien point d'entrée : applique maintenant le moteur à réfraction et
- *  renvoie un canvas « rim » vide (l'éclairage est dans le filtre). */
-export async function glass(el: HTMLElement, o: GlassOpts): Promise<GlassSurface> {
-  await liquidGlass(el, { radius: o.radius, scale: 16, blur: 5 });
-  const canvas = document.createElement("canvas");
-  canvas.className = "glx";
-  canvas.style.display = "none";
-  return { canvas, refresh: () => liquidGlass(el, { radius: o.radius, scale: 16, blur: 5 }) };
 }

@@ -40,7 +40,7 @@ export function aquaSurface(el: HTMLElement, initial: AquaSurfaceOptions = {}) {
   filter.setAttribute("primitiveUnits", "userSpaceOnUse");
   filter.setAttribute("color-interpolation-filters", "sRGB");
   const defs = document.createElementNS(NS, "defs");
-  defs.append(filter); svg.append(defs); document.body.append(svg);
+  defs.append(filter); svg.append(defs);
   const layer = (z: string) => {
     const span = document.createElement("span");
     span.setAttribute("aria-hidden", "true");
@@ -51,12 +51,14 @@ export function aquaSurface(el: HTMLElement, initial: AquaSurfaceOptions = {}) {
   optic.style.borderRadius = "0";
   if (getComputedStyle(el).position === "static") el.style.position = "relative";
   el.style.isolation = "isolate";
-  el.prepend(optic, tint, rim);
+  // The filter lives in the surface so it is dropped with it.
+  el.prepend(svg, optic, tint, rim);
   let enabled = true, last = "";
 
   function render() {
     const box = getComputedStyle(el);
-    const w = el.offsetWidth, h = el.offsetHeight, size = Math.min(w, h);
+    // The layers fill the padding box, so the field is sized to it.
+    const w = el.clientWidth, h = el.clientHeight, size = Math.min(w, h);
     if (w < 2 || h < 2) return;
     const blur = options.blur ?? 2;
     const bezel = Math.min(size / 2, options.bezel ?? Math.max(6, Math.min(22, size * .17)));
@@ -82,6 +84,8 @@ export function aquaSurface(el: HTMLElement, initial: AquaSurfaceOptions = {}) {
     const p = pad / ratio, width = mw / ratio, height = mh / ratio, scale = 256 / ratio;
     const veil = options.veil ?? .06;
     optic.style.inset = `${-p}px`;
+    // Overlapping pads of neighbouring surfaces must not repaint each other.
+    optic.style.clipPath = `inset(${p}px round ${radius / ratio}px)`;
     filter.setAttribute("x", "0"); filter.setAttribute("y", "0");
     filter.setAttribute("width", String(width)); filter.setAttribute("height", String(height));
     filter.innerHTML =
