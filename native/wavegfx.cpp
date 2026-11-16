@@ -470,6 +470,66 @@ int wg_aqua_lens(int w, int h, float r, float depth, float thickness,
   return 1;
 }
 
+/* Aqua Glass product surface: a flat body ringed by a convex squircle bezel.
+ * g_out RG is an inward refraction field for feDisplacementMap scale=256,
+ * B the antialiased shape coverage;
+ * g_aqua_relief is the white specular rim, brightest along the light axis. */
+EXP("wg_aqua_surface")
+int wg_aqua_surface(int w, int h, float r, float bezel, float thickness,
+                    float ior, float rim, int padding) {
+  if (w < 1 || h < 1 || padding < 0 || padding > 256
+      || w > GLYPH_MAXW - padding * 2 || h > GLYPH_MAXH - padding * 2
+      || !(r >= 0.f && r <= 1024.f) || !(bezel >= 1.f && bezel <= 640.f)
+      || !(thickness >= 0.f && thickness <= 120.f)
+      || !(ior >= 1.f && ior <= 2.5f) || !(rim >= 0.f && rim <= 64.f)) return 0;
+  const int mw = w + padding * 2, mh = h + padding * 2;
+  const float hw = w * 0.5f, hh = h * 0.5f;
+  r = wv_min(r, wv_min(hw, hh));
+  bezel = wv_min(bezel, wv_min(hw, hh));
+  const float lightX = -.5547f, lightY = -.8321f;
+  g_outW = mw; g_outH = mh;
+  for (int y = 0; y < mh; y++) {
+    for (int x = 0; x < mw; x++) {
+      const int offset = (y * mw + x) * 4;
+      unsigned char *q = g_out + offset, *relief = g_aqua_relief + offset;
+      q[0] = q[1] = 128; q[2] = 0; q[3] = 255;
+      relief[0] = relief[1] = relief[2] = 255; relief[3] = 0;
+      const float px = x + 0.5f - padding, py = y + 0.5f - padding;
+      const float d = drect(px, py, hw, hh, hw, hh, r);
+      if (d > 0.5f) continue;
+      const float coverage = wv_clampf(0.5f - d, 0.f, 1.f);
+      const float inside = wv_max(-d, 0.f);
+      q[2] = (unsigned char)(coverage * 255.f);
+      float nx, ny;
+      drectGrad(px, py, hw, hh, hw, hh, r, &nx, &ny);
+      if (inside < bezel && ior > 1.f) {
+        // Convex squircle profile: height = (1 - (1 - t)^4)^(1/4).
+        const float t = wv_max(inside / bezel, .02f), k = 1.f - t;
+        const float k3 = k * k * k, body = wv_max(1.f - k3 * k, 1e-4f);
+        const float root = wv_sqrt(wv_sqrt(body));
+        const float slope = thickness / bezel * k3 * root / body;
+        const float sinIn = slope / wv_sqrt(1.f + slope * slope);
+        const float sinOut = sinIn / ior;
+        const float tanOut = sinOut / wv_sqrt(1.f - sinOut * sinOut);
+        const float deviation = (slope - tanOut) / (1.f + slope * tanOut);
+        const float travel = thickness * (1.f + root) * deviation;
+        q[0] = (unsigned char)wv_clampf(128.5f - nx * travel * (255.f / 256.f), 0.f, 255.f);
+        q[1] = (unsigned char)wv_clampf(128.5f - ny * travel * (255.f / 256.f), 0.f, 255.f);
+      }
+      if (rim > 0.f) {
+        // A soft luminous band hugging the edge, nearly even around the shape.
+        const float facing = wv_fabs(nx * lightX + ny * lightY);
+        const float offset = (inside - rim * .5f) / (rim * .6f);
+        const float halo = wv_exp(-inside / wv_max(bezel * .3f, 1.f)) * .12f;
+        const float light = (wv_exp(-offset * offset) + halo)
+          * (.8f + .2f * facing * wv_sqrt(facing));
+        relief[3] = (unsigned char)(wv_clampf(light, 0.f, 1.f) * coverage * 255.f);
+      }
+    }
+  }
+  return 1;
+}
+
 /* Aqua Glass: continuous central magnification plus a shallow edge meniscus.
  * RG displacement is encoded for an SVG feDisplacementMap with scale=32. */
 EXP("wg_aqua_disp")
