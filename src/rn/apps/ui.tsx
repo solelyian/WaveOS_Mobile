@@ -173,8 +173,9 @@ export function FloatingTabBar({ tabs, active, onTab, dark }: {
   const idx = Math.max(0, tabs.findIndex((t) => t.id === active));
   React.useEffect(() => {
     const el = domOf(inRef);
-    if (el) liquidGlass(el, { radius: 26, scale: 10, blur: 4 });
-    const btn = el?.children?.[idx] as HTMLElement | undefined;
+    if (el) liquidGlass(el);
+    // Glass layers are prepended to the bar; they are aria-hidden.
+    const btn = el && Array.from(el.children).filter((c) => !c.hasAttribute("aria-hidden"))[idx] as HTMLElement | undefined;
     sx.to(btn ? btn.offsetLeft + btn.offsetWidth / 2 : 0);
     const off = onFrame((dt) => {
       sx.step(dt);
@@ -283,8 +284,8 @@ const uh = StyleSheet.create({
   } as object,
   tabbar: { position: "absolute", bottom: 32, left: "5%" as unknown as number, width: "90%" as unknown as number, maxWidth: 360, height: 72, zIndex: 50 } as object,
   tabIn: { flex: 1, borderRadius: 36, overflow: "hidden", flexDirection: "row", alignItems: "center", paddingHorizontal: 4 } as object,
-  tabInLight: { backgroundColor: "rgba(255,255,255,.05)", borderWidth: 1, borderColor: "rgba(255,255,255,.40)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.80), inset 0 -1px 0 rgba(255,255,255,.20), 0 10px 40px rgba(0,0,0,.10)" } as object,
-  tabInDark: { backgroundColor: "rgba(0,0,0,.10)", borderWidth: 1, borderColor: "rgba(255,255,255,.20)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.30), inset 0 -1px 0 rgba(255,255,255,.10), 0 10px 40px rgba(0,0,0,.20)" } as object,
+  tabInLight: { backgroundColor: "rgba(255,255,255,.04)", boxShadow: "0 12px 40px rgba(0,0,0,.12)" } as object,
+  tabInDark: { backgroundColor: "rgba(0,0,0,.06)", boxShadow: "0 12px 40px rgba(0,0,0,.22)" } as object,
   tabBtn: { flex: 1, height: "100%" as unknown as number, alignItems: "center", justifyContent: "center", zIndex: 1 } as object,
   tabPill: { position: "absolute", top: 12, left: 0, width: 48, height: 48, borderRadius: 20 } as object,
   pillLight: { backgroundColor: "rgba(255,255,255,.2)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.6)" } as object,

@@ -17,8 +17,7 @@
 // Usage : await liquidGlass(el, { scale: 16 })  — el reçoit le filtre ;
 // liquidGlassAll(root) balaie les surfaces glass connues.
 import { W, loadWasm } from "../wasm/bridge";
-import { aquaLens } from "../system/aquaLens";
-import { NATIVE } from "../platform";
+import { aquaSurface } from "../system/aquaSurface";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 let defs: SVGDefsElement | null = null;
@@ -99,7 +98,7 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
   const w = Math.min(512, Math.max(8, Math.round(control || notification ? el.offsetWidth : r.width)));
   const h = Math.min(640, Math.max(8, Math.round(control || notification ? el.offsetHeight : r.height)));
   const cs = getComputedStyle(el).borderTopLeftRadius;
-  const rad = o.radius ?? (notification ? 34 : cs.endsWith("%")
+  const rad = o.radius ?? (cs.endsWith("%")
     ? (parseFloat(cs) / 100) * Math.min(w, h)
     : (parseFloat(cs) || 20));
   const size = Math.min(w, h);
@@ -108,18 +107,13 @@ export async function liquidGlass(el: HTMLElement, o: LGOpts = {}): Promise<void
     return;
   }
   if (!el.hasAttribute("data-glass-legacy")) {
-    const capsule = rad >= size / 2 - .5;
-    aquaLens(el, {
-      radius: rad,
-      zoom: 1,
-      ior: capsule ? 1.32 : 1.24,
-      depth: o.depth ?? (capsule ? Math.min(9, size * .14) : Math.min(10, size * .1)),
-      thickness: capsule ? Math.min(5, size * .08) : Math.min(6, size * .06),
-      relief: capsule ? .32 : .22,
-      reflection: 0,
-      rim: capsule ? .9 : .55,
-      lite: NATIVE, // WebView Android : raster SVG url() trop lent/invisible
-    });
+    if (el.dataset.lgDone) return;
+    // Réglages validés sur le témoin ?aqua-study=controls.
+    const bezel = Math.max(5, Math.min(20, size * .18));
+    el.style.backdropFilter = "none";
+    el.style.setProperty("-webkit-backdrop-filter", "none");
+    el.style.borderColor = "transparent";
+    aquaSurface(el, { radius: rad, bezel, thickness: bezel * 2, blur: 6, rim: 1.5 });
     el.dataset.lgDone = "1";
     return;
   }
